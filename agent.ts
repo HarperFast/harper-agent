@@ -1,20 +1,13 @@
 import {Agent, MemorySession, run} from '@openai/agents';
 import chalk from 'chalk';
-import {mkdtemp} from 'node:fs/promises';
-import * as os from 'node:os';
-import * as path from 'node:path';
 import {askQuestion} from './utils/askQuestion.ts';
 import {createApplyPatchTool} from "./tools/applyPatchTool.ts";
 import {harperResponse} from "./utils/harperResponse.ts";
-import {seedWorkspace} from "./utils/seedWorkspace.ts";
 
 async function main() {
-    const workspaceRoot = await mkdtemp(
-        path.join(os.tmpdir(), 'apply-patch-example-'),
-    );
-    console.log(chalk.dim(`Temporary workspace: ${chalk.cyan(workspaceRoot)}`));
+    const workspaceRoot = process.cwd();
+    console.log(chalk.dim(`Working directory: ${chalk.cyan(workspaceRoot)}`));
     console.log(chalk.dim(`Press Ctrl+C or hit enter twice to exit.\n`));
-    await seedWorkspace(workspaceRoot);
     const agent = new Agent({
         name: 'Patch Assistant',
         model: 'gpt-5.2',
