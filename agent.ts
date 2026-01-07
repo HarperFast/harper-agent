@@ -17,13 +17,13 @@ async function main() {
     console.log(chalk.dim(`Working directory: ${chalk.cyan(workspaceRoot)}`));
     console.log(chalk.dim(`Press Ctrl+C or hit enter twice to exit.\n`));
     const agent = new Agent({
-        name: 'Patch Assistant',
+        name: 'Harper App Development Assistant',
         model: 'gpt-5.2',
-        instructions: `You can edit files inside ${workspaceRoot} using the apply_patch tool.`,
+        instructions: `You are working on creating the harper app in ${workspaceRoot} with the user.`,
         tools: createTools(),
     });
 
-    harperResponse('How can I assist you today?');
+    harperResponse('What kind of Harper app do you want to make together?');
 
     const session = new MemorySession();
     let emptyLines = 0;
