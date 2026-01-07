@@ -4,7 +4,7 @@ class Spinner {
 	private interval: NodeJS.Timeout | null = null;
 	private chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 	private i = 0;
-	private message: string;
+	private readonly message: string;
 
 	constructor(message: string = 'Thinking...') {
 		this.message = message;
