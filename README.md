@@ -19,6 +19,7 @@ AI to help you with Harper app management.
 3. Create a `.env` file in the root directory and add your OpenAI API key:
    ```env
    OPENAI_API_KEY=your_api_key_here
+   OPENAI_AGENTS_DISABLE_TRACING=1
    ```
 
 ### Running the Agent
