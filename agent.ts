@@ -82,11 +82,12 @@ async function main() {
             } else if (event.type === 'run_item_stream_event') {
                 if (event.name === 'tool_called') {
                     spinner.stop();
-                    const item = event.item as any;
+                    const item = event.item.rawItem ?? event.item;
                     const name = item.name || item.type || 'tool';
                     let args = item.arguments || '';
                     if (typeof args !== 'string') args = JSON.stringify(args);
                     const displayArgs = args && args.length <= 80 ? `(${args})` : '';
+                    // console.log(item);
                     console.log(`\n${chalk.yellow('🛠️')}  ${chalk.cyan(name)}${chalk.dim(displayArgs)}`);
                     atStartOfLine = true;
                     spinner.start();

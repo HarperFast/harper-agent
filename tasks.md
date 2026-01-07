@@ -1,4 +1,4 @@
-- Display when it executes a tool
+- Guide it to create the app more aggressively
 - Add more tools:
   - Search for a file by name
   - Search for file contents
