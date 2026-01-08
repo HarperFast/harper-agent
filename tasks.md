@@ -1,7 +1,7 @@
 - Add more tools:
   - Tool(s) for looking at the schemas for configs? Resources? Tables?
   - Tool for running Harper and observing the results
-  - Tool for exercising the APIs
+  - Tool for exercising the APIs (OpenAPI JSON?)
   - Tool for logging in to your Fabric account / cluster
   - Tool for deploying to Fabric
 - Reporting on total token usage

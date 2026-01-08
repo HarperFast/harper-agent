@@ -1,6 +1,7 @@
 import {tool} from '@openai/agents';
 import {execSync} from 'node:child_process';
 import {z} from 'zod';
+import {isIgnored} from '../utils/aiignore.ts';
 
 const ToolParameters = z.object({
 	path: z.string()
@@ -17,7 +18,11 @@ export const findTool = tool({
 	parameters: ToolParameters,
 	async execute({ path, iname }: z.infer<typeof ToolParameters>) {
 		try {
-			return execSync(`find ${path} -iname '${iname}'`).toString('utf8');
+			const output = execSync(`find ${path} -iname '${iname}'`).toString('utf8');
+			return output
+				.split('\n')
+				.filter(line => line.trim() !== '' && !isIgnored(line))
+				.join('\n');
 		} catch (error) {
 			return `Error executing find command: ${error}`;
 		}

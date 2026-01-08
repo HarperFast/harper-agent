@@ -3,6 +3,7 @@ import {execSync} from 'node:child_process';
 import {z} from 'zod';
 import fs from 'node:fs';
 import {applyTemplateToDirectory} from '../utils/applyTemplateToDirectory.ts';
+import {isIgnored} from '../utils/aiignore.ts';
 
 const ToolParameters = z.object({
 	directoryName: z
@@ -16,6 +17,9 @@ export const createNewHarperApplicationTool = tool({
 		'Creates a new harper application by downloading the application template zip archive.',
 	parameters: ToolParameters,
 	async execute({directoryName}: z.infer<typeof ToolParameters>) {
+		if (isIgnored(directoryName)) {
+			return `Error: Target directory ${directoryName} is restricted by .aiignore`;
+		}
 		try {
 			if (!fs.existsSync(directoryName)) {
 				fs.mkdirSync(directoryName, {recursive: true});
