@@ -1,5 +1,4 @@
 - Add more tools:
-  - Tool for interpreting code
   - Tool(s) for looking at the schemas for configs? Resources? Tables?
   - Tool for running Harper and observing the results
   - Tool for exercising the APIs

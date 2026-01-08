@@ -1,3 +1,4 @@
+import {codeInterpreterTool} from '@openai/agents';
 import {createApplyPatchTool} from './applyPatchTool.ts';
 import {createNewHarperApplicationTool} from './createNewHarperApplicationTool.ts';
 import {egrepTool} from './egrepTool.ts';
@@ -7,6 +8,7 @@ import {readFileTool} from './readFileTool.ts';
 
 export function createTools() {
 	return [
+		codeInterpreterTool(),
 		createApplyPatchTool(),
 		createNewHarperApplicationTool,
 		egrepTool,
