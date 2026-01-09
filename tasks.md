@@ -1,13 +1,12 @@
 - Add more tools:
   - Tool for running Harper and observing the results
-    - Start (detect if already started)
-    - Read recent logs
+    - Show in browser? Or give the AI a way to open a browser of it, with HITL permission.
+    - Start it off with the Vite plugin pre-installed?
     - Grab OpenAPI JSON?
     - Setting the username and password we'll use?
     - Logging in? With cookie...
     - Hit API?
     - Run operation?
-    - Stop
   - Tool for logging in to your Fabric account / cluster
   - Tool for deploying to Fabric
   - Tool(s) for looking at the schemas for configs? Resources? Tables?
