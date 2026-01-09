@@ -1,7 +1,7 @@
 import {tool} from '@openai/agents';
 import {execSync} from 'node:child_process';
 import {z} from 'zod';
-import {isIgnored} from '../utils/aiignore.ts';
+import {isIgnored} from '../../utils/aiignore.ts';
 
 const ToolParameters = z.object({
 	path: z.string()

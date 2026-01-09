@@ -2,7 +2,7 @@ import {applyDiff} from '@openai/agents';
 import type {ApplyPatchResult, Editor} from '@openai/agents-core';
 import {mkdir, readFile, rm, writeFile} from 'node:fs/promises';
 import path from 'node:path';
-import {isIgnored} from '../utils/aiignore.ts';
+import {isIgnored} from '../../utils/aiignore.ts';
 
 export class WorkspaceEditor implements Editor {
     private readonly root: string;

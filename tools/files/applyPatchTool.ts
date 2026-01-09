@@ -1,5 +1,5 @@
 import {applyPatchTool} from '@openai/agents';
-import {promptApplyPatchApproval} from '../utils/promptApplyPatchApproval.ts';
+import {promptApplyPatchApproval} from '../../utils/promptApplyPatchApproval.ts';
 import {WorkspaceEditor} from './workspaceEditor.ts';
 
 export function createApplyPatchTool() {

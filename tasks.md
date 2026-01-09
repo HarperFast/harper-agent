@@ -1,6 +1,6 @@
 - Add more tools:
   - Tool for running Harper and observing the results
-    - Start
+    - Start (detect if already started)
     - Read recent logs
     - Grab OpenAPI JSON?
     - Setting the username and password we'll use?

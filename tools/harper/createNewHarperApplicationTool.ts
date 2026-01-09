@@ -2,8 +2,8 @@ import {tool} from '@openai/agents';
 import {execSync} from 'node:child_process';
 import {z} from 'zod';
 import fs from 'node:fs';
-import {applyTemplateToDirectory} from '../utils/applyTemplateToDirectory.ts';
-import {isIgnored} from '../utils/aiignore.ts';
+import {applyTemplateToDirectory} from '../../utils/applyTemplateToDirectory.ts';
+import {isIgnored} from '../../utils/aiignore.ts';
 
 const ToolParameters = z.object({
 	directoryName: z

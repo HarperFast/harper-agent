@@ -1,10 +1,10 @@
 import {codeInterpreterTool} from '@openai/agents';
-import {createApplyPatchTool} from './applyPatchTool.ts';
-import {createNewHarperApplicationTool} from './createNewHarperApplicationTool.ts';
-import {egrepTool} from './egrepTool.ts';
-import {findTool} from './findTool.ts';
-import {readDirTool} from './readDirTool.ts';
-import {readFileTool} from './readFileTool.ts';
+import {createApplyPatchTool} from './files/applyPatchTool.ts';
+import {createNewHarperApplicationTool} from './harper/createNewHarperApplicationTool.ts';
+import {egrepTool} from './files/egrepTool.ts';
+import {findTool} from './files/findTool.ts';
+import {readDirTool} from './files/readDirTool.ts';
+import {readFileTool} from './files/readFileTool.ts';
 
 export function createTools() {
 	return [
