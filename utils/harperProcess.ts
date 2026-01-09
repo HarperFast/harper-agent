@@ -17,7 +17,6 @@ class HarperProcess {
 		this.childProcess = spawn('harperdb', ['dev', '.'], {
 			cwd: directoryName,
 			stdio: ['ignore', 'pipe', 'pipe'],
-			// shell: true,
 		});
 
 		this.childProcess.stdout?.on('data', (data) => {
