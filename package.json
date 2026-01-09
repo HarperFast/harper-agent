@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "tsx ./agent.ts",
-    "dev": "tsx watch ./agent.ts"
+    "dev": "tsx watch ./agent.ts",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "dprint check",
+    "format:fix": "dprint fmt",
+    "format:staged": "dprint check --staged"
   },
   "bin": {
     "hairper": "./agent.ts"
@@ -23,6 +28,8 @@
   },
   "devDependencies": {
     "@types/unzipper": "^0.10.11",
+    "dprint": "^0.51.1",
+    "oxlint": "^1.38.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
