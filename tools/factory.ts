@@ -6,9 +6,12 @@ import { readDirTool } from './files/readDirTool.ts';
 import { readFileTool } from './files/readFileTool.ts';
 import { shellTool } from './general/shell.ts';
 import { webTool } from './general/web.ts';
+import { gitAddTool } from './git/gitAddTool.ts';
 import { gitBranchTool } from './git/gitBranchTool.ts';
 import { gitCommitTool } from './git/gitCommitTool.ts';
+import { gitLogTool } from './git/gitLogTool.ts';
 import { gitStashTool } from './git/gitStashTool.ts';
+import { gitStatusTool } from './git/gitStatusTool.ts';
 import { gitWorkspaceTool } from './git/gitWorkspaceTool.ts';
 import { createNewHarperApplicationTool } from './harper/createNewHarperApplicationTool.ts';
 import { openBrowserTool } from './harper/openBrowserTool.ts';
@@ -24,9 +27,12 @@ export function createTools() {
 		createNewHarperApplicationTool,
 		egrepTool,
 		findTool,
+		gitAddTool,
 		gitBranchTool,
 		gitCommitTool,
+		gitLogTool,
 		gitStashTool,
+		gitStatusTool,
 		gitWorkspaceTool,
 		openBrowserTool,
 		readDirTool,

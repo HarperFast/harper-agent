@@ -11,7 +11,7 @@ const GitBranchParameters = z.object({
 });
 
 export const gitBranchTool = tool({
-	name: 'gitBranch',
+	name: 'gitBranchTool',
 	description: 'Create or switch to a git branch.',
 	parameters: GitBranchParameters,
 	async execute({ branchName, create }: z.infer<typeof GitBranchParameters>) {

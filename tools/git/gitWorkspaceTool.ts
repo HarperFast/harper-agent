@@ -12,7 +12,7 @@ const GitWorkspaceParameters = z.object({
 });
 
 export const gitWorkspaceTool = tool({
-	name: 'gitWorkspace',
+	name: 'gitWorkspaceTool',
 	description: 'Create a new workspace (git worktree) for parallel work.',
 	parameters: GitWorkspaceParameters,
 	async execute({ path, branchName, createBranch }: z.infer<typeof GitWorkspaceParameters>) {

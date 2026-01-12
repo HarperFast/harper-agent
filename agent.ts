@@ -53,6 +53,7 @@ async function main() {
 		}
 		emptyLines = 0;
 
+		process.stdout.write('\n');
 		spinner.start();
 
 		const stream = await run(
@@ -70,7 +71,7 @@ async function main() {
 		for await (const event of stream) {
 			switch (event.type) {
 				case 'raw_model_stream_event':
-					const data = event.data as any;
+					const data = event.data;
 					switch (data.type) {
 						case 'response_started':
 							if (!atStartOfLine) {

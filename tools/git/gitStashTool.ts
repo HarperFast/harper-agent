@@ -5,17 +5,22 @@ import { z } from 'zod';
 
 const execAsync = promisify(exec);
 
+const allowedActions = ['push', 'pop', 'apply', 'list'];
+
 const GitStashParameters = z.object({
-	action: z.enum(['push', 'pop', 'apply', 'list']).describe('The stash action to perform.'),
-	message: z.string().optional().describe('A message for the stash (only used for "push").'),
+	action: z.string().describe('The stash action to perform: ' + allowedActions.join(', ')),
+	message: z.string().describe('A message for the stash change.'),
 });
 
 export const gitStashTool = tool({
-	name: 'gitStash',
+	name: 'gitStashTool',
 	description: 'Stash changes or apply a stash.',
 	parameters: GitStashParameters,
 	async execute({ action, message }: z.infer<typeof GitStashParameters>) {
 		try {
+			if (!allowedActions.includes(action)) {
+				return `Error: Invalid action '${action}'. Allowed actions are: ${allowedActions.join(', ')}`;
+			}
 			let command = `git stash ${action}`;
 			if (action === 'push' && message) {
 				command += ` -m "${message.replace(/"/g, '\\"')}"`;
