@@ -13,15 +13,11 @@ export const readHarperOpenAPISpecTool = tool({
 			if (!harperProcess.running) {
 				return `Error: No Harper application is currently running.`;
 			}
-
-			// TODO: Auth...
-			// TODO: Figure out port.
-			const response = await fetch('http://localhost:9962/openapi/');
+			const response = await fetch(`http://localhost:${harperProcess.httpPort}/openapi`);
 			if (!response.ok) {
-				return `Error: Failed to download template: ${response.statusText} (${response.status})`;
+				return `Error: Failed to download OpenAPI specs: ${response.statusText} (${response.status})`;
 			}
 			return await response.text();
-			// TODO: If not started, return an error string.
 		} catch (error) {
 			return `Error getting OpenAPI spec from Harper app: ${error}`;
 		}

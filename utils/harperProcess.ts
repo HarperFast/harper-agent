@@ -3,6 +3,7 @@ import { ChildProcess, spawn } from 'node:child_process';
 class HarperProcess {
 	private childProcess: ChildProcess | null = null;
 	private logs: string[] = [];
+	public httpPort: number = 9926;
 
 	get running(): boolean {
 		return this.childProcess !== null;
@@ -20,7 +21,11 @@ class HarperProcess {
 		});
 
 		this.childProcess.stdout?.on('data', (data) => {
-			this.logs.push(data.toString());
+			const string = data.toString();
+			if (string.includes('REST:') && string.includes('HTTP:')) {
+				this.httpPort = parseInt(string.split('HTTP:').pop().split(',')[0], 10);
+			}
+			this.logs.push(string);
 		});
 
 		this.childProcess.stderr?.on('data', (data) => {

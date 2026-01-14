@@ -1,9 +1,6 @@
 - Add more tools:
   - Tool for running Harper and observing the results
     - Start it off with the Vite plugin pre-installed?
-    - Setting the username and password we'll use?
-    - Logging in? With cookie...
-    - Grab OpenAPI JSON?
     - Hit API?
     - Run operation?
     - Tool for logging in to your Fabric account / cluster
