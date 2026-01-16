@@ -1,8 +1,4 @@
 - Add more tools:
   - Tool for running Harper and observing the results
     - Start it off with the Vite plugin pre-installed?
-    - Hit API?
-    - Run operation?
-    - Tool for logging in to your Fabric account / cluster
-    - Tool for deploying to Fabric
 - Decoupling to prepare for socketization

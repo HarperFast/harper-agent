@@ -2,7 +2,7 @@ import { tool } from '@openai/agents';
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
 import { z } from 'zod';
-import { harperProcess } from "../../utils/harperProcess.ts";
+import { harperProcess } from '../../utils/harperProcess.ts';
 
 let alreadyOpened = false;
 
