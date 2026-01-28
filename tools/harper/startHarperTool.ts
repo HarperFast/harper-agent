@@ -21,14 +21,14 @@ export const startHarperTool = tool({
 		}
 
 		if (harperProcess.running) {
-			return `Error: A Harper application is already running. Please stop it before starting a new one.`;
+			return `Error: A Harper application is already running, and will auto-reload as changes are made.`;
 		}
 
 		try {
 			harperProcess.start(directoryName);
 			await sleep(5000);
 			const logs = harperProcess.getAndClearLogs();
-			return `Successfully started Harper application in '${directoryName}' with initial logs:\n${logs}`;
+			return `Successfully started Harper application with auto-reload in '${directoryName}' with initial logs:\n${logs}`;
 		} catch (error) {
 			return `Error starting Harper application: ${error}`;
 		}
