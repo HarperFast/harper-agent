@@ -9,6 +9,7 @@ import { askQuestion } from './utils/askQuestion.ts';
 import { checkForUpdate } from './utils/checkForUpdate.ts';
 import { cleanUpAndSayBye } from './utils/cleanUpAndSayBye.ts';
 import { costTracker } from './utils/cost.ts';
+import { ensureApiKey } from './utils/ensureApiKey.ts';
 import { harperResponse } from './utils/harperResponse.ts';
 import { spinner } from './utils/spinner.ts';
 
@@ -16,12 +17,7 @@ const argumentTruncationPoint = 100;
 
 async function main() {
 	await checkForUpdate();
-
-	if (!process.env['OPENAI_API_KEY']) {
-		harperResponse(chalk.red('Error: OPENAI_API_KEY is not set.'));
-		console.log(`Please set it in your environment or in a ${chalk.cyan('.env')} file.`);
-		process.exit(1);
-	}
+	await ensureApiKey();
 
 	const workspaceRoot = process.cwd();
 	const harperAppExists = existsSync(join(workspaceRoot, 'config.yaml'));
