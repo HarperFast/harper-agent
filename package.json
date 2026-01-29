@@ -39,7 +39,7 @@
 	"license": "None",
 	"type": "module",
 	"dependencies": {
-		"@openai/agents": "^0.3.7",
+		"@openai/agents": "^0.4.0",
 		"chalk": "^5.6.2",
 		"cross-spawn": "^7.0.6",
 		"dotenv": "^17.2.3",
