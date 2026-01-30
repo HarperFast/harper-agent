@@ -2,13 +2,14 @@
 import 'dotenv/config';
 import { Agent, MemorySession, OpenAIResponsesCompactionSession, run } from '@openai/agents';
 import chalk from 'chalk';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { parseArgs } from './lifecycle/parseArgs';
+import { sayHi } from './lifecycle/sayHi';
+import { trackCompaction } from './lifecycle/trackCompaction';
+import { trackedState } from './lifecycle/trackedState';
 import { createTools } from './tools/factory';
 import { askQuestion } from './utils/askQuestion';
 import { checkForUpdate } from './utils/checkForUpdate';
 import { cleanUpAndSayBye } from './utils/cleanUpAndSayBye';
-import { handleHelp, handleVersion, isHelpRequest, isVersionRequest } from './utils/cli';
 import { costTracker } from './utils/cost';
 import { ensureApiKey } from './utils/ensureApiKey';
 import { harperResponse } from './utils/harperResponse';
@@ -17,29 +18,16 @@ import { spinner } from './utils/spinner';
 const argumentTruncationPoint = 100;
 
 async function main() {
-	const args = process.argv.slice(2);
-	if (isHelpRequest(args)) {
-		return handleHelp();
-	}
-	if (isVersionRequest(args)) {
-		return handleVersion();
-	}
-
 	await checkForUpdate();
+	parseArgs();
 	await ensureApiKey();
 
-	const workspaceRoot = process.cwd();
-	const harperAppExists = existsSync(join(workspaceRoot, 'config.yaml'));
+	const { name, instructions } = sayHi();
 
-	console.log(chalk.dim(`Working directory: ${chalk.cyan(workspaceRoot)}`));
-	console.log(chalk.dim(`Harper app detected in it: ${chalk.cyan(harperAppExists ? 'Yes' : 'No')}`));
-	console.log(chalk.dim(`Press Ctrl+C or hit enter twice to exit.\n`));
-
-	const vibing = harperAppExists ? 'updating' : 'creating';
 	const agent = new Agent({
-		name: 'Harper App Development Assistant',
+		name,
 		model: 'gpt-5.2',
-		instructions: `You are working on ${vibing} the harper app in ${workspaceRoot} with the user.`,
+		instructions,
 		tools: createTools(),
 		modelSettings: {
 			providerData: {
@@ -47,98 +35,47 @@ async function main() {
 			},
 		},
 	});
-
-	harperResponse(
-		harperAppExists
-			? 'What do you want to do together today?'
-			: 'What kind of Harper app do you want to make together?',
-	);
-
-	let atStartOfLine = true;
 	const session = new OpenAIResponsesCompactionSession({
 		underlyingSession: new MemorySession(),
 		model: 'gpt-4o-mini',
 	}) as OpenAIResponsesCompactionSession & {
 		runCompaction: typeof OpenAIResponsesCompactionSession.prototype.runCompaction;
 	};
-
-	const originalRunCompaction = session.runCompaction.bind(session);
-	session.runCompaction = async (args) => {
-		const originalMessage = spinner.message;
-		spinner.message = 'Compacting conversation history...';
-		const wasSpinning = spinner.isSpinning;
-		if (!wasSpinning) {
-			if (!atStartOfLine) {
-				process.stdout.write('\n');
-				atStartOfLine = true;
-			}
-			await new Promise((resolve) => setTimeout(resolve, 50));
-			spinner.start();
-		}
-		try {
-			return await originalRunCompaction(args);
-		} finally {
-			if (!wasSpinning) {
-				spinner.stop();
-			}
-			spinner.message = originalMessage;
-		}
-	};
-	let emptyLines = 0;
-	let approvalState: any | null = null;
-
-	let controller: AbortController | null = null;
-
-	spinner.interrupt = () => {
-		if (controller) {
-			spinner.stop();
-			controller.abort();
-			harperResponse('<thought interrupted>');
-			atStartOfLine = true;
-		}
-	};
+	trackCompaction(session);
 
 	while (true) {
 		let task: string = '';
 
-		controller = new AbortController();
-		const signal = controller.signal;
+		trackedState.controller = new AbortController();
 
-		if (!approvalState) {
+		if (!trackedState.approvalState) {
 			task = await askQuestion('> ');
 			if (!task) {
-				emptyLines += 1;
-				if (emptyLines >= 2) {
+				trackedState.emptyLines += 1;
+				if (trackedState.emptyLines >= 2) {
 					costTracker.logFinalStats();
 					cleanUpAndSayBye();
 					break;
 				}
 				continue;
 			}
-			emptyLines = 0;
-
-			if (isHelpRequest([task])) {
-				handleHelp();
-			}
-			if (isVersionRequest([task])) {
-				handleVersion();
-			}
+			trackedState.emptyLines = 0;
 
 			process.stdout.write('\n');
 		}
 
 		spinner.start();
 		try {
-			const stream = await run(agent, approvalState ?? task, {
+			const stream = await run(agent, trackedState.approvalState ?? task, {
 				session,
 				stream: true,
-				signal,
+				signal: trackedState.controller.signal,
 				maxTurns: 30,
 			});
-			approvalState = null;
+			trackedState.approvalState = null;
 
 			let hasStartedResponse = false;
-			atStartOfLine = true;
+			trackedState.atStartOfLine = true;
 
 			for await (const event of stream) {
 				spinner.status = costTracker.getStatusString(stream.state.usage, String(agent.model));
@@ -148,9 +85,9 @@ async function main() {
 						const data = event.data;
 						switch (data.type) {
 							case 'response_started':
-								if (!atStartOfLine) {
+								if (!trackedState.atStartOfLine) {
 									process.stdout.write('\n');
-									atStartOfLine = true;
+									trackedState.atStartOfLine = true;
 								}
 								spinner.start();
 								break;
@@ -161,11 +98,11 @@ async function main() {
 									hasStartedResponse = true;
 								}
 								process.stdout.write(chalk.cyan(data.delta));
-								atStartOfLine = data.delta.endsWith('\n');
+								trackedState.atStartOfLine = data.delta.endsWith('\n');
 								break;
 							case 'response_done':
 								spinner.stop();
-								atStartOfLine = true;
+								trackedState.atStartOfLine = true;
 								break;
 						}
 						break;
@@ -174,7 +111,7 @@ async function main() {
 						console.log(
 							`\n${chalk.magenta('👤')} ${chalk.bold('Agent switched to:')} ${chalk.italic(event.agent.name)}`,
 						);
-						atStartOfLine = true;
+						trackedState.atStartOfLine = true;
 						spinner.start();
 						break;
 					case 'run_item_stream_event':
@@ -200,7 +137,7 @@ async function main() {
 								? `(${args.slice(0, argumentTruncationPoint)}${args.length > argumentTruncationPoint ? '...' : ''})`
 								: '()';
 							console.log(`\n${chalk.yellow('🛠️')}  ${chalk.cyan(name)}${chalk.dim(displayedArgs)}`);
-							atStartOfLine = true;
+							trackedState.atStartOfLine = true;
 							spinner.start();
 						}
 						break;
@@ -232,24 +169,24 @@ async function main() {
 							stream.state.reject(interruption);
 						}
 					}
-					approvalState = stream.state;
+					trackedState.approvalState = stream.state;
 					break;
 				}
 			}
 			spinner.stop();
-			if (!atStartOfLine || hasStartedResponse) {
+			if (!trackedState.atStartOfLine || hasStartedResponse) {
 				process.stdout.write('\n\n');
 			}
 
-			if (!approvalState) {
+			if (!trackedState.approvalState) {
 				costTracker.recordTurn(String(agent.model), stream.state.usage);
 			}
 		} catch (error: any) {
 			spinner.stop();
 			process.stdout.write('\n');
 			harperResponse(chalk.red(`Error: ${error.message || error}`));
-			atStartOfLine = true;
-			approvalState = null;
+			trackedState.atStartOfLine = true;
+			trackedState.approvalState = null;
 		}
 	}
 }

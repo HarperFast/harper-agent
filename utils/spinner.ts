@@ -1,9 +1,9 @@
 import process from 'node:process';
 import { createInterface, Interface } from 'node:readline';
+import { trackedState } from '../lifecycle/trackedState';
+import { harperResponse } from './harperResponse';
 
 class Spinner {
-	public interrupt: (() => void) | null = null;
-
 	private interval: NodeJS.Timeout | null = null;
 	private chars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 	private i = 0;
@@ -12,7 +12,7 @@ class Spinner {
 	private rl: Interface | null = null;
 
 	private readonly checkLine = (line: string) => {
-		if (line === '' && this.interrupt) {
+		if (line === '') {
 			this.rl?.close();
 			this.interrupt();
 		}
@@ -44,6 +44,15 @@ class Spinner {
 			this.i = (this.i + 1) % this.chars.length;
 			process.stdout.write(`\r${this.chars[this.i]} ${this.message}${this.status ? ' ' + this.status : ''}\x1b[K`);
 		}, 80);
+	}
+
+	interrupt() {
+		if (trackedState.controller) {
+			this.stop();
+			trackedState.controller.abort();
+			harperResponse('<thought interrupted>');
+			trackedState.atStartOfLine = true;
+		}
 	}
 
 	stop() {
