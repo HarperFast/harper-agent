@@ -3,6 +3,8 @@ export interface TrackedState {
 	emptyLines: number;
 	approvalState: any | null;
 	controller: AbortController | null;
+	model: string | null;
+	compactionModel: string | null;
 }
 
 export const trackedState: TrackedState = {
@@ -10,4 +12,6 @@ export const trackedState: TrackedState = {
 	emptyLines: 0,
 	approvalState: null,
 	controller: null,
+	model: null,
+	compactionModel: null,
 };

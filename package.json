@@ -39,11 +39,17 @@
 	"license": "None",
 	"type": "module",
 	"dependencies": {
+		"@ai-sdk/anthropic": "^3.0.31",
+		"@ai-sdk/google": "^3.0.18",
+		"@ai-sdk/openai": "^3.0.23",
 		"@openai/agents": "^0.4.0",
+		"@openai/agents-extensions": "^0.4.4",
+		"ai": "^6.0.62",
 		"chalk": "^5.6.2",
 		"create-harper": "^0.9.3",
 		"cross-spawn": "^7.0.6",
 		"dotenv": "^17.2.3",
+		"ollama-ai-provider-v2": "^3.0.3",
 		"zod": "^4.3.5"
 	},
 	"devDependencies": {
@@ -55,6 +61,7 @@
 		"@semantic-release/npm": "^13.1.1",
 		"@semantic-release/release-notes-generator": "^14.1.0",
 		"@types/cross-spawn": "^6.0.6",
+		"@types/node": "^24.10.9",
 		"@vitest/coverage-v8": "^4.0.17",
 		"conventional-changelog-conventionalcommits": "^9.1.0",
 		"dprint": "^0.51.1",

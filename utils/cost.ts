@@ -44,8 +44,9 @@ class CostTracker {
 	public recordTurn(
 		model: string,
 		usage: Usage,
+		compactionModel?: string,
 	) {
-		const { turnCost, compactionCost } = this.calculateUsageCosts(model, usage);
+		const { turnCost, compactionCost } = this.calculateUsageCosts(model, usage, compactionModel);
 		this.totalInputTokens += usage.inputTokens;
 		this.totalCachedInputTokens += extractCachedTokens(usage.inputTokensDetails);
 		this.totalOutputTokens += usage.outputTokens;
@@ -54,19 +55,24 @@ class CostTracker {
 		return turnCost + compactionCost;
 	}
 
-	private calculateUsageCosts(model: string, usage: Usage | undefined): { turnCost: number; compactionCost: number } {
+	private calculateUsageCosts(
+		model: string,
+		usage: Usage | undefined,
+		compactionModel?: string,
+	): { turnCost: number; compactionCost: number } {
 		let turnCost = 0;
 		let compactionCost = 0;
 
 		if (usage?.requestUsageEntries && usage.requestUsageEntries.length > 0) {
 			for (const entry of usage.requestUsageEntries) {
+				const isCompaction = entry.endpoint === 'responses.compact';
 				const entryCost = calculateCost(
-					model,
+					isCompaction ? (compactionModel || 'gpt-4o-mini') : model,
 					entry.inputTokens,
 					entry.outputTokens,
 					entry.inputTokensDetails,
 				);
-				if (entry.endpoint === 'responses.compact') {
+				if (isCompaction) {
 					compactionCost += entryCost;
 				} else {
 					turnCost += entryCost;
@@ -82,8 +88,9 @@ class CostTracker {
 	public getStatusString(
 		currentTurnUsage: Usage | undefined,
 		model: string,
+		compactionModel?: string,
 	) {
-		const { turnCost, compactionCost } = this.calculateUsageCosts(model, currentTurnUsage);
+		const { turnCost, compactionCost } = this.calculateUsageCosts(model, currentTurnUsage, compactionModel);
 		const totalTurnCost = turnCost + compactionCost;
 		return chalk.dim(
 			`[~${chalk.cyan('$' + (this.totalCost + this.totalCompactionCost + totalTurnCost).toFixed(4))}]`,

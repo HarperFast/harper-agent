@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateCost, extractCachedTokens } from './cost';
+import { calculateCost, costTracker, extractCachedTokens } from './cost';
 
 describe('cost utilities', () => {
 	describe('extractCachedTokens', () => {
@@ -41,6 +41,43 @@ describe('cost utilities', () => {
 			const costUnknown = calculateCost('unknown-model', 1_000_000, 0, undefined);
 			const costDefault = calculateCost('gpt-5.2', 1_000_000, 0, undefined);
 			expect(costUnknown).toBe(costDefault);
+		});
+	});
+
+	describe('CostTracker', () => {
+		it('should record turns and track total cost', () => {
+			const usage = {
+				inputTokens: 1000,
+				outputTokens: 100,
+				inputTokensDetails: {},
+			};
+			const cost = costTracker.recordTurn('gpt-5.2', usage);
+			expect(cost).toBeGreaterThan(0);
+		});
+
+		it('should handle compaction costs with a specific model', () => {
+			const usage = {
+				inputTokens: 1000,
+				outputTokens: 100,
+				inputTokensDetails: {},
+				requestUsageEntries: [
+					{
+						endpoint: 'responses.compact',
+						inputTokens: 500,
+						outputTokens: 50,
+						inputTokensDetails: {},
+					},
+					{
+						endpoint: 'chat.completions',
+						inputTokens: 500,
+						outputTokens: 50,
+						inputTokensDetails: {},
+					},
+				],
+			};
+
+			const cost = costTracker.recordTurn('gpt-5.2', usage, 'gpt-4o-mini');
+			expect(cost).toBeGreaterThan(0);
 		});
 	});
 });

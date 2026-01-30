@@ -29,8 +29,13 @@ ${chalk.bold('USAGE')}
   $ hairper [command]
 
 ${chalk.bold('OPTIONS')}
-  -h, --help     Show help information
-  -v, --version  Show version information
+  -h, --help              Show help information
+  -v, --version           Show version information
+  -m, --model             Specify the model to use (e.g., gpt-4o, claude-3-5-sonnet, ollama-llama3)
+                          Can also be set via HAIRPER_MODEL environment variable.
+                          For Ollama, use the ollama- prefix (e.g., ollama-llama3).
+  -c, --compaction-model  Specify the compaction model to use (defaults to gpt-4o-mini).
+                          Can also be set via HAIRPER_COMPACTION_MODEL environment variable.
 
 ${chalk.bold('COMMANDS')}
   help           Show help information

@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import { Agent, MemorySession, OpenAIResponsesCompactionSession, run } from '@openai/agents';
 import chalk from 'chalk';
+import { getModel } from './lifecycle/getModel';
 import { parseArgs } from './lifecycle/parseArgs';
 import { sayHi } from './lifecycle/sayHi';
 import { trackCompaction } from './lifecycle/trackCompaction';
@@ -26,7 +27,7 @@ async function main() {
 
 	const agent = new Agent({
 		name,
-		model: 'gpt-5.2',
+		model: getModel(trackedState.model),
 		instructions,
 		tools: createTools(),
 		modelSettings: {
@@ -37,7 +38,7 @@ async function main() {
 	});
 	const session = new OpenAIResponsesCompactionSession({
 		underlyingSession: new MemorySession(),
-		model: 'gpt-4o-mini',
+		model: getModel(trackedState.compactionModel, 'gpt-4o-mini') as any, // TODO: Not sure if non-OpenAI models will work...
 	}) as OpenAIResponsesCompactionSession & {
 		runCompaction: typeof OpenAIResponsesCompactionSession.prototype.runCompaction;
 	};
@@ -78,7 +79,11 @@ async function main() {
 			trackedState.atStartOfLine = true;
 
 			for await (const event of stream) {
-				spinner.status = costTracker.getStatusString(stream.state.usage, String(agent.model));
+				spinner.status = costTracker.getStatusString(
+					stream.state.usage,
+					trackedState.model || 'gpt-5.2',
+					trackedState.compactionModel || 'gpt-4o-mini',
+				);
 
 				switch (event.type) {
 					case 'raw_model_stream_event':
@@ -179,7 +184,11 @@ async function main() {
 			}
 
 			if (!trackedState.approvalState) {
-				costTracker.recordTurn(String(agent.model), stream.state.usage);
+				costTracker.recordTurn(
+					trackedState.model || 'gpt-5.2',
+					stream.state.usage,
+					trackedState.compactionModel || 'gpt-4o-mini',
+				);
 			}
 		} catch (error: any) {
 			spinner.stop();

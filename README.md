@@ -5,17 +5,28 @@ AI to help you with Harper app creation and management.
 ## Prerequisites
 
 - Node.js (v24 or higher recommended)
-- OpenAI API Key: https://platform.openai.com/api-keys
+- An API key for your preferred AI model:
+  - **OpenAI**: https://platform.openai.com/api-keys
+  - **Anthropic**: https://console.anthropic.com/settings/keys
+  - **Google Gemini**: https://aistudio.google.com/app/apikey
+  - **Ollama**: (No API key required, see [Ollama Support](#ollama-support-local-models) below)
 
 ## Getting Started
 
-Grab a key from https://platform.openai.com/api-keys
+When you first run `hairper`, it will prompt you for an API key if one is not found in your environment. It will then automatically save it to a `.env` file in your current working directory.
 
-Create your .env file in your current working directory:
+If you prefer to set it manually, you can create a `.env` file:
 
 ```bash
+# For OpenAI (default)
 OPENAI_API_KEY=your_api_key_here
 OPENAI_AGENTS_DISABLE_TRACING=1
+
+# For Anthropic
+ANTHROPIC_API_KEY=your_api_key_here
+
+# For Google Gemini
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
 ```
 
 (If you'd rather export these environment variables from within your .zshrc or equivalent file, you can do that instead.)
@@ -46,6 +57,50 @@ Harper: What do you want to do together today?
 >
 ```
 
+## Model Selection
+
+By default, `hairper` uses OpenAI. You can switch to other models using the `--model` (or `-m`) flag:
+
+```bash
+# Use Claude 3.5 Sonnet
+hairper --model claude-3-5-sonnet-20241022
+
+# Use Gemini 1.5 Pro
+hairper --model gemini-1.5-pro
+
+# Use a specific OpenAI model
+hairper --model gpt-4o-mini
+```
+
+You can also set the default model via the `HAIRPER_MODEL` environment variable.
+
+### Compaction Model
+
+By default, `hairper` uses `gpt-4o-mini` for session memory compaction. You can switch this to another model using the `--compaction-model` (or `-c`) flag:
+
+```bash
+# Use a different compaction model
+hairper --compaction-model claude-3-haiku-20240307
+```
+
+You can also set the default compaction model via the `HAIRPER_COMPACTION_MODEL` environment variable.
+
+### Ollama Support (Local Models)
+
+To use local models with [Ollama](https://ollama.com/), use the `ollama-` prefix:
+
+```bash
+# Use Llama 3 via Ollama
+hairper --model ollama-llama3
+```
+
+If your Ollama instance is running on a custom URL, you can set the `OLLAMA_BASE_URL` environment variable:
+
+```bash
+export OLLAMA_BASE_URL=http://localhost:11434
+hairper --model ollama-llama3
+```
+
 ### OpenAI API Key Permissions
 
 If you are using a restricted API key, ensure the following permissions are enabled:
@@ -68,9 +123,10 @@ If you want to help us advance the source code that powers Hairper, take a look 
    ```bash
    npm install
    ```
-3. Create a `.env` file in the root directory and add your OpenAI API key:
+3. Create a `.env` file in the root directory and add your API key:
    ```env
    OPENAI_API_KEY=your_api_key_here
+   # OR ANTHROPIC_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY
    OPENAI_AGENTS_DISABLE_TRACING=1
    HAIRPER_SKIP_UPDATE=true
    ```
