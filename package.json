@@ -12,7 +12,6 @@
 		"build": "tsup agent.ts --format esm --clean --dts",
 		"commitlint": "commitlint --edit",
 		"start": "node ./dist/agent.js",
-		"dev": "tsx watch ./agent.ts",
 		"lint": "oxlint .",
 		"lint:fix": "oxlint . --fix",
 		"prepare": "husky",
@@ -42,6 +41,7 @@
 	"dependencies": {
 		"@openai/agents": "^0.4.0",
 		"chalk": "^5.6.2",
+		"create-harper": "^0.9.3",
 		"cross-spawn": "^7.0.6",
 		"dotenv": "^17.2.3",
 		"zod": "^4.3.5"

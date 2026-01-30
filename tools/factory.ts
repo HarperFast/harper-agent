@@ -20,6 +20,7 @@ import { createNewHarperApplicationTool } from './harper/createNewHarperApplicat
 import { getHarperConfigSchemaTool } from './harper/getHarperConfigSchemaTool';
 import { getHarperResourceInterfaceTool } from './harper/getHarperResourceInterfaceTool';
 import { getHarperSchemaGraphQLTool } from './harper/getHarperSchemaGraphQLTool';
+import { getHarperSkillTool } from './harper/getHarperSkillTool';
 import { hitHarperAPITool } from './harper/hitHarperAPITool';
 import { openHarperInBrowserTool } from './harper/openHarperInBrowserTool';
 import { readHarperLogsTool } from './harper/readHarperLogsTool';
@@ -37,6 +38,7 @@ export function createTools() {
 		getHarperConfigSchemaTool,
 		getHarperResourceInterfaceTool,
 		getHarperSchemaGraphQLTool,
+		getHarperSkillTool,
 		gitAddTool,
 		gitBranchTool,
 		gitCommitTool,
