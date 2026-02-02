@@ -1,6 +1,6 @@
 import { tool } from '@openai/agents';
 import { z } from 'zod';
-import { harperProcess } from '../../utils/harperProcess';
+import { harperProcess } from '../../utils/shell/harperProcess';
 
 const ToolParameters = z.object({});
 

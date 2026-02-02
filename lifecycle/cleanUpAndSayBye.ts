@@ -1,5 +1,5 @@
-import { harperProcess } from './harperProcess';
-import { harperResponse } from './harperResponse';
+import { harperProcess } from '../utils/shell/harperProcess';
+import { harperResponse } from '../utils/shell/harperResponse';
 
 export function cleanUpAndSayBye() {
 	if (harperProcess.startedByHairper) {

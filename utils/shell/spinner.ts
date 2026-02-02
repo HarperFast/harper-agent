@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { trackedState } from '../lifecycle/trackedState';
+import { trackedState } from '../../lifecycle/trackedState';
 import { harperResponse } from './harperResponse';
 
 class Spinner {

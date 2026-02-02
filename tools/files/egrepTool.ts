@@ -2,8 +2,8 @@ import { tool } from '@openai/agents';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { z } from 'zod';
-import { isIgnored } from '../../utils/aiignore';
-import { resolvePath } from '../../utils/paths';
+import { isIgnored } from '../../utils/files/aiignore';
+import { resolvePath } from '../../utils/files/paths';
 
 const execFileAsync = promisify(execFile);
 

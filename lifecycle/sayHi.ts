@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { harperResponse } from '../utils/harperResponse';
+import { harperResponse } from '../utils/shell/harperResponse';
 
 export function sayHi() {
 	const workspaceRoot = process.cwd();

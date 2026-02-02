@@ -1,5 +1,5 @@
-import { isHelpRequest, isVersionRequest } from '../utils/cli';
-import { handleHelp, handleVersion } from '../utils/cli';
+import { isHelpRequest, isVersionRequest } from '../utils/shell/cli';
+import { handleHelp, handleVersion } from '../utils/shell/cli';
 import { trackedState } from './trackedState';
 
 function stripQuotes(str: string): string {

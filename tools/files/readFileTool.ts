@@ -1,7 +1,7 @@
 import { tool } from '@openai/agents';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { resolvePath } from '../../utils/paths';
+import { resolvePath } from '../../utils/files/paths';
 
 const ToolParameters = z.object({
 	fileName: z

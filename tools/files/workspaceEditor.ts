@@ -2,8 +2,8 @@ import { applyDiff } from '@openai/agents';
 import type { ApplyPatchResult, Editor } from '@openai/agents-core';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { normalizeDiff } from '../../utils/normalizeDiff';
-import { resolvePath } from '../../utils/paths';
+import { normalizeDiff } from '../../utils/files/normalizeDiff';
+import { resolvePath } from '../../utils/files/paths';
 
 export class WorkspaceEditor implements Editor {
 	private readonly root: string;

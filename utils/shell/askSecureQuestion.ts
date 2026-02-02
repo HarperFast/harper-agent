@@ -1,6 +1,6 @@
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
-import { handleExit } from './handleExit';
+import { handleExit } from '../../lifecycle/handleExit';
 
 export async function askSecureQuestion(query: string): Promise<string> {
 	let muted = false;

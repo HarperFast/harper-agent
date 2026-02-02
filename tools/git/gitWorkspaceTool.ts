@@ -2,7 +2,7 @@ import { tool } from '@openai/agents';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { z } from 'zod';
-import { resolvePath } from '../../utils/paths';
+import { resolvePath } from '../../utils/files/paths';
 
 const execFileAsync = promisify(execFile);
 

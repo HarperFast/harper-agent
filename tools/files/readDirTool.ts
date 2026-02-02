@@ -2,8 +2,8 @@ import { tool } from '@openai/agents';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { isIgnored } from '../../utils/aiignore';
-import { resolvePath } from '../../utils/paths';
+import { isIgnored } from '../../utils/files/aiignore';
+import { resolvePath } from '../../utils/files/paths';
 
 const ToolParameters = z.object({
 	directoryName: z

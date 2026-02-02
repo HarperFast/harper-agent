@@ -1,5 +1,5 @@
 import { createInterface } from 'node:readline/promises';
-import { handleExit } from './handleExit';
+import { handleExit } from '../../lifecycle/handleExit';
 
 export async function askQuestion(query: string): Promise<string> {
 	const rl = createInterface({

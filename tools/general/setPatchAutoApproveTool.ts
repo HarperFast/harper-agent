@@ -1,6 +1,6 @@
 import { tool } from '@openai/agents';
 import { z } from 'zod';
-import { updateEnv } from '../../utils/updateEnv';
+import { updateEnv } from '../../utils/files/updateEnv';
 
 const SetPatchAutoApproveParameters = z.object({
 	autoApprove: z.boolean(),

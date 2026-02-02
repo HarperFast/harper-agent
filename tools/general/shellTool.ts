@@ -1,10 +1,10 @@
 import { tool } from '@openai/agents';
 import chalk from 'chalk';
 import { z } from 'zod';
-import { isRiskyCommand } from '../../utils/isRiskyCommand';
-import { LocalShell } from '../../utils/LocalShell';
-import { mentionsIgnoredPath } from '../../utils/mentionsIgnoredPath';
-import { spinner } from '../../utils/spinner';
+import { mentionsIgnoredPath } from '../../utils/files/mentionsIgnoredPath';
+import { isRiskyCommand } from '../../utils/shell/isRiskyCommand';
+import { LocalShell } from '../../utils/shell/LocalShell';
+import { spinner } from '../../utils/shell/spinner';
 
 const ShellParameters = z.object({
 	commands: z.array(z.string()).describe('The commands to execute.'),

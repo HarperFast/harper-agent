@@ -9,7 +9,7 @@ import {
 	type Session,
 	system,
 } from '@openai/agents';
-import { excludeFalsy } from './excludeFalsy';
+import { excludeFalsy } from '../arrays/excludeFalsy';
 
 export interface MemoryCompactionSessionOptions {
 	underlyingSession?: Session;

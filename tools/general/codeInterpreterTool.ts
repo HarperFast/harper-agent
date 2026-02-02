@@ -5,7 +5,7 @@ import { unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { z } from 'zod';
-import { spinner } from '../../utils/spinner';
+import { spinner } from '../../utils/shell/spinner';
 
 const execAsync = promisify(exec);
 

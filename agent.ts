@@ -2,21 +2,21 @@
 import 'dotenv/config';
 import { Agent, run } from '@openai/agents';
 import chalk from 'chalk';
+import { cleanUpAndSayBye } from './lifecycle/cleanUpAndSayBye';
 import { getModel } from './lifecycle/getModel';
 import { parseArgs } from './lifecycle/parseArgs';
 import { sayHi } from './lifecycle/sayHi';
 import { trackedState } from './lifecycle/trackedState';
 import { createTools } from './tools/factory';
-import { askQuestion } from './utils/askQuestion';
-import { checkForUpdate } from './utils/checkForUpdate';
-import { cleanUpAndSayBye } from './utils/cleanUpAndSayBye';
-import { costTracker } from './utils/cost';
-import { ensureApiKey } from './utils/ensureApiKey';
-import { harperResponse } from './utils/harperResponse';
-import { spinner } from './utils/spinner';
+import { checkForUpdate } from './utils/package/checkForUpdate';
+import { costTracker } from './utils/sessions/cost';
+import { askQuestion } from './utils/shell/askQuestion';
+import { ensureApiKey } from './utils/shell/ensureApiKey';
+import { harperResponse } from './utils/shell/harperResponse';
+import { spinner } from './utils/shell/spinner';
 
-import { createSession } from './utils/createSession';
-import { handleExit } from './utils/handleExit';
+import { handleExit } from './lifecycle/handleExit';
+import { createSession } from './utils/sessions/createSession';
 
 const argumentTruncationPoint = 100;
 

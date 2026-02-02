@@ -1,5 +1,5 @@
 import { OpenAIResponsesCompactionSession } from '@openai/agents';
-import { spinner } from '../utils/spinner';
+import { spinner } from '../utils/shell/spinner';
 import { trackedState } from './trackedState';
 
 export function trackCompaction(session: Pick<OpenAIResponsesCompactionSession, 'runCompaction'>) {

@@ -1,6 +1,6 @@
 import { MemorySession, OpenAIResponsesCompactionSession, type Session } from '@openai/agents';
-import { getModel, isOpenAIModel } from '../lifecycle/getModel';
-import { trackCompaction } from '../lifecycle/trackCompaction';
+import { getModel, isOpenAIModel } from '../../lifecycle/getModel';
+import { trackCompaction } from '../../lifecycle/trackCompaction';
 import { DiskSession } from './DiskSession';
 import { MemoryCompactionSession } from './MemoryCompactionSession';
 

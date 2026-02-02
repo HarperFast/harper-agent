@@ -1,8 +1,8 @@
 import { tool } from '@openai/agents';
 import chalk from 'chalk';
 import { z } from 'zod';
-import { printDiff } from '../../utils/printDiff';
-import { spinner } from '../../utils/spinner';
+import { printDiff } from '../../utils/files/printDiff';
+import { spinner } from '../../utils/shell/spinner';
 import { WorkspaceEditor } from './workspaceEditor';
 
 const ApplyPatchParameters = z.object({

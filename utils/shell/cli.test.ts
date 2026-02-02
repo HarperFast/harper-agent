@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import * as getOwnPackageJsonModule from '../package/getOwnPackageJson';
 import { handleHelp, handleVersion, isHelpRequest, isVersionRequest } from './cli';
-import * as getOwnPackageJsonModule from './getOwnPackageJson';
 
 describe('cli utils', () => {
 	describe('isHelpRequest', () => {

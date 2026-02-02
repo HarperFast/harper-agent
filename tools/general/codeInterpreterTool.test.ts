@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { spinner } from '../../utils/spinner';
+import { spinner } from '../../utils/shell/spinner';
 import { execute, needsApproval } from './codeInterpreterTool';
 
 vi.mock('node:child_process', () => {
@@ -16,7 +16,7 @@ vi.mock('node:fs/promises', () => ({
 	unlink: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../../utils/spinner', () => ({
+vi.mock('../../utils/shell/spinner', () => ({
 	spinner: {
 		start: vi.fn(),
 		stop: vi.fn(),

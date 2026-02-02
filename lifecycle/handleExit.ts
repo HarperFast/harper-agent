@@ -1,6 +1,6 @@
+import { costTracker } from '../utils/sessions/cost';
+import { spinner } from '../utils/shell/spinner';
 import { cleanUpAndSayBye } from './cleanUpAndSayBye';
-import { costTracker } from './cost';
-import { spinner } from './spinner';
 
 export function handleExit() {
 	spinner.stop();

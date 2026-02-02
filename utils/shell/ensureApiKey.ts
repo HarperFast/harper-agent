@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { trackedState } from '../lifecycle/trackedState';
+import { trackedState } from '../../lifecycle/trackedState';
+import { updateEnv } from '../files/updateEnv';
 import { askSecureQuestion } from './askSecureQuestion';
 import { harperResponse } from './harperResponse';
-import { updateEnv } from './updateEnv';
 
 export async function ensureApiKey(): Promise<void> {
 	const models = [

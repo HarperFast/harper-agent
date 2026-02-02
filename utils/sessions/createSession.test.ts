@@ -1,7 +1,7 @@
 import { MemorySession, OpenAIResponsesCompactionSession } from '@openai/agents';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as getModelModule from '../lifecycle/getModel';
-import * as trackCompactionModule from '../lifecycle/trackCompaction';
+import * as getModelModule from '../../lifecycle/getModel';
+import * as trackCompactionModule from '../../lifecycle/trackCompaction';
 import { createSession } from './createSession';
 import { MemoryCompactionSession } from './MemoryCompactionSession';
 
@@ -14,12 +14,12 @@ vi.mock('./MemoryCompactionSession', () => ({
 	MemoryCompactionSession: vi.fn(),
 }));
 
-vi.mock('../lifecycle/getModel', () => ({
+vi.mock('../../lifecycle/getModel', () => ({
 	getModel: vi.fn(),
 	isOpenAIModel: vi.fn(),
 }));
 
-vi.mock('../lifecycle/trackCompaction', () => ({
+vi.mock('../../lifecycle/trackCompaction', () => ({
 	trackCompaction: vi.fn(),
 }));
 

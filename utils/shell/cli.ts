@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { getOwnPackageJson } from './getOwnPackageJson';
+import { getOwnPackageJson } from '../package/getOwnPackageJson';
 
 /**
  * Checks if the provided arguments contain a help request.
