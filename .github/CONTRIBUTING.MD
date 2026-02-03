@@ -50,6 +50,21 @@ Useful types include: feat, fix, perf, refactor, chore, docs, style, test, build
 
 Where practical, add or update unit tests for your changes.
 
+### Disable the Spinner (useful for CI/E2E)
+
+By default, Hairper shows a live spinner while thinking. For cleaner logs in CI or end-to-end tests, you can disable it:
+
+```bash
+# CLI flag
+hairper --no-spinner
+
+# or set an environment variable
+export HAIRPER_NO_SPINNER=true
+# (alternatively) export HAIRPER_DISABLE_SPINNER=1
+```
+
+Disabling the spinner preserves the ability to interrupt a step by pressing Enter; it simply stops the animated output.
+
 ## Linting and style
 
 - Linting: OXLint (`npm run lint`, `npm run lint:fix`)

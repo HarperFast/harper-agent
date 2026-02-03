@@ -48,6 +48,8 @@ export function parseArgs() {
 			trackedState.sessionPath = stripQuotes(arg.slice('session='.length));
 		} else if (arg === '--flex-tier') {
 			trackedState.useFlexTier = true;
+		} else if (arg === '--no-spinner' || arg === '--disable-spinner') {
+			trackedState.disableSpinner = true;
 		}
 	}
 
@@ -68,6 +70,15 @@ export function parseArgs() {
 		!trackedState.useFlexTier && (process.env.HAIRPER_FLEX_TIER === 'true' || process.env.HAIRPER_FLEX_TIER === '1')
 	) {
 		trackedState.useFlexTier = true;
+	}
+
+	// Spinner control via env
+	if (
+		!trackedState.disableSpinner
+		&& (process.env.HAIRPER_NO_SPINNER === 'true' || process.env.HAIRPER_NO_SPINNER === '1'
+			|| process.env.HAIRPER_DISABLE_SPINNER === 'true' || process.env.HAIRPER_DISABLE_SPINNER === '1')
+	) {
+		trackedState.disableSpinner = true;
 	}
 
 	// If no model was provided, select a sensible default based on available provider env keys

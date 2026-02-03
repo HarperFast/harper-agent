@@ -7,6 +7,7 @@ export interface TrackedState {
 	compactionModel: string;
 	sessionPath: string | null;
 	useFlexTier: boolean;
+	disableSpinner: boolean;
 }
 
 export const trackedState: TrackedState = {
@@ -18,4 +19,5 @@ export const trackedState: TrackedState = {
 	compactionModel: '',
 	sessionPath: null,
 	useFlexTier: false,
+	disableSpinner: false,
 };

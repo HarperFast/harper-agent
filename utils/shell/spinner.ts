@@ -19,6 +19,11 @@ class Spinner {
 	}
 
 	start() {
+		const disabled = trackedState.disableSpinner
+			|| process.env.HAIRPER_NO_SPINNER === 'true'
+			|| process.env.HAIRPER_NO_SPINNER === '1'
+			|| process.env.HAIRPER_DISABLE_SPINNER === 'true'
+			|| process.env.HAIRPER_DISABLE_SPINNER === '1';
 		if (this.interval) {
 			return;
 		}
@@ -33,6 +38,13 @@ class Spinner {
 		process.stdin.on('data', this.onData);
 		if (process.stdin.isTTY) {
 			process.stdin.resume();
+		}
+
+		if (disabled) {
+			// Do not render spinner, but keep onData listener active for interrupt support
+			this.interval = null;
+			console.log('Thinking...');
+			return;
 		}
 
 		this.i = 0;
@@ -53,17 +65,21 @@ class Spinner {
 	}
 
 	stop() {
-		if (!this.interval) { return; }
-		clearInterval(this.interval);
-
+		// Always detach input listener if attached
 		if (this.onData) {
 			process.stdin.removeListener('data', this.onData);
 			this.onData = null;
 		}
 
-		this.interval = null;
-		this.status = '';
-		process.stdout.write('\r\x1b[K');
+		if (this.interval) {
+			clearInterval(this.interval);
+			this.interval = null;
+			this.status = '';
+			process.stdout.write('\r\x1b[K');
+		} else {
+			// When disabled (no interval), still reset status without writing spinner clearing sequences
+			this.status = '';
+		}
 	}
 }
 
