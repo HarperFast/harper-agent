@@ -20,7 +20,6 @@ export function createApplyPatchTool(shouldNormalize: boolean = true) {
 		description: 'Applies a patch (create, update, or delete a file) to the workspace.',
 		parameters: ApplyPatchParameters,
 		execute: async (operation) => {
-			console.log(operation);
 			switch (operation.type) {
 				case 'create_file':
 					if (!operation.diff) { throw new Error('diff is required for create_file'); }
