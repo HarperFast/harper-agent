@@ -9,6 +9,9 @@ export class Chat {
 	private tempDir: string | undefined;
 	private child: ChildProcessWithoutNullStreams | null = null;
 	public stdoutBuf: string = '';
+	private readonly PROMPT_RE = /\n>\s*$/; // matches a CLI prompt at the end of the current buffer
+	// Small delay to ensure no additional output arrives immediately after the prompt
+	private readonly PROMPT_DELAY_MS = 75;
 
 	constructor() {
 		beforeEach(async () => {
@@ -35,7 +38,17 @@ export class Chat {
 		});
 	}
 
-	bootstrap(instruction: string) {
+	/**
+	 * Spawn the CLI process in a fresh temp directory. Returns an async generator
+	 * that yields all stdout accumulated up to (but not including) each prompt occurrence.
+	 *
+	 * Usage in tests:
+	 *   const out = chat.bootstrap();
+	 *   await out.next(); // Wait for initial prompt
+	 *   chat.sendLine('your instruction');
+	 *   // ... optionally, await next(out.next()) to sync on subsequent prompts
+	 */
+	bootstrap(): AsyncGenerator<string, void, void> {
 		const cliPath = join(this.originalCwd, 'dist', 'agent.js');
 
 		this.stdoutBuf = '';
@@ -50,37 +63,113 @@ export class Chat {
 			env: {
 				...process.env,
 				HAIRPER_SKIP_UPDATE: 'true',
-				_HARPER_TEST_CLI: 'true',
+				// _HARPER_TEST_CLI: 'true',
 				APPLY_PATCH_AUTO_APPROVE: '1',
 				CODE_INTERPRETER_AUTO_APPROVE: '1',
 				SHELL_AUTO_APPROVE: '1',
+				// Disable stdin-based interruption logic during E2E runs to avoid races
+				HAIRPER_DISABLE_INTERRUPTIONS: '1',
 				OPENAI_AGENTS_DISABLE_TRACING: process.env.OPENAI_AGENTS_DISABLE_TRACING || '1',
 				OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 			},
 			stdio: ['pipe', 'pipe', 'pipe'],
 		});
 
-		// Watch for prompts and approve when needed
-		this.child.stdout.on('data', (chunk: Buffer) => {
+		return this.#createPromptStream();
+	}
+
+	/**
+	 * Async generator that yields stdout chunks ending when a prompt appears.
+	 * Each yield returns text up to (but not including) the prompt. Continues
+	 * until the process exits. Cleans up listeners when closed.
+	 */
+	async *#createPromptStream(): AsyncGenerator<string, void, void> {
+		if (!this.child) { return; }
+
+		let localBuffer = '';
+		const queue: string[] = [];
+		let resolveNext: ((value: string) => void) | null = null;
+		let done = false;
+
+		const offer = (value: string) => {
+			if (resolveNext) {
+				const r = resolveNext;
+				resolveNext = null;
+				r(value);
+			} else {
+				queue.push(value);
+			}
+		};
+
+		let promptTimer: NodeJS.Timeout | null = null;
+
+		const onStdout = (chunk: Buffer) => {
 			const text = chunk.toString();
 			this.stdoutBuf += text;
-			process.stdout.write(text);
+			// process.stdout.write(text);
+			localBuffer += text;
 
-			// When prompt appears, send the task
-			if (text.includes('\n> ') || /\n>\s*$/.test(this.stdoutBuf)) {
-				// Only send once
-				if (!this.stdoutBuf.includes('[TASK_SENT]')) {
-					this.sendLine(instruction);
-					// mark to avoid resending if prompt reappears
-					this.stdoutBuf += '[TASK_SENT]';
-				}
+			// If we previously detected a prompt, reset the timer as new output arrived
+			if (promptTimer) {
+				clearTimeout(promptTimer);
+				promptTimer = null;
 			}
-		});
 
-		// If CLI logs errors, surface them to the test output
-		this.child.stderr.on('data', (chunk: Buffer) => {
+			// If the buffer currently ends with a prompt, wait a short grace period to
+			// ensure no more text comes in before emitting up to the prompt.
+			if (this.PROMPT_RE.test(localBuffer)) {
+				promptTimer = setTimeout(() => {
+					// Double-check that we still end with a prompt before emitting
+					if (this.PROMPT_RE.test(localBuffer)) {
+						const matchIndex = localBuffer.search(this.PROMPT_RE);
+						const emit = localBuffer.slice(0, matchIndex);
+						// Reset buffer after prompt. Anything beyond the prompt stays for next round
+						localBuffer = '';
+						offer(emit);
+					}
+					promptTimer = null;
+				}, this.PROMPT_DELAY_MS);
+			}
+		};
+
+		const onStderr = (chunk: Buffer) => {
+			// Capture stderr into the overall buffer for debugging, but do not treat as prompt
 			this.stdoutBuf += chunk.toString();
-		});
+		};
+
+		const onClose = () => {
+			done = true;
+			// flush remaining buffer if any
+			if (localBuffer) {
+				offer(localBuffer);
+				localBuffer = '';
+			}
+			if (promptTimer) {
+				clearTimeout(promptTimer);
+				promptTimer = null;
+			}
+		};
+
+		this.child.stdout.on('data', onStdout);
+		this.child.stderr.on('data', onStderr);
+		this.child.on('close', onClose);
+
+		try {
+			while (!done) {
+				const nextChunk = queue.length
+					? queue.shift()!
+					: await new Promise<string>(res => {
+						resolveNext = res;
+					});
+				console.log(`Hairper: ${nextChunk}`);
+				yield nextChunk;
+			}
+		} finally {
+			// Cleanup listeners when consumer stops iterating
+			this.child?.stdout.off('data', onStdout);
+			this.child?.stderr.off('data', onStderr);
+			this.child?.off('close', onClose);
+		}
 	}
 
 	sendLine(line: string) {
