@@ -1,7 +1,7 @@
 {
 	"name": "hairper",
 	"description": "AI to help you with Harper app management",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"main": "dist/agent.js",
 	"repository": "github:HarperFast/hairper",
 	"bugs": {
