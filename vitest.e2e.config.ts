@@ -8,5 +8,6 @@ export default defineConfig({
 		hookTimeout: 60_000,
 		reporters: 'default',
 		maxConcurrency: 1,
+		slowTestThreshold: 60_000,
 	},
 });
