@@ -10,11 +10,15 @@ import {
 	system,
 } from '@openai/agents';
 import { excludeFalsy } from '../arrays/excludeFalsy';
+import { getCompactionTriggerTokens } from './modelContextLimits';
 
 export interface MemoryCompactionSessionOptions {
 	underlyingSession?: Session;
-	threshold?: number;
 	model: Model;
+	// Optional: model name to determine context window for token-aware compaction
+	modelName?: string;
+	// Optional: fraction of context window at which to trigger compaction (0.5..0.95)
+	triggerFraction?: number;
 }
 
 /**
@@ -24,14 +28,18 @@ export interface MemoryCompactionSessionOptions {
  */
 export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSession {
 	private readonly underlyingSession: Session;
-	private readonly threshold: number;
 	private readonly model: Model;
+	private readonly triggerTokens?: number;
 	private itemsAddedSinceLastCompaction: number = 0;
 
 	constructor(options: MemoryCompactionSessionOptions) {
 		this.underlyingSession = options.underlyingSession ?? new MemorySession();
-		this.threshold = options.threshold ?? 20;
 		this.model = options.model;
+		// Compute token-based trigger if modelName provided
+		if (options.modelName) {
+			const fraction = options.triggerFraction ?? 0.8;
+			this.triggerTokens = getCompactionTriggerTokens(options.modelName, fraction);
+		}
 	}
 
 	async getSessionId(): Promise<string> {
@@ -45,12 +53,9 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 	async addItems(items: AgentInputItem[]): Promise<void> {
 		await this.underlyingSession.addItems(items);
 		this.itemsAddedSinceLastCompaction += items.length;
-
-		// We check threshold here as well to ensure we don't grow too large
-		// if many items are added at once outside of a 'run' loop.
-		if (this.itemsAddedSinceLastCompaction >= this.threshold) {
-			await this.runCompaction();
-		}
+		// Proactively invoke compaction entry point; runCompaction will decide
+		// whether a compaction is actually needed based on token thresholds.
+		await this.runCompaction({ reason: 'post-add-check', mode: 'auto' } as any);
 	}
 
 	async popItem(): Promise<AgentInputItem | undefined> {
@@ -63,19 +68,34 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 	}
 
 	/**
-	 * Run compaction on the session history.
-	 * For now, this performs a simple truncation, keeping the first item
-	 * and the most recent items.
+	 * Compaction entry point used by the underlying agent.
+	 * This method first decides if compaction is necessary (token-aware gating),
+	 * and only then performs the compaction. External callers should invoke this
+	 * method directly; there is no separate "maybe" helper anymore.
+	 *
+	 * Behavior:
+	 * - If a token trigger threshold is configured (via modelName), compaction is
+	 *   skipped unless the estimated token count exceeds the threshold, unless a
+	 *   forcing flag is provided in args.
+	 * - If history is trivially small (<= 6 items), it skips compaction.
+	 * - Otherwise, it keeps the first item, adds a compaction notice (optionally
+	 *   summarized by the model), and retains the last 5 recent items.
 	 */
-	async runCompaction(_args?: OpenAIResponsesCompactionArgs): Promise<OpenAIResponsesCompactionResult | null> {
+	async runCompaction(args?: OpenAIResponsesCompactionArgs): Promise<OpenAIResponsesCompactionResult | null> {
 		const items = await this.underlyingSession.getItems();
 
 		if (items.length <= 1) {
 			return null;
 		}
 
-		// Reset the counter
-		this.itemsAddedSinceLastCompaction = 0;
+		// Decide if compaction is needed based on token threshold unless forced.
+		const force = !!(args as any)?.force || !!(args as any)?.always || (args as any)?.trigger === 'force';
+		if (!force && this.triggerTokens && this.triggerTokens > 0) {
+			const tokenEstimate = estimateTokens(items);
+			if (tokenEstimate < this.triggerTokens) {
+				return null; // below threshold, skip compaction
+			}
+		}
 
 		// Keep the first item to maintain core instructions
 		const firstItem = items[0];
@@ -123,6 +143,9 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 			}
 		}
 
+		// Reset the counter only when we actually compact
+		this.itemsAddedSinceLastCompaction = 0;
+
 		await this.underlyingSession.clearSession();
 
 		// We add a system message indicating that history was compacted
@@ -132,4 +155,29 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 
 		return null;
 	}
+}
+
+// Rough token estimator: ~4 chars per token heuristic across text content
+function estimateTokens(items: AgentInputItem[]): number {
+	let chars = 0;
+	for (const it of items as any[]) {
+		if (!it) { continue; }
+		// message-style with content array
+		if (Array.isArray((it as any).content)) {
+			for (const c of (it as any).content) {
+				if (!c) { continue; }
+				if (typeof c.text === 'string') { chars += c.text.length; }
+				else if (typeof c.content === 'string') { chars += c.content.length; }
+				else if (typeof c === 'string') { chars += c.length; }
+			}
+		}
+		// single string content
+		if (typeof (it as any).content === 'string') {
+			chars += (it as any).content.length;
+		}
+		if (typeof (it as any).text === 'string') {
+			chars += (it as any).text.length;
+		}
+	}
+	return Math.ceil(chars / 4);
 }

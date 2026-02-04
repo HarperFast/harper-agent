@@ -1,14 +1,17 @@
-import { MemorySession, OpenAIResponsesCompactionSession, type Session } from '@openai/agents';
-import { getModel, isOpenAIModel } from '../../lifecycle/getModel';
+import { MemorySession, type Session } from '@openai/agents';
+import { getModel, getModelName } from '../../lifecycle/getModel';
 import { trackCompaction } from '../../lifecycle/trackCompaction';
 import { DiskSession } from './DiskSession';
 import { MemoryCompactionSession } from './MemoryCompactionSession';
 
 export function createSession(compactionModel: string, sessionPath: string | null = null): Session {
 	const underlyingSession = sessionPath ? new DiskSession(sessionPath) : new MemorySession();
-	const session = isOpenAIModel(compactionModel)
-		? new OpenAIResponsesCompactionSession({ underlyingSession, model: compactionModel })
-		: new MemoryCompactionSession({ underlyingSession, model: getModel(compactionModel) });
+	// Always use our own memory compaction session, regardless of provider
+	const session = new MemoryCompactionSession({
+		underlyingSession,
+		model: getModel(compactionModel),
+		modelName: getModelName(compactionModel),
+	});
 	trackCompaction(session);
 	return session;
 }

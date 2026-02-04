@@ -1,10 +1,11 @@
-import { OpenAIResponsesCompactionSession } from '@openai/agents';
 import chalk from 'chalk';
 import { harperResponse } from '../utils/shell/harperResponse';
 import { spinner } from '../utils/shell/spinner';
 import { trackedState } from './trackedState';
 
-export function trackCompaction(session: Pick<OpenAIResponsesCompactionSession, 'runCompaction'>) {
+type WithRunCompaction = { runCompaction: (args?: any) => Promise<any> };
+
+export function trackCompaction(session: WithRunCompaction) {
 	const originalRunCompaction = session.runCompaction.bind(session);
 	session.runCompaction = async (args) => {
 		const originalMessage = spinner.message;

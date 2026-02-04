@@ -42,17 +42,20 @@ describe('createSession', () => {
 		expect(trackCompactionModule.trackCompaction).toHaveBeenCalled();
 	});
 
-	it('should create an OpenAIResponsesCompactionSession if compaction model is an OpenAI model', () => {
+	it('should create a MemoryCompactionSession even if compaction model is an OpenAI model', () => {
 		vi.mocked(getModelModule.isOpenAIModel).mockReturnValue(true);
 		vi.mocked(getModelModule.getModelName).mockReturnValue('gpt-4o-mini' as any);
+		vi.mocked(getModelModule.getModel).mockReturnValue('mock-model' as any);
 
 		createSession('gpt-4o-mini');
 
 		expect(MemorySession).toHaveBeenCalled();
-		expect(OpenAIResponsesCompactionSession).toHaveBeenCalledWith(expect.objectContaining({
+		expect(MemoryCompactionSession).toHaveBeenCalledWith(expect.objectContaining({
 			underlyingSession: expect.any(MemorySession),
-			model: 'gpt-4o-mini',
+			model: 'mock-model',
+			modelName: 'gpt-4o-mini',
 		}));
+		expect(OpenAIResponsesCompactionSession).not.toHaveBeenCalled();
 		expect(trackCompactionModule.trackCompaction).toHaveBeenCalled();
 	});
 });
