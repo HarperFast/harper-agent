@@ -1,6 +1,7 @@
 import { applyDiff } from '@openai/agents';
 import type { ApplyPatchResult, Editor } from '@openai/agents-core';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { normalizeDiff } from '../../utils/files/normalizeDiff';
 import { resolvePath } from '../../utils/files/paths';
@@ -9,7 +10,7 @@ export class WorkspaceEditor implements Editor {
 	private readonly root: string;
 	private readonly shouldNormalize: boolean;
 
-	constructor(root: string, shouldNormalize: boolean = true) {
+	constructor(root: string, shouldNormalize: boolean) {
 		this.root = root;
 		this.shouldNormalize = shouldNormalize;
 	}
@@ -30,12 +31,10 @@ export class WorkspaceEditor implements Editor {
 
 	async updateFile(operation: UpdateFileOperation): Promise<ApplyPatchResult | void> {
 		const targetPath = resolvePath(this.root, operation.path);
-		const original = await readFile(targetPath, 'utf8').catch((error: any) => {
-			if (error?.code === 'ENOENT') {
-				throw new Error(`Cannot update missing file: ${operation.path}`);
-			}
-			throw error;
-		});
+		if (!existsSync(targetPath)) {
+			return { status: 'failed', output: 'Error: file not found at path ' + targetPath };
+		}
+		const original = readFileSync(targetPath, 'utf8');
 		const normalizedDiff = this.shouldNormalize ? normalizeDiff(operation.diff) : operation.diff;
 		const patched = applyDiff(original, normalizedDiff);
 		await writeFile(targetPath, patched, 'utf8');
@@ -44,6 +43,9 @@ export class WorkspaceEditor implements Editor {
 
 	async deleteFile(operation: DeleteFileOperation): Promise<ApplyPatchResult | void> {
 		const targetPath = resolvePath(this.root, operation.path);
+		if (!existsSync(targetPath)) {
+			return { status: 'failed', output: 'Error: file not found at path ' + targetPath };
+		}
 		await rm(targetPath, { force: true });
 		return { status: 'completed', output: `Deleted ${operation.path}` };
 	}

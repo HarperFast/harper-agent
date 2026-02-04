@@ -11,9 +11,14 @@ vi.mock('../../utils/files/normalizeDiff', () => ({
 	normalizeDiff: vi.fn((diff) => `normalized ${diff}`),
 }));
 
+// Mock sync fs methods used by workspaceEditor now (existsSync, readFileSync)
+vi.mock('node:fs', () => ({
+	existsSync: vi.fn().mockReturnValue(true),
+	readFileSync: vi.fn().mockReturnValue('original content'),
+}));
+
 vi.mock('node:fs/promises', () => ({
 	mkdir: vi.fn().mockResolvedValue(undefined),
-	readFile: vi.fn().mockResolvedValue('original content'),
 	rm: vi.fn().mockResolvedValue(undefined),
 	writeFile: vi.fn().mockResolvedValue(undefined),
 }));
@@ -25,7 +30,7 @@ describe('WorkspaceEditor', () => {
 
 	describe('updateFile', () => {
 		it('should normalize diff by default', async () => {
-			const editor = new WorkspaceEditor('/root');
+			const editor = new WorkspaceEditor('/root', true);
 			await editor.updateFile({ type: 'update_file', path: 'test.txt', diff: 'some diff' });
 
 			expect(normalizeDiff).toHaveBeenCalledWith('some diff');
@@ -51,7 +56,7 @@ describe('WorkspaceEditor', () => {
 
 	describe('createFile', () => {
 		it('should normalize diff by default', async () => {
-			const editor = new WorkspaceEditor('/root');
+			const editor = new WorkspaceEditor('/root', true);
 			await editor.createFile({ type: 'create_file', path: 'new.txt', diff: 'new diff' });
 
 			expect(normalizeDiff).toHaveBeenCalledWith('new diff');

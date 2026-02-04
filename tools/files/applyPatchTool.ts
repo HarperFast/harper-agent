@@ -22,15 +22,19 @@ export function createApplyPatchTool(shouldNormalize: boolean = true) {
 		execute: async (operation) => {
 			switch (operation.type) {
 				case 'create_file':
-					if (!operation.diff) { throw new Error('diff is required for create_file'); }
+					if (!operation.diff) {
+						return 'Error: diff is required for create_file';
+					}
 					return editor.createFile(operation as any);
 				case 'update_file':
-					if (!operation.diff) { throw new Error('diff is required for update_file'); }
+					if (!operation.diff) {
+						return 'Error: diff is required for update_file';
+					}
 					return editor.updateFile(operation as any);
 				case 'delete_file':
 					return editor.deleteFile(operation as any);
 				default:
-					throw new Error(`Unknown operation type: ${(operation as any).type}`);
+					return `Error: Unknown operation type: ${(operation as any).type}`;
 			}
 		},
 		needsApproval: async (runContext, operation, callId) => {
