@@ -8,14 +8,26 @@ export function normalizeDiff(diff: string): string {
 		.split(/\r?\n/)
 		.filter((line) => {
 			const l = line.trim();
-			return (
-				!l.startsWith('*** Begin Patch')
-				&& !l.startsWith('*** End Patch')
-				&& !l.startsWith('*** Add File:')
-				&& !l.startsWith('*** Update File:')
-				&& !l.startsWith('*** Delete File:')
-				&& !l.startsWith('*** End of File')
-			);
+			// Strip common patch wrappers and metadata lines models may include
+			if (
+				l.startsWith('*** Begin Patch')
+				|| l.startsWith('*** End Patch')
+				|| l.startsWith('*** Add File:')
+				|| l.startsWith('*** Update File:')
+				|| l.startsWith('*** Delete File:')
+				|| l.startsWith('*** End of File')
+			) {
+				return false;
+			}
+			// Also strip lowercase operation headers sometimes emitted
+			if (
+				l.startsWith('update_file:')
+				|| l.startsWith('create_file:')
+				|| l.startsWith('delete_file:')
+			) {
+				return false;
+			}
+			return true;
 		})
 		.join('\n')
 		.trim();

@@ -1,7 +1,6 @@
-import { applyPatchTool, type RunContext, tool } from '@openai/agents';
+import { type RunContext, tool } from '@openai/agents';
 import chalk from 'chalk';
 import { z } from 'zod';
-import { isOpenAIModel } from '../../lifecycle/getModel';
 import { trackedState } from '../../lifecycle/trackedState';
 import { printDiff } from '../../utils/files/printDiff';
 import { spinner } from '../../utils/shell/spinner';
@@ -16,66 +15,63 @@ const ApplyPatchParameters = z.object({
 });
 
 export function createApplyPatchTool() {
-	const isOpenAI = isOpenAIModel(trackedState.model);
 	const editor = new WorkspaceEditor(() => trackedState.cwd);
-
-	const needsApproval = async (
-		runContext: RunContext,
-		operation: z.infer<typeof ApplyPatchParameters>,
-		callId?: string,
-	) => {
-		if (callId && runContext.isToolApproved({ toolName: 'apply_patch', callId })) {
-			return false;
-		}
-
-		const autoApproved = process.env.APPLY_PATCH_AUTO_APPROVE === '1';
-
-		spinner.stop();
-		if (autoApproved) {
-			console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
-		} else {
-			console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
-		}
-		console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
-		if (operation.diff) {
-			printDiff(operation.diff);
-		}
-		if (autoApproved) {
-			spinner.start();
-		}
-
-		return !autoApproved;
-	};
-
-	if (isOpenAI) {
-		return applyPatchTool({
-			editor,
-			needsApproval: needsApproval as any,
-		});
-	}
 
 	return tool({
 		name: 'apply_patch',
 		description: 'Applies a patch (create, update, or delete a file) to the workspace.',
 		parameters: ApplyPatchParameters,
-		execute: async (operation) => {
-			switch (operation.type) {
-				case 'create_file':
-					if (!operation.diff) {
-						return 'Error: diff is required for create_file';
-					}
-					return editor.createFile(operation as any);
-				case 'update_file':
-					if (!operation.diff) {
-						return 'Error: diff is required for update_file';
-					}
-					return editor.updateFile(operation as any);
-				case 'delete_file':
-					return editor.deleteFile(operation as any);
-				default:
-					return `Error: Unknown operation type: ${(operation as any).type}`;
+		needsApproval: async (runContext: RunContext, operation: z.infer<typeof ApplyPatchParameters>, callId?: string) => {
+			try {
+				if (callId && runContext.isToolApproved({ toolName: 'apply_patch', callId })) {
+					return false;
+				}
+
+				const autoApproved = process.env.APPLY_PATCH_AUTO_APPROVE === '1';
+
+				spinner.stop();
+				if (autoApproved) {
+					console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
+				} else {
+					console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
+				}
+				console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
+				if (operation.diff) {
+					printDiff(operation.diff);
+				}
+				if (autoApproved) {
+					spinner.start();
+				}
+
+				return !autoApproved;
+			} catch (err) {
+				console.error('apply_patch approval step failed:', err);
+				return false;
 			}
 		},
-		needsApproval,
+		execute: async (operation) => {
+			try {
+				switch (operation.type) {
+					case 'create_file':
+						if (!operation.diff) {
+							return { status: 'failed', output: 'Error: diff is required for create_file' } as const;
+						}
+						return await editor.createFile(operation as any);
+					case 'update_file':
+						if (!operation.diff) {
+							return { status: 'failed', output: 'Error: diff is required for update_file' } as const;
+						}
+						return await editor.updateFile(operation as any);
+					case 'delete_file':
+						return await editor.deleteFile(operation as any);
+					default:
+						return { status: 'failed', output: `Error: Unknown operation type: ${(operation as any).type}` } as const;
+				}
+			} catch (err) {
+				console.error('hit unexpected error in apply patch tool', err);
+				// Ensure the tool always returns something the LLM can react to
+				return { status: 'failed', output: `apply_patch threw: ${String(err)}` } as const;
+			}
+		},
 	});
 }

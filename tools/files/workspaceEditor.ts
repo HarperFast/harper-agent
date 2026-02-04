@@ -13,7 +13,7 @@ export class WorkspaceEditor implements Editor {
 		this.root = root;
 	}
 
-	async createFile(operation: CreateFileOperation): Promise<ApplyPatchResult | void> {
+	async createFile(operation: CreateFileOperation): Promise<ApplyPatchResult> {
 		try {
 			const targetPath = resolvePath(this.root(), operation.path);
 			await mkdir(path.dirname(targetPath), { recursive: true });
@@ -22,11 +22,11 @@ export class WorkspaceEditor implements Editor {
 			await writeFile(targetPath, content, 'utf8');
 			return { status: 'completed', output: `Created ${operation.path}` };
 		} catch (err) {
-			return { status: 'failed', output: String(err) };
+			return { status: 'failed', output: `Error creating ${operation.path}: ${String(err)}` };
 		}
 	}
 
-	async updateFile(operation: UpdateFileOperation): Promise<ApplyPatchResult | void> {
+	async updateFile(operation: UpdateFileOperation): Promise<ApplyPatchResult> {
 		try {
 			const targetPath = resolvePath(this.root(), operation.path);
 			if (!existsSync(targetPath)) {
@@ -38,11 +38,11 @@ export class WorkspaceEditor implements Editor {
 			await writeFile(targetPath, patched, 'utf8');
 			return { status: 'completed', output: `Updated ${operation.path}` };
 		} catch (err) {
-			return { status: 'failed', output: String(err) };
+			return { status: 'failed', output: `Error updating ${operation.path}: ${String(err)}` };
 		}
 	}
 
-	async deleteFile(operation: DeleteFileOperation): Promise<ApplyPatchResult | void> {
+	async deleteFile(operation: DeleteFileOperation): Promise<ApplyPatchResult> {
 		try {
 			const targetPath = resolvePath(this.root(), operation.path);
 			if (!existsSync(targetPath)) {
@@ -51,7 +51,7 @@ export class WorkspaceEditor implements Editor {
 			await rm(targetPath, { force: true });
 			return { status: 'completed', output: `Deleted ${operation.path}` };
 		} catch (err) {
-			return { status: 'failed', output: String(err) };
+			return { status: 'failed', output: `Error deleting ${operation.path}: ${String(err)}` };
 		}
 	}
 }
