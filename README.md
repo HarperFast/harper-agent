@@ -20,7 +20,6 @@ If you prefer to set it manually, you can create a `.env` file:
 ```bash
 # For OpenAI (default)
 OPENAI_API_KEY=your_api_key_here
-OPENAI_AGENTS_DISABLE_TRACING=1
 
 # For Anthropic
 ANTHROPIC_API_KEY=your_api_key_here
@@ -156,7 +155,6 @@ If you want to help us advance the source code that powers Hairper, take a look 
    ```env
    OPENAI_API_KEY=your_api_key_here
    # OR ANTHROPIC_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY
-   OPENAI_AGENTS_DISABLE_TRACING=1
    HAIRPER_SKIP_UPDATE=true
    ```
 

@@ -25,10 +25,8 @@ process.on('SIGINT', handleExit);
 process.on('SIGTERM', handleExit);
 
 async function main() {
-	process.on('SIGINT', () => {
-		spinner.stop();
-		costTracker.logFinalStats();
-		cleanUpAndSayBye();
+	process.on('SIGINT', async () => {
+		await cleanUpAndSayBye();
 		process.exit(0);
 	});
 

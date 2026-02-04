@@ -133,6 +133,6 @@ export function parseArgs() {
 			trackedState.compactionModel = 'gpt-4o-mini';
 		}
 	} else {
-		process.env.OPENAI_AGENTS_DISABLE_TRACING = '1';
+		process.env.OPENAI_AGENTS_DISABLE_TRACING = process.env.OPENAI_AGENTS_DISABLE_TRACING || '1';
 	}
 }

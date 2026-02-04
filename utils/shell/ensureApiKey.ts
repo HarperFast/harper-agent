@@ -52,9 +52,6 @@ export async function ensureApiKey(): Promise<void> {
 		}
 
 		await updateEnv(envVar, key);
-		if (envVar === 'OPENAI_API_KEY') {
-			await updateEnv('OPENAI_AGENTS_DISABLE_TRACING', '1');
-		}
 
 		console.log(chalk.green('API key saved successfully!\n'));
 	}

@@ -74,7 +74,7 @@ export class Chat {
 				OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 			},
 			stdio: ['pipe', 'pipe', 'pipe'],
-		});
+		}) as ChildProcessWithoutNullStreams;
 
 		return this.#createPromptStream();
 	}
