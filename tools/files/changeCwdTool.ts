@@ -1,6 +1,7 @@
 import { tool } from '@openai/agents';
 import { statSync } from 'node:fs';
 import { z } from 'zod';
+import { readAgentsMD } from '../../lifecycle/readAgentsMD';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
 
@@ -21,6 +22,15 @@ export async function execute({ path }: z.infer<typeof ToolParameters>) {
 		process.chdir(target);
 		trackedState.cwd = process.cwd();
 		console.log(`Switched current working directory to ${trackedState.cwd}`);
+
+		const agentsMDContents = readAgentsMD();
+		if (agentsMDContents) {
+			if (trackedState.agent) {
+				trackedState.agent.instructions = agentsMDContents;
+			}
+			return `Switched current working directory to ${trackedState.cwd}, with a AGENTS.md file containing:\n${agentsMDContents}`;
+		}
+
 		return `Switched current working directory to ${trackedState.cwd}`;
 	} catch (err: any) {
 		// If path does not exist or cannot be accessed, provide a clear message

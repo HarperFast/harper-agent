@@ -25,31 +25,21 @@ describe('sayHi', () => {
 		rmSync(testDir, { recursive: true, force: true });
 	});
 
-	it('suggests reading AGENTS.md if it exists in a harper app', () => {
-		writeFileSync(join(testDir, 'config.yaml'), 'foo: bar');
-		writeFileSync(join(testDir, 'AGENTS.md'), '# Agents');
+	it('guides the user to create a harper app', () => {
+		sayHi();
 
-		const { instructions } = sayHi();
+		expect(harperResponse).toHaveBeenCalledWith(
+			expect.stringContaining('What kind of Harper app do you want to make together?'),
+		);
+	});
+
+	it('guides the user differently if a harper app already exists', () => {
+		writeFileSync(join(testDir, 'config.yaml'), 'neat');
+
+		sayHi();
 
 		expect(harperResponse).toHaveBeenCalledWith(
 			expect.stringContaining('What do you want to do together today?'),
 		);
-		expect(instructions).toContain('AGENTS.md');
-	});
-
-	it('does not suggest reading AGENTS.md if it does not exist', () => {
-		writeFileSync(join(testDir, 'config.yaml'), 'foo: bar');
-
-		const { instructions } = sayHi();
-
-		expect(instructions).not.toContain('AGENTS.md');
-	});
-
-	it('does not suggest reading AGENTS.md if it is not a harper app', () => {
-		writeFileSync(join(testDir, 'AGENTS.md'), '# Agents');
-
-		const { instructions } = sayHi();
-
-		expect(instructions).not.toContain('AGENTS.md');
 	});
 });

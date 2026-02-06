@@ -3,8 +3,10 @@ import 'dotenv/config';
 import { Agent, run } from '@openai/agents';
 import chalk from 'chalk';
 import { cleanUpAndSayBye } from './lifecycle/cleanUpAndSayBye';
+import { defaultInstructions } from './lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from './lifecycle/getModel';
 import { parseArgs } from './lifecycle/parseArgs';
+import { readAgentsMD } from './lifecycle/readAgentsMD';
 import { sayHi } from './lifecycle/sayHi';
 import { trackedState } from './lifecycle/trackedState';
 import { createTools } from './tools/factory';
@@ -34,15 +36,16 @@ async function main() {
 	parseArgs();
 	await ensureApiKey();
 
-	const { name, instructions } = sayHi();
+	sayHi();
 
-	const agent = new Agent({
-		name,
+	const agent = trackedState.agent = new Agent({
+		name: 'Harper App Development Assistant',
 		model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
 		modelSettings,
-		instructions,
+		instructions: readAgentsMD() || defaultInstructions(),
 		tools: createTools(),
 	});
+
 	const session = createSession(trackedState.sessionPath);
 
 	while (true) {

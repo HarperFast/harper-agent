@@ -5,6 +5,8 @@ import path from 'node:path';
 import { z } from 'zod';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
+import { buildCreateCommand } from '../../utils/package/buildHarperCreateCommand';
+import { pickPreferredPackageManager, PM_DISPLAY } from '../../utils/package/pickPreferredPackageManager';
 import { execute as changeCwd } from '../files/changeCwdTool';
 
 const ToolParameters = z.object({
@@ -25,62 +27,10 @@ export async function execute({ directoryName, template }: z.infer<typeof ToolPa
 	const executionCwd = isCurrentDir ? resolvedPath : path.dirname(resolvedPath);
 	const appName = isCurrentDir ? '.' : path.basename(resolvedPath);
 
-	function isAvailable(cmd: string): boolean {
-		try {
-			// Using --version is portable across these CLIs
-			execSync(`${cmd} --version`, { stdio: 'ignore' });
-			return true;
-		} catch {
-			return false;
-		}
-	}
-
-	type PackageManager = 'yarn' | 'pnpm' | 'bun' | 'deno' | 'npm';
-
-	function pickPackageManager(): PackageManager {
-		// Prefer non-npm options if available
-		const preferred: PackageManager[] = ['yarn', 'pnpm', 'bun', 'deno'];
-		for (const pm of preferred) {
-			if (isAvailable(pm)) { return pm; }
-		}
-		return 'npm';
-	}
-
-	const PM_DISPLAY: Record<PackageManager, string> = {
-		yarn: 'Yarn',
-		pnpm: 'PNPM',
-		bun: 'Bun',
-		deno: 'Deno',
-		npm: 'NPM',
-	};
-
-	function buildCreateCommand(
-		pm: PackageManager,
-		appName: string,
-		template: string,
-	): { cmd: string; label: string } {
-		switch (pm) {
-			case 'deno':
-				// Deno's init command doesn't follow the exact same flags; use provided invocation
-				return { cmd: `deno init --npm harper "${appName}" 2>&1`, label: 'deno init --npm harper' };
-			case 'npm':
-				return {
-					cmd: `npm create harper@latest --yes "${appName}" -- --no-interactive --template ${template} 2>&1`,
-					label: 'npm create harper@latest',
-				};
-			default:
-				// yarn/pnpm/bun share the same shape
-				return {
-					cmd: `${pm} create harper "${appName}" --no-interactive --template ${template} 2>&1`,
-					label: `${pm} create harper`,
-				};
-		}
-	}
-
 	try {
 		console.log(`Creating new Harper application in ${resolvedPath} using template ${template}...`);
 
-		const pm = pickPackageManager();
+		const pm = pickPreferredPackageManager();
 		const { cmd, label } = buildCreateCommand(pm, appName, template);
 		console.log(`Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`);
 		execSync(cmd, {

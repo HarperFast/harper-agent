@@ -1,4 +1,7 @@
+import { Agent } from '@openai/agents';
+
 export interface TrackedState {
+	agent: Agent | null;
 	cwd: string;
 	atStartOfLine: boolean;
 	emptyLines: number;
@@ -13,6 +16,7 @@ export interface TrackedState {
 }
 
 export const trackedState: TrackedState = {
+	agent: null,
 	cwd: process.cwd(),
 	atStartOfLine: true,
 	emptyLines: 0,
