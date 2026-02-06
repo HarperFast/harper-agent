@@ -32,7 +32,7 @@ export async function checkForUpdate(): Promise<string> {
 
 			// Clear the npx cache for this package to ensure we get the latest version
 			const lsResult = spawn.sync('npm', ['cache', 'npx', 'ls', packageName], {
-				encoding: 'utf-8',
+				encoding: 'utf8',
 			});
 
 			if (lsResult.stdout) {

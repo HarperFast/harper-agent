@@ -58,7 +58,7 @@ export async function execute({ code, language }: z.infer<typeof CodeInterpreter
 	const interpreter = language === 'javascript' ? 'node' : 'python3';
 	const tempFile = path.join(trackedState.cwd, `.temp_code_${Date.now()}.${extension}`);
 	try {
-		await writeFile(tempFile, code, 'utf-8');
+		await writeFile(tempFile, code, 'utf8');
 		const { stdout, stderr } = await execAsync(`${interpreter} ${tempFile}`);
 		return `STDOUT:\n${stdout}\nSTDERR:\n${stderr}`;
 	} catch (error: any) {

@@ -29,7 +29,7 @@ export const getHarperResourceInterfaceTool = tool({
 					'resources',
 					`${resourceFile}.d.ts`,
 				),
-				'utf-8',
+				'utf8',
 			);
 		} catch (error) {
 			return `Error reading HarperDB resource file ${resourceFile}: ${error}`;

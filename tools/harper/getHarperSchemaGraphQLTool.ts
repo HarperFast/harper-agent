@@ -18,7 +18,7 @@ export const getHarperSchemaGraphQLTool = tool({
 					dirname(createRequire(import.meta.url).resolve('harperdb')),
 					`schema.graphql`,
 				),
-				'utf-8',
+				'utf8',
 			);
 		} catch (error) {
 			return `Error reading HarperDB GraphQL schema: ${error}`;

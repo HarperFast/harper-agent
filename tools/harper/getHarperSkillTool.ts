@@ -35,7 +35,7 @@ export const getHarperSkillTool = tool({
 
 function getSkillsDescription() {
 	try {
-		return readFileSync(agentsMarkdown, 'utf-8')
+		return readFileSync(agentsMarkdown, 'utf8')
 			.replace('This repository contains', 'This tool describes')
 			.replace(skillLinkRegex, '$1');
 	} catch {
@@ -59,7 +59,7 @@ export async function execute({ skill }: z.infer<typeof ToolParameters>) {
 	}
 	try {
 		const filePath = join(skillsDir, `${skill}.md`);
-		return readFileSync(filePath, 'utf-8');
+		return readFileSync(filePath, 'utf8');
 	} catch (error) {
 		return `Error reading Harper skill "${skill}": ${error}`;
 	}

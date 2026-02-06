@@ -17,7 +17,7 @@ export const readFileTool = tool({
 	async execute({ fileName }: z.infer<typeof ToolParameters>) {
 		try {
 			const resolvedPath = resolvePath(trackedState.cwd, fileName);
-			return readFile(resolvedPath, 'utf-8');
+			return readFile(resolvedPath, 'utf8');
 		} catch (error) {
 			return `Error reading file: ${error}`;
 		}

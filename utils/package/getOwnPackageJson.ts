@@ -6,7 +6,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export function getOwnPackageJson() {
 	try {
-		const packageContents = readFileSync(join(__dirname, '../package.json'), 'utf-8');
+		const packageContents = readFileSync(join(__dirname, '../package.json'), 'utf8');
 		return JSON.parse(packageContents);
 	} catch {
 		return { name: 'hairper', version: '0.0.0' };

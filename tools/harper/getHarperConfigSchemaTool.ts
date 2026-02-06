@@ -22,7 +22,7 @@ export const getHarperConfigSchemaTool = tool({
 					dirname(createRequire(import.meta.url).resolve('harperdb')),
 					`config-${schemaType}.schema.json`,
 				),
-				'utf-8',
+				'utf8',
 			);
 		} catch (error) {
 			return `Error reading HarperDB ${schemaType} configuration schema: ${error}`;

@@ -19,7 +19,7 @@ export const readDirTool = tool({
 	async execute({ directoryName }: z.infer<typeof ToolParameters>) {
 		try {
 			const resolvedPath = resolvePath(trackedState.cwd, directoryName);
-			const files = await readdir(resolvedPath, 'utf-8');
+			const files = await readdir(resolvedPath, 'utf8');
 			return files.filter(file => !isIgnored(path.join(resolvedPath, file)));
 		} catch (error) {
 			return `Error reading directory: ${error}`;

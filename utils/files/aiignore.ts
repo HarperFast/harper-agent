@@ -11,7 +11,7 @@ export function loadAiIgnore() {
 	const ignorePath = path.join(trackedState.cwd, '.aiignore');
 	if (existsSync(ignorePath)) {
 		try {
-			const content = readFileSync(ignorePath, 'utf-8');
+			const content = readFileSync(ignorePath, 'utf8');
 			ignorePatterns = content
 				.split(/\r?\n/)
 				.map(line => line.trim())

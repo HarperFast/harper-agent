@@ -15,7 +15,7 @@ export async function updateEnv(key: string, value: string): Promise<void> {
 
 	let envContent = '';
 	if (existsSync(envPath)) {
-		envContent = await readFile(envPath, 'utf-8');
+		envContent = await readFile(envPath, 'utf8');
 	}
 
 	const regex = new RegExp(`^${key}=.*`, 'm');

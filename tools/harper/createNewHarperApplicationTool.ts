@@ -85,7 +85,7 @@ export async function execute({ directoryName, template }: z.infer<typeof ToolPa
 		console.log(`Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`);
 		execSync(cmd, {
 			cwd: executionCwd,
-			encoding: 'utf-8',
+			encoding: 'utf8',
 		});
 
 		console.log(`Initializing new Git repository in ${resolvedPath}...`);
