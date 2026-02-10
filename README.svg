@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 1280 200"
-  width="640"
+  viewBox="0 0 1320 200"
+  width="660"
   height="200"
   role="img"
   aria-label="npm install -g @harperfast/agent, harper-agent"
@@ -37,7 +37,7 @@
       font-weight="800"
       letter-spacing="-1.5"
       fill="url(#harperGrad)"
-    >harper agent</text>
+    >harper-agent</text>
 
     <!-- little “terminal” capsule -->
     <g transform="translate(0 120)">
@@ -71,7 +71,7 @@
         font-size="22"
         fill="#e6f7ff"
         opacity="0.96"
-      >$ harper agent</text>
+      >$ harper-agent</text>
 
       <!-- blinking cursor -->
       <rect x="284" y="55" width="12" height="24" fill="#e6f7ff" opacity="0.55">
