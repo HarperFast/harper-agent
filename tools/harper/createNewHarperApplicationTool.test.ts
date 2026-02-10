@@ -38,7 +38,7 @@ describe('createNewHarperApplicationTool', () => {
 
 		const result = await createHarper({ directoryName: appName, template: 'vanilla-ts' } as any);
 		expect(result).toContain('Successfully created a new Harper application');
-		expect(result).toContain('I strongly suggest you read it next');
+		expect(result).toContain('I strongly suggest you use these newfound skills!');
 		expect(result).toContain('AGENTS.md');
 		expect(process.cwd()).toBe(resolved);
 		expect(trackedState.cwd).toBe(resolved);

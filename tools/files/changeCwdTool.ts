@@ -29,7 +29,7 @@ export async function execute({ path }: z.infer<typeof ToolParameters>) {
 				trackedState.agent.instructions = agentsMDContents;
 			}
 			console.log('Detected AGENTS.md, reading its contents for the AI.');
-			return `Switched current working directory to ${trackedState.cwd}, with a AGENTS.md file containing:\n${agentsMDContents}`;
+			return `Switched current working directory to ${trackedState.cwd}, with a AGENTS.md file containing:\n${agentsMDContents}\nI strongly suggest you use these newfound skills!`;
 		}
 
 		return `Switched current working directory to ${trackedState.cwd}`;
