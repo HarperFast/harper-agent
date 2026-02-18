@@ -4,6 +4,7 @@ import { openai } from '@ai-sdk/openai';
 import { aisdk } from '@openai/agents-extensions';
 import { AiSdkModel } from '@openai/agents-extensions/ai-sdk';
 import { createOllama, ollama } from 'ollama-ai-provider-v2';
+import type { ModelProvider } from '../ink/models/config';
 
 export function isOpenAIModel(modelName: string): boolean {
 	if (!modelName || modelName === 'gpt-5.2') {
@@ -15,6 +16,22 @@ export function isOpenAIModel(modelName: string): boolean {
 		&& !modelName.startsWith('gemini-')
 		&& !modelName.startsWith('ollama-')
 	);
+}
+
+export function getProvider(modelName: string): ModelProvider {
+	if (modelName.startsWith('claude-')) {
+		return 'Anthropic';
+	}
+
+	if (modelName.startsWith('gemini-')) {
+		return 'Google';
+	}
+
+	if (modelName.startsWith('ollama-')) {
+		return 'Ollama';
+	}
+
+	return 'OpenAI';
 }
 
 export function getModel(modelName: string): AiSdkModel {

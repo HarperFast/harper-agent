@@ -59,7 +59,6 @@ export class Chat {
 			cliPath,
 			'--model',
 			process.env.HARPER_AGENT_MODEL || 'gpt-4o-mini',
-			'--no-spinner',
 		], {
 			cwd: this.tempDir,
 			env: {

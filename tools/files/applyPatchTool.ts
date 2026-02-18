@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { trackedState } from '../../lifecycle/trackedState';
 import { printDiff } from '../../utils/files/printDiff';
 import { getEnv } from '../../utils/getEnv';
-import { spinner } from '../../utils/shell/spinner';
 import { execute as getHarperSkillExecute, skills as harperSkills } from '../harper/getHarperSkillTool';
 import { WorkspaceEditor } from './workspaceEditor';
 
@@ -80,7 +79,6 @@ export async function needsApproval(
 
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', 'APPLY_PATCH_AUTO_APPROVE') === '1';
 
-		spinner.stop();
 		if (autoApproved) {
 			console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
 		} else {
@@ -89,9 +87,6 @@ export async function needsApproval(
 		console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
 		if (operation.diff) {
 			printDiff(operation.diff);
-		}
-		if (autoApproved) {
-			spinner.start();
 		}
 
 		return !autoApproved;

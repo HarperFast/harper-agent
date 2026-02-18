@@ -5,7 +5,7 @@ import { getModel, isOpenAIModel } from '../lifecycle/getModel';
 import { parseArgs } from '../lifecycle/parseArgs';
 import { trackedState } from '../lifecycle/trackedState';
 import { createSession } from '../utils/sessions/createSession';
-import { modelSettings } from '../utils/sessions/modelSettings';
+import { getModelSettings } from '../utils/sessions/modelSettings';
 import { Chat } from './utils/chat';
 
 describe('App Creation Tests', () => {
@@ -49,7 +49,7 @@ describe('App Creation Tests', () => {
 			const human = new Agent({
 				name: 'Developer',
 				model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
-				modelSettings,
+				modelSettings: getModelSettings(trackedState.model),
 				instructions,
 			});
 			const session = createSession(trackedState.sessionPath);

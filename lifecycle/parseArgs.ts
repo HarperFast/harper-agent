@@ -65,8 +65,6 @@ export function parseArgs() {
 		// Handle boolean flags
 		if (arg === '--flex-tier') {
 			trackedState.useFlexTier = true;
-		} else if (arg === '--no-spinner' || arg === '--disable-spinner') {
-			trackedState.disableSpinner = true;
 		} else if (
 			[
 				'--no-interrupt',
@@ -109,14 +107,6 @@ export function parseArgs() {
 
 	if (!trackedState.useFlexTier && isTrue(process.env.HARPER_AGENT_FLEX_TIER)) {
 		trackedState.useFlexTier = true;
-	}
-
-	// Spinner control via env
-	if (
-		!trackedState.disableSpinner
-		&& (isTrue(process.env.HARPER_AGENT_NO_SPINNER) || isTrue(process.env.HARPER_AGENT_DISABLE_SPINNER))
-	) {
-		trackedState.disableSpinner = true;
 	}
 
 	// Interruption control via env (default is enabled)

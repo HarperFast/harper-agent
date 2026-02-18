@@ -2,7 +2,7 @@ import { Agent, type AgentInputItem, run, system } from '@openai/agents';
 import { getModel, isOpenAIModel } from '../../lifecycle/getModel';
 import { trackedState } from '../../lifecycle/trackedState';
 import { excludeFalsy } from '../arrays/excludeFalsy';
-import { compactionModelSettings } from './modelSettings';
+import { getCompactionModelSettings } from './modelSettings';
 
 export interface CompactionArtifacts {
 	noticeContent: string;
@@ -29,7 +29,7 @@ export async function compactConversation(
 				model: isOpenAIModel(trackedState.compactionModel)
 					? trackedState.compactionModel
 					: getModel(trackedState.compactionModel),
-				modelSettings: compactionModelSettings,
+				modelSettings: getCompactionModelSettings(trackedState.compactionModel),
 				instructions: 'Compact the provided conversation history into key observations. '
 					+ 'Focus on what seems likely to be needed later. '
 					+ 'Be concise and avoid repeating information.',

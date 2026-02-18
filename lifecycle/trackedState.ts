@@ -13,7 +13,6 @@ export interface TrackedState {
 	compactionModel: string;
 	sessionPath: string | null;
 	useFlexTier: boolean;
-	disableSpinner: boolean;
 	enableInterruptions: boolean; // whether stdin can interrupt model runs
 	maxTurns: number;
 	maxCost: number | null;
@@ -32,7 +31,6 @@ export const trackedState: TrackedState = {
 	compactionModel: '',
 	sessionPath: null,
 	useFlexTier: false,
-	disableSpinner: false,
 	enableInterruptions: true,
 	maxTurns: 30,
 	maxCost: null,
