@@ -42,6 +42,9 @@ export const ChatProvider = ({
 				return prev;
 			}
 			const last = prev[prev.length - 1];
+			if (!last) {
+				return prev;
+			}
 			const updated = [...prev];
 			updated[prev.length - 1] = {
 				...last,
