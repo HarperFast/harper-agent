@@ -15,7 +15,6 @@ function resetState() {
 	trackedState.compactionModel = '';
 	trackedState.sessionPath = null;
 	trackedState.useFlexTier = false;
-	trackedState.disableSpinner = false;
 	trackedState.enableInterruptions = true;
 	trackedState.maxTurns = 30;
 	trackedState.maxCost = null;
@@ -23,8 +22,6 @@ function resetState() {
 
 function clearAllEnv() {
 	clearProviderEnv();
-	delete process.env.HARPER_AGENT_NO_SPINNER;
-	delete process.env.HARPER_AGENT_DISABLE_SPINNER;
 	delete process.env.HARPER_AGENT_DISABLE_INTERRUPTION;
 	delete process.env.HARPER_AGENT_DISABLE_INTERRUPTIONS;
 	delete process.env.HARPER_AGENT_ENABLE_INTERRUPTION;
@@ -184,18 +181,6 @@ describe('parseArgs CLI arguments', () => {
 		expect(trackedState.useFlexTier).toBe(true);
 	});
 
-	it('parses boolean flag --no-spinner', () => {
-		process.argv.push('--no-spinner');
-		parseArgs();
-		expect(trackedState.disableSpinner).toBe(true);
-	});
-
-	it('parses boolean flag --disable-spinner', () => {
-		process.argv.push('--disable-spinner');
-		parseArgs();
-		expect(trackedState.disableSpinner).toBe(true);
-	});
-
 	it('parses boolean flag --no-interrupt', () => {
 		process.argv.push('--no-interrupt');
 		parseArgs();
@@ -234,12 +219,6 @@ describe('parseArgs Environment Variables', () => {
 		process.env.HARPER_AGENT_FLEX_TIER = '1';
 		parseArgs();
 		expect(trackedState.useFlexTier).toBe(true);
-	});
-
-	it('uses HARPER_AGENT_NO_SPINNER=true', () => {
-		process.env.HARPER_AGENT_NO_SPINNER = 'true';
-		parseArgs();
-		expect(trackedState.disableSpinner).toBe(true);
 	});
 
 	it('uses HARPER_AGENT_DISABLE_INTERRUPTION=true', () => {

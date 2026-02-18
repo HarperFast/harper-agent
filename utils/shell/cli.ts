@@ -47,8 +47,6 @@ ${chalk.bold('OPTIONS')}
   --flex-tier             Force the use of the flex service tier for lower costs but potentially 
                           more errors under high system load.
                           Can also be set via HARPER_AGENT_FLEX_TIER=true environment variable.
-  --no-spinner            Disable the thinking spinner (also: --disable-spinner)
-                          Can also be set via HARPER_AGENT_NO_SPINNER=1 or HARPER_AGENT_DISABLE_SPINNER=1.
   --no-interruptions      Disable stdin-based interruption logic
                           Aliases: --no-interrupt, --no-interrupts, --disable-interrupt,
                                    --disable-interrupts, --disable-interruptions

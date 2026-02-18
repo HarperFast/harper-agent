@@ -13,6 +13,13 @@ export interface WatchedValuesTypeMap {
 	Exit: undefined;
 	InterruptThought: undefined;
 	UpdateLastMessageText: string;
+	UpdateCost: {
+		totalCost: number;
+		inputTokens: number;
+		outputTokens: number;
+		cachedInputTokens: number;
+		hasUnknownPrices: boolean;
+	};
 }
 
 export type WatchedValueKeys = keyof WatchedValuesTypeMap;

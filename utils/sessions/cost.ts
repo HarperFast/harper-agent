@@ -107,6 +107,16 @@ class CostTracker {
 		return this.totalCost + this.totalCompactionCost;
 	}
 
+	public getSessionStats() {
+		return {
+			totalCost: this.totalCost + this.totalCompactionCost,
+			inputTokens: this.totalInputTokens,
+			outputTokens: this.totalOutputTokens,
+			cachedInputTokens: this.totalCachedInputTokens,
+			hasUnknownPrices: this.hasUnknownPrices,
+		};
+	}
+
 	public getEstimatedTotalCost(
 		currentTurnUsage:
 			| Pick<Usage, 'requestUsageEntries' | 'outputTokens' | 'inputTokens' | 'inputTokensDetails'>

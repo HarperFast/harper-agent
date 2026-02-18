@@ -6,8 +6,10 @@ import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners } from '../emitters/listener';
 import type { Message } from '../models/message';
+import { CostView } from './CostView';
 import { GoalView } from './GoalView';
 import { MessageItem } from './MessageItem';
+import { SettingsView } from './SettingsView';
 import { ShellView } from './ShellView';
 import { UserInput } from './UserInput';
 import { VirtualList } from './VirtualList';
@@ -120,11 +122,15 @@ export function ChatContent() {
 					>
 						<Tab name="goal">{' '}GOAL{' '}</Tab>
 						<Tab name="shell">{' '}SHELL{' '}</Tab>
+						<Tab name="settings">{' '}SETTINGS{' '}</Tab>
+						<Tab name="cost">{' '}COST{' '}</Tab>
 					</Tabs>
 
 					<Box flexDirection="column" flexGrow={1} marginTop={0}>
 						{activeTab === 'goal' && <GoalView />}
 						{activeTab === 'shell' && <ShellView height={contentHeight - 6} />}
+						{activeTab === 'settings' && <SettingsView />}
+						{activeTab === 'cost' && <CostView />}
 					</Box>
 				</Box>
 			</Box>

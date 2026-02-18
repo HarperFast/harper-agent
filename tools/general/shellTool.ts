@@ -5,7 +5,6 @@ import { mentionsIgnoredPath } from '../../utils/files/mentionsIgnoredPath';
 import { getEnv } from '../../utils/getEnv';
 import { isRiskyCommand } from '../../utils/shell/isRiskyCommand';
 import { LocalShell } from '../../utils/shell/LocalShell';
-import { spinner } from '../../utils/shell/spinner';
 
 const ShellParameters = z.object({
 	commands: z.array(z.string()).describe('The commands to execute.'),
@@ -40,7 +39,6 @@ export const shellTool = tool({
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_SHELL', 'SHELL_AUTO_APPROVE') === '1' && !foundRiskyCommand
 			&& !foundIgnoredInteraction;
 
-		spinner.stop();
 		if (autoApproved) {
 			console.log(
 				chalk.bold.bgGreen.black('\n Shell command (auto-approved): \n'),
@@ -61,10 +59,6 @@ export const shellTool = tool({
 
 		for (const cmd of commands) {
 			console.log(chalk.dim(`  > ${cmd}`));
-		}
-
-		if (autoApproved) {
-			spinner.start();
 		}
 
 		return !autoApproved;

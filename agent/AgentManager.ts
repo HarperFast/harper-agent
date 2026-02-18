@@ -9,7 +9,7 @@ import { createTools } from '../tools/factory';
 import { checkForUpdate } from '../utils/package/checkForUpdate';
 import { costTracker } from '../utils/sessions/cost';
 import { createSession } from '../utils/sessions/createSession';
-import { modelSettings } from '../utils/sessions/modelSettings';
+import { getModelSettings } from '../utils/sessions/modelSettings';
 import { getStdin } from '../utils/shell/getStdin';
 
 export class AgentManager {
@@ -34,7 +34,7 @@ export class AgentManager {
 		trackedState.agent = new Agent({
 			name: 'Harper App Development Assistant',
 			model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
-			modelSettings,
+			modelSettings: getModelSettings(trackedState.model),
 			instructions: readAgentsMD() || defaultInstructions(),
 			tools: createTools(),
 		});
@@ -81,7 +81,7 @@ export class AgentManager {
 									emitToListeners('PushNewMessages', [{ type: 'agent', text: '' }]);
 									hasStartedResponse = true;
 								}
-								emitToListeners('UpdateLastMessageText', data.text_delta);
+								emitToListeners('UpdateLastMessageText', data.delta);
 								break;
 							case 'response_done':
 								const tier = (data as any).response?.providerData?.service_tier
@@ -139,7 +139,7 @@ export class AgentManager {
 								if (typeof result === 'string') {
 									const exitCodeMatch = result.match(/EXIT CODE: (\d+)/);
 									if (exitCodeMatch) {
-										exitCode = parseInt(exitCodeMatch[1], 10);
+										exitCode = parseInt(exitCodeMatch[1]!, 10);
 									}
 								}
 
@@ -160,12 +160,18 @@ export class AgentManager {
 						break;
 				}
 
+				const estimatedTotalCost = costTracker.getEstimatedTotalCost(
+					stream.state.usage,
+					trackedState.model || 'gpt-5.2',
+					trackedState.compactionModel || 'gpt-4o-mini',
+				);
+
+				emitToListeners('UpdateCost', {
+					...costTracker.getSessionStats(),
+					totalCost: estimatedTotalCost,
+				});
+
 				if (trackedState.maxCost !== null) {
-					const estimatedTotalCost = costTracker.getEstimatedTotalCost(
-						stream.state.usage,
-						trackedState.model || 'gpt-5.2',
-						trackedState.compactionModel || 'gpt-4o-mini',
-					);
 					if (estimatedTotalCost > trackedState.maxCost) {
 						if (trackedState.controller) {
 							trackedState.controller.abort();
@@ -189,6 +195,7 @@ export class AgentManager {
 					stream.state.usage,
 					trackedState.compactionModel || 'gpt-4o-mini',
 				);
+				emitToListeners('UpdateCost', costTracker.getSessionStats());
 			}
 		} catch (error: any) {
 			emitToListeners('SetInputMode', 'waiting');
