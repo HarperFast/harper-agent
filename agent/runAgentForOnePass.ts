@@ -1,0 +1,151 @@
+import { Agent, type AgentInputItem, run, type RunState } from '@openai/agents';
+import { argumentTruncationPoint } from '../ink/constants/argumentTruncationPoint';
+import { curryEmitToListeners, emitToListeners, onceListener } from '../ink/emitters/listener';
+import { handleExit } from '../lifecycle/handleExit';
+import type { CombinedSession } from '../lifecycle/session';
+import { trackedState } from '../lifecycle/trackedState';
+import { costTracker } from '../utils/sessions/cost';
+import { isTrue } from '../utils/strings/isTrue';
+import { showErrorToUser } from './showErrorToUser';
+
+export async function runAgentForOnePass(
+	agent: Agent,
+	session: CombinedSession,
+	input: string | AgentInputItem[] | RunState<undefined, Agent>,
+	controller: AbortController,
+): Promise<null | RunState<undefined, Agent>> {
+	let lastToolCallInfo: string | null = null;
+
+	try {
+		emitToListeners('SetInputMode', 'thinking');
+		let hasStartedResponse = false;
+
+		const stream = await run(agent, input, {
+			session,
+			stream: true,
+			signal: controller.signal,
+			maxTurns: trackedState.maxTurns,
+		});
+
+		for await (const event of stream) {
+			switch (event.type) {
+				case 'raw_model_stream_event':
+					const data = event.data;
+					switch (data.type) {
+						case 'response_started':
+							break;
+						case 'output_text_delta':
+							if (!hasStartedResponse) {
+								emitToListeners('PushNewMessages', [{ type: 'agent', text: data.delta }]);
+								hasStartedResponse = true;
+							} else {
+								emitToListeners('UpdateLastMessageText', data.delta);
+							}
+							break;
+						case 'response_done':
+							const tier = (data as any).response?.providerData?.service_tier
+								|| (data as any).providerData?.service_tier;
+							if (tier) {
+								(stream.state.usage as any).serviceTier = tier;
+								const entries = stream.state.usage.requestUsageEntries;
+								if (entries && entries.length > 0) {
+									(entries[entries.length - 1] as any).serviceTier = tier;
+								}
+							}
+							emitToListeners('SetInputMode', 'waiting');
+							break;
+					}
+					break;
+				case 'run_item_stream_event':
+					if (event.name === 'tool_called') {
+						const item: any = event.item.rawItem ?? event.item;
+						const name = item.name || item.type || 'tool';
+						let args: string = typeof item.arguments === 'string'
+							? item.arguments
+							: item.arguments
+							? JSON.stringify(item.arguments)
+							: '';
+
+						if (!args && item.type === 'shell_call' && item.action?.commands) {
+							args = JSON.stringify(item.action.commands);
+						}
+
+						if (!args && item.type === 'apply_patch_call' && item.operation) {
+							args = JSON.stringify(item.operation);
+						}
+
+						const displayedArgs = args
+							? `(${args.slice(0, argumentTruncationPoint)}${args.length > argumentTruncationPoint ? '...' : ''})`
+							: '()';
+						emitToListeners('PushNewMessages', [{
+							type: 'tool',
+							text: name,
+							args: displayedArgs,
+						}]);
+						// Save context for potential error reporting later
+						lastToolCallInfo = `${name}${displayedArgs}`;
+					}
+					break;
+			}
+
+			if (trackedState.maxCost !== null) {
+				const estimatedTotalCost = costTracker.getEstimatedTotalCost(
+					stream.state.usage,
+					trackedState.model || 'gpt-5.2',
+					trackedState.compactionModel || 'gpt-4o-mini',
+				);
+				if (estimatedTotalCost > trackedState.maxCost) {
+					emitToListeners('SetInputMode', 'denied');
+					setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
+					emitToListeners('PushNewMessages', [{
+						type: 'agent',
+						text: `Cost limit exceeded: $${estimatedTotalCost.toFixed(4)} > $${trackedState.maxCost.toFixed(4)}`,
+					}]);
+					if (controller) {
+						controller.abort();
+					}
+					process.exitCode = 1;
+					await handleExit();
+				}
+			}
+
+			// No break here - let the stream finish naturally so we can capture all events
+			// and potential multiple interruptions in one turn.
+		} // end of stream events loop
+
+		const estimatedTotalCost = costTracker.getEstimatedTotalCost(
+			stream.state.usage,
+			trackedState.model,
+			trackedState.compactionModel,
+		);
+		emitToListeners('UpdateCost', {
+			...costTracker.getSessionStats(),
+			totalCost: estimatedTotalCost,
+		});
+
+		if (stream.interruptions?.length) {
+			emitToListeners('SetInputMode', 'approving');
+
+			for (const interruption of stream.interruptions) {
+				const newMessages = await onceListener('PushNewMessages');
+				const approved = newMessages.some(newMessage => newMessage.type === 'user' && isTrue(newMessage.text));
+				// TODO: How do I stop these from invoking separate runs?
+				if (approved) {
+					stream.state.approve(interruption);
+				} else {
+					stream.state.reject(interruption);
+				}
+			}
+
+			emitToListeners('SetInputMode', 'approved');
+			// TODO: Likely to step on toes with the timeouts.
+			setTimeout(curryEmitToListeners('SetInputMode', 'thinking'), 1000);
+			return stream.state;
+		}
+
+		return null;
+	} catch (error: any) {
+		showErrorToUser(error, lastToolCallInfo);
+		return null;
+	}
+}

@@ -1,6 +1,7 @@
 import { Box, Text, useInput, useStdout } from 'ink';
 import { Tab, Tabs } from 'ink-tab';
 import React, { useCallback, useEffect, useState } from 'react';
+import { handleExit } from '../../lifecycle/handleExit';
 import { useMessageListener } from '../bindings/useMessageListener';
 import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
@@ -53,7 +54,7 @@ export function ChatContent() {
 		}
 
 		if (key.ctrl && input === 'x') {
-			emitToListeners('Exit', undefined);
+			void handleExit();
 		}
 
 		if (key.escape && userInputMode === 'thinking') {

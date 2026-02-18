@@ -2,6 +2,7 @@ import { tool } from '@openai/agents';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { z } from 'zod';
+import { agentManager } from '../../agent/AgentManager';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
 
@@ -26,7 +27,7 @@ export async function execute({ fileName }: z.infer<typeof ToolParameters>) {
 		const normalized = String(fileName).replace(/\\/g, '/');
 		const m = normalized.match(/(?:^|\/)skills\/([A-Za-z0-9_-]+)\.md(?:$|[?#])/);
 		if (m && m[1]) {
-			trackedState.session?.addSkillRead?.(m[1]);
+			agentManager.session?.addSkillRead?.(m[1]);
 		}
 		const resolvedPath = resolvePath(trackedState.cwd, fileName);
 

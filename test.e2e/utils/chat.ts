@@ -68,8 +68,6 @@ export class Chat {
 				HARPER_AGENT_AUTO_APPROVE_PATCHES: '1',
 				HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER: '1',
 				HARPER_AGENT_AUTO_APPROVE_SHELL: '1',
-				// Disable stdin-based interruption logic during E2E runs to avoid races
-				HARPER_AGENT_DISABLE_INTERRUPTIONS: '1',
 				OPENAI_AGENTS_DISABLE_TRACING: process.env.OPENAI_AGENTS_DISABLE_TRACING || '1',
 				OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 			},
