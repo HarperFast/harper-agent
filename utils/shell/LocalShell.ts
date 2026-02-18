@@ -1,6 +1,8 @@
 import type { Shell, ShellAction, ShellOutputResult, ShellResult } from '@openai/agents';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
+import { commandId } from '../../ink/contexts/ShellContext';
+import { emitToListeners } from '../../ink/emitters/listener';
 import { trackedState } from '../../lifecycle/trackedState';
 import { getEnv } from '../getEnv';
 
@@ -23,11 +25,23 @@ export class LocalShell implements Shell {
 		for (const command of action.commands) {
 			let stdout = '';
 			let stderr = '';
-			let exitCode: number | null = 0;
+			let exitCode: number = 0;
 			let outcome: ShellOutputResult['outcome'] = {
 				type: 'exit',
 				exitCode: 0,
 			};
+
+			const parts = command.split(' ');
+			const firstPart = parts[0]!;
+			const laterParts = parts.slice(1).join(' ') || '';
+
+			let myCommandId = commandId;
+			emitToListeners('AddShellCommand', {
+				command: firstPart,
+				args: laterParts,
+				running: true,
+			});
+
 			try {
 				const { stdout: localStdout, stderr: localStderr } = await execAsync(
 					command,
@@ -48,6 +62,13 @@ export class LocalShell implements Shell {
 					? { type: 'timeout' }
 					: { type: 'exit', exitCode };
 			}
+
+			emitToListeners('UpdateShellCommand', {
+				id: myCommandId,
+				running: false,
+				exitCode,
+			});
+
 			output.push({
 				command,
 				stdout,

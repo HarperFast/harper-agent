@@ -215,34 +215,6 @@ class CostTracker {
 			`[~${chalk.cyan('$' + (this.totalCost + this.totalCompactionCost + totalTurnCost).toFixed(4))}]`,
 		);
 	}
-
-	public logFinalStats() {
-		if (this.totalInputTokens > 0 || this.totalOutputTokens > 0) {
-			const fmt = (n: number) => new Intl.NumberFormat().format(n);
-			const cachedStr = this.totalCachedInputTokens > 0
-				? ` (${chalk.cyan(fmt(this.totalCachedInputTokens))} cached)`
-				: '';
-			const showCost = !this.hasUnknownPrices;
-			const totalCost = this.totalCost + this.totalCompactionCost;
-			let statsStr = chalk.dim(
-				`Final session usage: ${chalk.cyan(fmt(this.totalInputTokens))} input${cachedStr}, ${
-					chalk.cyan(fmt(this.totalOutputTokens))
-				} output tokens.`,
-			);
-
-			if (showCost) {
-				statsStr += chalk.dim(` Total cost: ~${chalk.cyan('$' + totalCost.toFixed(4))}`);
-				if (this.totalCompactionCost > 0) {
-					statsStr += chalk.dim(
-						` (Compaction: ${chalk.cyan('$' + this.totalCompactionCost.toFixed(4))})`,
-					);
-				}
-			}
-
-			// TODO:
-			console.log(statsStr);
-		}
-	}
 }
 
 export const costTracker = new CostTracker();

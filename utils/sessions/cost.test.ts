@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { calculateCost, costTracker, extractCachedTokens, hasKnownPrices } from './cost';
 
 describe('cost utilities', () => {
@@ -148,44 +148,6 @@ describe('cost utilities', () => {
 			};
 			const status = costTracker.getStatusString(usage, 'gpt-5.2', 'unknown-compaction');
 			expect(status).toBe('');
-		});
-
-		it('should hide cost in logFinalStats if model is unknown', () => {
-			costTracker.reset();
-			const usage = {
-				inputTokens: 1000,
-				outputTokens: 100,
-				inputTokensDetails: [],
-				requestUsageEntries: [],
-			};
-			costTracker.recordTurn('ollama-llama3', usage);
-
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-			costTracker.logFinalStats();
-
-			expect(consoleSpy).toHaveBeenCalled();
-			const logMessage = consoleSpy.mock.calls[0]![0];
-			expect(logMessage).not.toContain('Total cost');
-			consoleSpy.mockRestore();
-		});
-
-		it('should show cost in logFinalStats if all models are known', () => {
-			costTracker.reset();
-			const usage = {
-				inputTokens: 1000,
-				outputTokens: 100,
-				inputTokensDetails: [],
-				requestUsageEntries: [],
-			};
-			costTracker.recordTurn('gpt-5.2', usage);
-
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-			costTracker.logFinalStats();
-
-			expect(consoleSpy).toHaveBeenCalled();
-			const logMessage = consoleSpy.mock.calls[0]![0];
-			expect(logMessage).toContain('Total cost');
-			consoleSpy.mockRestore();
 		});
 
 		it('should respect serviceTier property on usage entries', () => {

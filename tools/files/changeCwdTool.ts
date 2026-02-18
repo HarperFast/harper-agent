@@ -17,26 +17,23 @@ export async function execute({ path }: z.infer<typeof ToolParameters>) {
 		const target = resolvePath(trackedState.cwd, path);
 		const stat = statSync(target);
 		if (!stat.isDirectory()) {
-			console.log(`Path is not a directory: ${target}`);
 			return `Path is not a directory: ${target}`;
 		}
 		process.chdir(target);
 		trackedState.cwd = process.cwd();
-		console.log(`Switched current working directory to ${trackedState.cwd}`);
+		// TODO: console.log(`Switched current working directory to ${trackedState.cwd}`);
 
 		const agentsMDContents = readAgentsMD();
 		if (agentsMDContents) {
 			if (agentManager.agent) {
 				agentManager.agent.instructions = agentsMDContents;
 			}
-			console.log('Detected AGENTS.md, reading its contents.');
+			// TODO: console.log('Detected AGENTS.md, reading its contents.');
 			return `Switched current working directory to ${trackedState.cwd}, with a AGENTS.md file containing:\n${agentsMDContents}\nI strongly suggest you use these newfound skills!`;
 		}
 
 		return `Switched current working directory to ${trackedState.cwd}`;
 	} catch (err: any) {
-		// If path does not exist or cannot be accessed, provide a clear message
-		console.log(`Failed to change directory: ${err.message}`);
 		return `Failed to change directory: ${err.message}`;
 	}
 }

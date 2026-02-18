@@ -27,17 +27,17 @@ export async function execute({ directoryName, template }: z.infer<typeof ToolPa
 	const appName = isCurrentDir ? '.' : path.basename(resolvedPath);
 
 	try {
-		console.log(`Creating new Harper application in ${resolvedPath} using template ${template}...`);
+		// TODO: console.log(`Creating new Harper application in ${resolvedPath} using template ${template}...`);
 
 		const pm = pickPreferredPackageManager();
 		const { cmd, label } = buildCreateCommand(pm, appName, template);
-		console.log(`Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`);
+		// TODO: console.log(`Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`);
 		execSync(cmd, {
 			cwd: executionCwd,
 			encoding: 'utf8',
 		});
 
-		console.log(`Initializing new Git repository in ${resolvedPath}...`);
+		// TODO: console.log(`Initializing new Git repository in ${resolvedPath}...`);
 		execSync('git init', { cwd: resolvedPath, stdio: 'ignore' });
 
 		// Automatically switch into the newly created app directory

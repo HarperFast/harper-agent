@@ -19,11 +19,10 @@ export function useMessageListener() {
 					await handleExit();
 				}
 
-				if (userInputMode === 'waiting') {
-					agentManager.runTask(message.text);
-				} else {
-					// TODO: Build up the messages they send while we are thinking?
+				if (userInputMode === 'waiting' && !message.handled) {
+					void agentManager.runTask(message.text);
 				}
+				// TODO: Build up the messages they send while we are thinking?
 			}
 		}
 	}, [userInputMode]);

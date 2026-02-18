@@ -29,7 +29,6 @@ export function showErrorToUser(error: any, lastToolCallInfo: string | null) {
 	const composed = `${name}:${code}${statusStr} ${message}${hint}${lastTool}${responseDataSnippet}${stack}`;
 
 	emitToListeners('SetInputMode', 'denied');
-	// TODO: Likely to step on toes with the timeouts.
 	setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
 	emitToListeners('PushNewMessages', [{
 		type: 'agent',

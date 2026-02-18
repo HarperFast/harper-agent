@@ -37,12 +37,13 @@ export async function needsApproval(
 
 	const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER', 'CODE_INTERPRETER_AUTO_APPROVE') === '1';
 
-	if (autoApproved) {
-		console.log(`\n${chalk.bold.bgGreen.black(` Code interpreter (${language}, auto-approved): `)}`);
-	} else {
-		console.log(`\n${chalk.bold.bgYellow.black(` Code interpreter (${language}) approval required: `)}`);
-	}
-	console.log(chalk.dim(code));
+	// TODO:
+	//   if (autoApproved) {
+	//   	console.log(`\n${chalk.bold.bgGreen.black(` Code interpreter (${language}, auto-approved): `)}`);
+	//   } else {
+	//   	console.log(`\n${chalk.bold.bgYellow.black(` Code interpreter (${language}) approval required: `)}`);
+	//   }
+	//   console.log(chalk.dim(code));
 
 	return !autoApproved;
 }

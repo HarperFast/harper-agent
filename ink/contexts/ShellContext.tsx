@@ -13,7 +13,7 @@ export const useShell = () => {
 	return context;
 };
 
-let commandId = 0;
+export let commandId = 0;
 
 export const ShellProvider = ({
 	children,

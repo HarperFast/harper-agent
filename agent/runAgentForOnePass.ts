@@ -17,7 +17,6 @@ export async function runAgentForOnePass(
 	let lastToolCallInfo: string | null = null;
 
 	try {
-		emitToListeners('SetInputMode', 'thinking');
 		let hasStartedResponse = false;
 
 		const stream = await run(agent, input, {
@@ -128,19 +127,30 @@ export async function runAgentForOnePass(
 
 			for (const interruption of stream.interruptions) {
 				const newMessages = await onceListener('PushNewMessages');
-				const approved = newMessages.some(newMessage => newMessage.type === 'user' && isTrue(newMessage.text));
-				// TODO: How do I stop these from invoking separate runs?
+				let approved = false;
+				for (const newMessage of newMessages) {
+					if (newMessage.type === 'user' && isTrue(newMessage.text)) {
+						approved = true;
+					}
+					newMessage.handled = true;
+				}
 				if (approved) {
+					emitToListeners('SetInputMode', 'approved');
 					stream.state.approve(interruption);
 				} else {
+					emitToListeners('SetInputMode', 'denied');
 					stream.state.reject(interruption);
 				}
 			}
-
-			emitToListeners('SetInputMode', 'approved');
-			// TODO: Likely to step on toes with the timeouts.
 			setTimeout(curryEmitToListeners('SetInputMode', 'thinking'), 1000);
 			return stream.state;
+		} else {
+			costTracker.recordTurn(
+				trackedState.model,
+				stream.state.usage,
+				trackedState.compactionModel,
+			);
+			emitToListeners('UpdateCost', costTracker.getSessionStats());
 		}
 
 		return null;

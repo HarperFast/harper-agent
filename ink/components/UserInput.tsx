@@ -23,6 +23,7 @@ export function UserInput() {
 
 	const onSubmitResetKey = useCallback((value: string) => {
 		setResetKey(prev => prev + 1);
+		emitToListeners('SetInputMode', 'thinking');
 		emitToListeners('PushNewMessages', [{ type: 'user', text: value.trim() }]);
 	}, []);
 

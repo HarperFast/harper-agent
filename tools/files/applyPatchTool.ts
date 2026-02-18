@@ -80,15 +80,16 @@ export async function needsApproval(
 
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', 'APPLY_PATCH_AUTO_APPROVE') === '1';
 
-		if (autoApproved) {
-			console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
-		} else {
-			console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
-		}
-		console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
-		if (operation.diff) {
-			printDiff(operation.diff);
-		}
+		// TODO:
+		//   if (autoApproved) {
+		//   	console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
+		//   } else {
+		//   	console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
+		//   }
+		//   console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
+		//   if (operation.diff) {
+		//   	printDiff(operation.diff);
+		//   }
 
 		return !autoApproved;
 	} catch (err) {
@@ -103,7 +104,7 @@ export async function execute(operation: z.infer<typeof ApplyPatchParameters>) {
 		const needed = await requiredSkillForOperation(operation.path, operation.type);
 		if (needed) {
 			const content = await getHarperSkillExecute({ skill: needed });
-			console.log(`Understanding ${needed} is necessary before applying this patch.`);
+			// TODO: console.log(`Understanding ${needed} is necessary before applying this patch.`);
 			return { status: 'failed, skill guarded', output: content } as const;
 		}
 		switch (operation.type) {
