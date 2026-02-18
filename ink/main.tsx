@@ -27,7 +27,7 @@ function Main() {
 
 	useEffect(() => {
 		if (config) {
-			agentManager.initialize(config);
+			void agentManager.initialize(config);
 		}
 	}, [config]);
 
@@ -42,4 +42,6 @@ function Main() {
 	);
 }
 
-render(<Main />);
+export function bootstrap() {
+	render(<Main />);
+}

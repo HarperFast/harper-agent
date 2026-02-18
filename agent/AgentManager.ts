@@ -1,5 +1,6 @@
 import { Agent, run } from '@openai/agents';
 import { emitToListeners } from '../ink/emitters/listener';
+import type { Config } from '../ink/models/config';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from '../lifecycle/getModel';
 import { readAgentsMD } from '../lifecycle/readAgentsMD';
@@ -15,7 +16,7 @@ export class AgentManager {
 	private isInitialized = false;
 	private shellCommandCount = 0;
 
-	public async initialize(config: { model: string; compactionModel: string; apiKey?: string; provider: string }) {
+	public async initialize(config: Config) {
 		if (this.isInitialized) { return; }
 
 		await checkForUpdate();
