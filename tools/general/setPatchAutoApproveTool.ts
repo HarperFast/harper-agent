@@ -23,7 +23,7 @@ export const setPatchAutoApproveTool = tool({
 		}
 
 		try {
-			await updateEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', newValue);
+			updateEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', newValue);
 			return `HARPER_AGENT_AUTO_APPROVE_PATCHES has been set to ${newValue} in .env and current process.`;
 		} catch (error: any) {
 			return `Error updating .env file: ${error.message}`;

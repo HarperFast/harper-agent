@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { handleHelp, handleVersion, isHelpRequest, isVersionRequest } from '../utils/shell/cli';
-import { isFalse } from '../utils/strings/isFalse';
 import { isTrue } from '../utils/strings/isTrue';
 import { isOpenAIModel } from './getModel';
 import { trackedState } from './trackedState';
@@ -65,17 +64,6 @@ export function parseArgs() {
 		// Handle boolean flags
 		if (arg === '--flex-tier') {
 			trackedState.useFlexTier = true;
-		} else if (
-			[
-				'--no-interrupt',
-				'--no-interrupts',
-				'--no-interruptions',
-				'--disable-interrupt',
-				'--disable-interrupts',
-				'--disable-interruptions',
-			].includes(arg)
-		) {
-			trackedState.enableInterruptions = false;
 		}
 	}
 
@@ -107,14 +95,6 @@ export function parseArgs() {
 
 	if (!trackedState.useFlexTier && isTrue(process.env.HARPER_AGENT_FLEX_TIER)) {
 		trackedState.useFlexTier = true;
-	}
-
-	// Interruption control via env (default is enabled)
-	if (
-		isTrue(process.env.HARPER_AGENT_DISABLE_INTERRUPTION) || isTrue(process.env.HARPER_AGENT_DISABLE_INTERRUPTIONS)
-		|| isFalse(process.env.HARPER_AGENT_ENABLE_INTERRUPTION) || isFalse(process.env.HARPER_AGENT_ENABLE_INTERRUPTIONS)
-	) {
-		trackedState.enableInterruptions = false;
 	}
 
 	// If no model was provided, select a sensible default based on available provider env keys

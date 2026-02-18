@@ -23,7 +23,7 @@ export const setInterpreterAutoApproveTool = tool({
 		}
 
 		try {
-			await updateEnv('HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER', newValue);
+			updateEnv('HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER', newValue);
 			return `HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER has been set to ${newValue} in .env and current process.`;
 		} catch (error: any) {
 			return `Error updating .env file: ${error.message}`;

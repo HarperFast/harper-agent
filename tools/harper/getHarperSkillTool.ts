@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
-import { trackedState } from '../../lifecycle/trackedState';
+import { agentManager } from '../../agent/AgentManager';
 
 const createHarper = dirname(createRequire(import.meta.url).resolve('create-harper'));
 
@@ -60,7 +60,7 @@ export async function execute({ skill }: z.infer<typeof ToolParameters>) {
 	try {
 		const filePath = join(skillsDir, `${skill}.md`);
 		const content = readFileSync(filePath, 'utf8');
-		trackedState.session?.addSkillRead?.(skill);
+		agentManager.session?.addSkillRead?.(skill);
 		return content;
 	} catch (error) {
 		return `Error reading Harper skill "${skill}": ${error}`;

@@ -1,58 +1,42 @@
 import { render, useApp } from 'ink';
-import React, { useEffect, useState } from 'react';
-import { agentManager } from '../agent/AgentManager';
-import { getProvider } from '../lifecycle/getModel';
-import { trackedState } from '../lifecycle/trackedState';
+import React from 'react';
 import { ChatContent } from './components/ChatContent';
-import { ConfigurationWizard } from './components/ConfigurationWizard';
+import { ConfigurationWizard } from './configurationWizard/ConfigurationWizard';
 import { ChatProvider } from './contexts/ChatContext';
 import { CostProvider } from './contexts/CostContext';
 import { PlanProvider } from './contexts/PlanContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ShellProvider } from './contexts/ShellContext';
 import { useListener } from './emitters/listener';
-import type { Config, ModelProvider } from './models/config';
 
-function Main() {
+export function bootstrapConfig(onComplete: (value?: unknown) => void) {
+	render(<MainConfig onComplete={onComplete} />);
+}
+
+function MainConfig({ onComplete }: { onComplete: (value?: unknown) => void }) {
 	const { exit } = useApp();
-	useListener('Exit', () => exit(), [exit]);
-	const [config, setConfig] = useState<Config | null>(() => {
-		const model = trackedState.model;
-		const compactionModel = trackedState.compactionModel;
-		const provider = (process.env.HARPER_AGENT_PROVIDER || getProvider(model)) as ModelProvider;
+	useListener('ExitUI', () => exit(), [exit]);
+	return <ConfigurationWizard onComplete={onComplete} />;
+}
 
-		let apiKey: string | undefined;
-		if (provider === 'OpenAI') { apiKey = process.env.OPENAI_API_KEY; }
-		else if (provider === 'Anthropic') { apiKey = process.env.ANTHROPIC_API_KEY; }
-		else if (provider === 'Google') { apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY; }
+export function bootstrapMain() {
+	render(<MainChat />);
+}
 
-		if (apiKey || provider === 'Ollama') {
-			return { provider, model, compactionModel, apiKey };
-		}
-		return null;
-	});
-
-	useEffect(() => {
-		if (config) {
-			void agentManager.initialize(config);
-		}
-	}, [config]);
-
+function MainChat() {
+	const { exit } = useApp();
+	useListener('ExitUI', () => exit(), [exit]);
 	return (
 		<CostProvider>
 			<PlanProvider>
 				<ShellProvider>
 					<SettingsProvider>
 						<ChatProvider>
-							{!config ? <ConfigurationWizard onComplete={setConfig} /> : <ChatContent />}
+							<ChatContent />
 						</ChatProvider>
 					</SettingsProvider>
 				</ShellProvider>
 			</PlanProvider>
 		</CostProvider>
 	);
-}
-
-export function bootstrap() {
-	render(<Main />);
 }

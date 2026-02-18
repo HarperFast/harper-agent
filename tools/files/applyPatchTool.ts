@@ -1,6 +1,7 @@
 import { type RunContext, tool } from '@openai/agents';
 import chalk from 'chalk';
 import { z } from 'zod';
+import { agentManager } from '../../agent/AgentManager';
 import { trackedState } from '../../lifecycle/trackedState';
 import { printDiff } from '../../utils/files/printDiff';
 import { getEnv } from '../../utils/getEnv';
@@ -21,7 +22,7 @@ function normalizedPath(p: string): string {
 
 async function getSkillsRead(): Promise<string[]> {
 	try {
-		const s = trackedState.session as any;
+		const s = agentManager.session;
 		const arr = await Promise.resolve(s?.getSkillsRead?.());
 		return Array.isArray(arr) ? arr as string[] : [];
 	} catch {

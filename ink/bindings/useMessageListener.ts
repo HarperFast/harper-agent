@@ -1,4 +1,5 @@
 import { agentManager } from '../../agent/AgentManager';
+import { handleExit } from '../../lifecycle/handleExit';
 import { useChat } from '../contexts/ChatContext';
 import { useListener } from '../emitters/listener';
 
@@ -15,20 +16,13 @@ export function useMessageListener() {
 				const lowerText = message.text.toLowerCase();
 
 				if (lowerText === 'exit' || lowerText === 'bye') {
-					process.exit(0);
-				}
-
-				if (userInputMode === 'approving') {
-					if (lowerText.includes('approve') || lowerText.includes('yes') || lowerText === 'y') {
-						agentManager.handleApproval(true);
-					} else if (lowerText.includes('deny') || lowerText.includes('no') || lowerText === 'n') {
-						agentManager.handleApproval(false);
-					}
-					return;
+					await handleExit();
 				}
 
 				if (userInputMode === 'waiting') {
 					agentManager.runTask(message.text);
+				} else {
+					// TODO: Build up the messages they send while we are thinking?
 				}
 			}
 		}

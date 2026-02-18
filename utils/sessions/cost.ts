@@ -239,6 +239,7 @@ class CostTracker {
 				}
 			}
 
+			// TODO:
 			console.log(statsStr);
 		}
 	}

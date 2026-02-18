@@ -10,7 +10,7 @@ export interface WatchedValuesTypeMap {
 	SetPlanItems: PlanItem[];
 	AddShellCommand: Omit<ShellCommand, 'id'>;
 	UpdateShellCommand: Partial<ShellCommand> & { id: number };
-	Exit: undefined;
+	ExitUI: undefined;
 	InterruptThought: undefined;
 	UpdateLastMessageText: string;
 	UpdateCost: {

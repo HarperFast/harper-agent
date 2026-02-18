@@ -1,5 +1,4 @@
-import chalk from 'chalk';
-import { harperResponse } from '../utils/shell/harperResponse';
+import { curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
 import { trackedState } from './trackedState';
 import type { WithRunCompaction } from './withRunCompaction';
 
@@ -75,10 +74,15 @@ export function trackCompaction(session: WithRunCompaction) {
 				} catch {}
 			}
 			const stack = err.stack ? `\nStack: ${String(err.stack).split('\n').slice(0, 8).join('\n')}` : '';
-			const composed =
-				`${name}:${code}${statusStr} ${message}${hint}${compactionCtx}${argsSnippet}${responseDataSnippet}${stack}`;
-			harperResponse(chalk.red(composed));
-			trackedState.atStartOfLine = true;
+
+			emitToListeners('SetInputMode', 'denied');
+			setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
+			emitToListeners('PushNewMessages', [{
+				type: 'agent',
+				text:
+					`${name}:${code}${statusStr} ${message}${hint}${compactionCtx}${argsSnippet}${responseDataSnippet}${stack}`,
+			}]);
+
 			return undefined as any;
 		}
 	};

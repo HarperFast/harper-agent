@@ -7,25 +7,16 @@ const ORIGINAL_ENV = { ...process.env } as Record<string, string | undefined>;
 const ORIGINAL_ARGV = [...process.argv];
 
 function resetState() {
-	trackedState.atStartOfLine = true;
-	trackedState.emptyLines = 0;
-	trackedState.approvalState = null;
-	trackedState.controller = null;
 	trackedState.model = '';
 	trackedState.compactionModel = '';
 	trackedState.sessionPath = null;
 	trackedState.useFlexTier = false;
-	trackedState.enableInterruptions = true;
 	trackedState.maxTurns = 30;
 	trackedState.maxCost = null;
 }
 
 function clearAllEnv() {
 	clearProviderEnv();
-	delete process.env.HARPER_AGENT_DISABLE_INTERRUPTION;
-	delete process.env.HARPER_AGENT_DISABLE_INTERRUPTIONS;
-	delete process.env.HARPER_AGENT_ENABLE_INTERRUPTION;
-	delete process.env.HARPER_AGENT_ENABLE_INTERRUPTIONS;
 	delete process.env.HARPER_AGENT_MAX_TURNS;
 	delete process.env.HARPER_AGENT_MAX_COST;
 }
@@ -180,18 +171,6 @@ describe('parseArgs CLI arguments', () => {
 		parseArgs();
 		expect(trackedState.useFlexTier).toBe(true);
 	});
-
-	it('parses boolean flag --no-interrupt', () => {
-		process.argv.push('--no-interrupt');
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
-	});
-
-	it('parses boolean flag --disable-interruptions', () => {
-		process.argv.push('--disable-interruptions');
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
-	});
 });
 
 describe('parseArgs Environment Variables', () => {
@@ -219,30 +198,6 @@ describe('parseArgs Environment Variables', () => {
 		process.env.HARPER_AGENT_FLEX_TIER = '1';
 		parseArgs();
 		expect(trackedState.useFlexTier).toBe(true);
-	});
-
-	it('uses HARPER_AGENT_DISABLE_INTERRUPTION=true', () => {
-		process.env.HARPER_AGENT_DISABLE_INTERRUPTION = 'true';
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
-	});
-
-	it('uses HARPER_AGENT_ENABLE_INTERRUPTIONS=false', () => {
-		process.env.HARPER_AGENT_ENABLE_INTERRUPTIONS = 'false';
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
-	});
-
-	it('uses HARPER_AGENT_ENABLE_INTERRUPTIONS=0', () => {
-		process.env.HARPER_AGENT_ENABLE_INTERRUPTIONS = '0';
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
-	});
-
-	it('uses HARPER_AGENT_DISABLE_INTERRUPTIONS=1', () => {
-		process.env.HARPER_AGENT_DISABLE_INTERRUPTIONS = '1';
-		parseArgs();
-		expect(trackedState.enableInterruptions).toBe(false);
 	});
 
 	it('CLI arg takes precedence over Env var', () => {

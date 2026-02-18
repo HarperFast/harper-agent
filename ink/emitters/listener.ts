@@ -1,11 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import type { WatchedValueKeys, WatchedValuesTypeMap } from './watchedValueKeys';
 
-const listenersMap: Record<string, Array<(newValue: unknown, trigger?: unknown) => void>> = {};
+type GenericListenerCallback<T = unknown> = (newValue: T, trigger?: unknown) => void | Promise<void>;
+
+const listenersMap: Record<string, Array<GenericListenerCallback>> = {};
 
 export function useListener<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(
 	name: K,
-	listener: (newValue: T, trigger?: unknown) => void,
+	listener: GenericListenerCallback<T>,
 	deps: unknown,
 ) {
 	// eslint-disable-next-line react-hooks/preserve-manual-memoization,react-hooks/exhaustive-deps
@@ -14,15 +16,33 @@ export function useListener<K extends keyof WatchedValuesTypeMap, T extends Watc
 		if (!listenersMap[name]) {
 			listenersMap[name] = [];
 		}
-		listenersMap[name].push(callback as (newValue: unknown, trigger?: unknown) => void);
+		listenersMap[name].push(callback as GenericListenerCallback);
 
 		return function cleanUp() {
-			const index = listenersMap[name]!.indexOf(callback as (newValue: unknown, trigger?: unknown) => void);
+			const index = listenersMap[name]!.indexOf(callback as GenericListenerCallback);
 			if (index >= 0) {
 				listenersMap[name]!.splice(index, 1);
 			}
 		};
 	}, [name, listener, callback]);
+}
+
+export async function onceListener<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(
+	name: K,
+) {
+	return new Promise<T>((resolve) => {
+		if (!listenersMap[name]) {
+			listenersMap[name] = [];
+		}
+		const callback = (newValue: T) => {
+			resolve(newValue);
+			const index = listenersMap[name]!.indexOf(callback as GenericListenerCallback);
+			if (index >= 0) {
+				listenersMap[name]!.splice(index, 1);
+			}
+		};
+		listenersMap[name].unshift(callback as GenericListenerCallback);
+	});
 }
 
 export function emitToListeners<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(

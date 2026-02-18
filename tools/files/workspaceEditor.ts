@@ -1,5 +1,5 @@
+import type { ApplyPatchResult, Editor } from '@openai/agents';
 import { applyDiff } from '@openai/agents';
-import type { ApplyPatchResult, Editor } from '@openai/agents-core';
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
