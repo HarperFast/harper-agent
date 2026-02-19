@@ -1,1 +1,1 @@
-export type UserInputMode = 'thinking' | 'waiting' | 'approving' | 'approved' | 'denied';
+export type UserInputMode = 'waiting' | 'approving' | 'approved' | 'denied';

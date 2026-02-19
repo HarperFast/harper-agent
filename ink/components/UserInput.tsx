@@ -1,4 +1,4 @@
-import { Spinner, TextInput } from '@inkjs/ui';
+import { TextInput } from '@inkjs/ui';
 import { Box, Text } from 'ink';
 import React, { useCallback, useState } from 'react';
 import { handleExit } from '../../lifecycle/handleExit';
@@ -12,7 +12,6 @@ const modeSuggestion: Record<UserInputMode, string[]> = {
 	approving: ['yes', 'approve', 'no', 'deny'],
 	denied: [],
 	waiting: [],
-	thinking: [],
 };
 
 export function UserInput() {
@@ -26,7 +25,6 @@ export function UserInput() {
 	const onSubmitResetKey = useCallback((value: string) => {
 		if (value.length) {
 			setResetKey(prev => prev + 1);
-			emitToListeners('SetInputMode', 'thinking');
 			emitToListeners('PushNewMessages', [{ type: 'user', text: value.trim(), version: 1 }]);
 			setBlankLines(0);
 		} else {
@@ -60,7 +58,6 @@ export function UserInput() {
 				onSubmit={onSubmitResetKey}
 				suggestions={modeSuggestion[userInputMode]}
 			/>
-			{userInputMode === 'thinking' && <Spinner type="clock" />}
 		</Box>
 	);
 }
@@ -73,8 +70,6 @@ function calculateBorderColor(mode: UserInputMode) {
 			return 'red';
 		case 'approving':
 			return 'yellow';
-		case 'thinking':
-			return 'blue';
 		default:
 		case 'waiting':
 			return 'gray';
@@ -88,8 +83,6 @@ function calculatePlaceholder(mode: UserInputMode) {
 			return prefix + "OK! Let's find another way.";
 		case 'approving':
 			return prefix + 'Do you approve? yes / no';
-		case 'thinking':
-			return prefix + 'Thinking...';
 		default:
 		case 'approved':
 		case 'waiting':

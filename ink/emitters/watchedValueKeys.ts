@@ -7,6 +7,7 @@ export interface WatchedValuesTypeMap {
 	PushNewMessages: Omit<Message, 'id'>[];
 	SetGoal: string;
 	SetInputMode: UserInputMode;
+	SetThinking: boolean;
 	SetPlanItems: PlanItem[];
 	AddShellCommand: Omit<ShellCommand, 'id'>;
 	UpdateShellCommand: Partial<ShellCommand> & { id: number };

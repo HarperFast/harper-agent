@@ -1,4 +1,5 @@
 import { Agent, type AgentInputItem, type RunState } from '@openai/agents';
+import { emitToListeners } from '../ink/emitters/listener';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from '../lifecycle/getModel';
 import { readAgentsMD } from '../lifecycle/readAgentsMD';
@@ -35,10 +36,15 @@ export class AgentManager {
 
 	public async runTask(task: string) {
 		this.controller = new AbortController();
+
+		// We think while the pass executes.
+		emitToListeners('SetThinking', true);
 		let taskOrState: null | string | AgentInputItem[] | RunState<undefined, Agent> = task;
 		while (taskOrState) {
 			taskOrState = await runAgentForOnePass(this.agent!, this.session!, taskOrState, this.controller);
 		}
+		// When the pass finishes execution, we can stop thinking.
+		emitToListeners('SetThinking', false);
 	}
 
 	public interrupt() {

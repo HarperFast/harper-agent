@@ -1,3 +1,4 @@
+import { Spinner } from '@inkjs/ui';
 import { Box, Text, useInput } from 'ink';
 import { Tab, Tabs } from 'ink-tab';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,7 +18,7 @@ import { UserInput } from './UserInput';
 import { useTerminalSize, VirtualList } from './VirtualList';
 
 export function ChatContent() {
-	const { messages, userInputMode } = useChat();
+	const { messages, userInputMode, isThinking } = useChat();
 	const size = useTerminalSize();
 
 	useMessageListener();
@@ -42,7 +43,7 @@ export function ChatContent() {
 			void handleExit();
 		}
 
-		if (key.escape && userInputMode === 'thinking') {
+		if (key.escape && isThinking) {
 			emitToListeners('InterruptThought', undefined);
 		}
 	});
@@ -131,8 +132,9 @@ export function ChatContent() {
 					borderColor="blue"
 					paddingX={1}
 				>
-					<Box marginBottom={1}>
+					<Box marginBottom={1} flexDirection="row" alignItems="center" gap={1}>
 						<Text bold color="blue" underline>TIMELINE:</Text>
+						{isThinking && <Spinner type="clock" />}
 					</Box>
 					<Box flexDirection="column" flexGrow={1}>
 						<VirtualList
