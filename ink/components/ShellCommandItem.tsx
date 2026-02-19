@@ -5,27 +5,33 @@ import type { ShellCommand } from '../models/shellCommand';
 
 export const ShellCommandItem = memo(({ command, isSelected }: { command: ShellCommand; isSelected: boolean }) => {
 	const statusColor = command.running ? 'yellow' : command.exitCode === 0 ? 'green' : 'red';
+	const pipe = (
+		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+			{isSelected ? '┃ ' : '│ '}
+		</Text>
+	);
 
 	return (
-		<Box flexDirection="column" paddingLeft={isSelected ? 0 : 2}>
-			<Box gap={1}>
-				{isSelected && (
-					<Text color="gray" bold>
-						❯{' '}
+		<Box flexDirection="column">
+			<Box>
+				{pipe}
+				<Box gap={1}>
+					<Text bold color={statusColor}>
+						[{command.running ? '' : command.exitCode === 0 ? 'OK' : `${command.exitCode}`}]
 					</Text>
-				)}
-				<Text bold color={statusColor}>
-					[{command.running ? '' : command.exitCode === 0 ? 'OK' : `${command.exitCode}`}]
-				</Text>
-				<Text color="white" bold wrap="truncate-end">
-					{command.command}
-				</Text>
+					<Text color="white" bold wrap="truncate-end">
+						{command.command}
+					</Text>
+				</Box>
 				{command.running && <Spinner type="dots" />}
 			</Box>
-			<Box paddingLeft={isSelected ? 2 : 0}>
-				<Text dimColor italic wrap="truncate-end">
-					{command.args}
-				</Text>
+			<Box>
+				{pipe}
+				<Box paddingLeft={2}>
+					<Text dimColor italic wrap="truncate-end">
+						{command.args}
+					</Text>
+				</Box>
 			</Box>
 		</Box>
 	);
