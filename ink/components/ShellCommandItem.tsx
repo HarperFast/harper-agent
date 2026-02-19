@@ -17,7 +17,7 @@ export const ShellCommandItem = memo(({ command, isSelected }: { command: ShellC
 				{pipe}
 				<Box gap={1}>
 					<Text bold color={statusColor}>
-						[{command.running ? '' : command.exitCode === 0 ? 'OK' : `${command.exitCode}`}]
+						[{command.running ? '' : command.exitCode === 0 ? '✅' : `${command.exitCode}`}]
 					</Text>
 					<Text color="white" bold wrap="truncate-end">
 						{command.command}

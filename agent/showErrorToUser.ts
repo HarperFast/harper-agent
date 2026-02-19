@@ -33,5 +33,6 @@ export function showErrorToUser(error: any, lastToolCallInfo: string | null) {
 	emitToListeners('PushNewMessages', [{
 		type: 'agent',
 		text: composed,
+		version: 1,
 	}]);
 }

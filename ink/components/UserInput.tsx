@@ -1,6 +1,7 @@
 import { Spinner, TextInput } from '@inkjs/ui';
 import { Box, Text } from 'ink';
 import React, { useCallback, useState } from 'react';
+import { handleExit } from '../../lifecycle/handleExit';
 import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners } from '../emitters/listener';
@@ -17,14 +18,26 @@ const modeSuggestion: Record<UserInputMode, string[]> = {
 export function UserInput() {
 	const { userInputMode } = useChat();
 	const [resetKey, setResetKey] = useState(0);
+	const [, setBlankLines] = useState(0);
 
 	const borderColor = calculateBorderColor(userInputMode);
 	const placeholder = calculatePlaceholder(userInputMode);
 
 	const onSubmitResetKey = useCallback((value: string) => {
-		setResetKey(prev => prev + 1);
-		emitToListeners('SetInputMode', 'thinking');
-		emitToListeners('PushNewMessages', [{ type: 'user', text: value.trim() }]);
+		if (value.length) {
+			setResetKey(prev => prev + 1);
+			emitToListeners('SetInputMode', 'thinking');
+			emitToListeners('PushNewMessages', [{ type: 'user', text: value.trim(), version: 1 }]);
+			setBlankLines(0);
+		} else {
+			setBlankLines(value => {
+				value += 1;
+				if (value === 2) {
+					void handleExit();
+				}
+				return value;
+			});
+		}
 	}, []);
 
 	return (

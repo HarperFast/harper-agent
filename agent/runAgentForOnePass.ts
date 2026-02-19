@@ -35,7 +35,7 @@ export async function runAgentForOnePass(
 							break;
 						case 'output_text_delta':
 							if (!hasStartedResponse) {
-								emitToListeners('PushNewMessages', [{ type: 'agent', text: data.delta }]);
+								emitToListeners('PushNewMessages', [{ type: 'agent', text: data.delta, version: 1 }]);
 								hasStartedResponse = true;
 							} else {
 								emitToListeners('UpdateLastMessageText', data.delta);
@@ -80,6 +80,7 @@ export async function runAgentForOnePass(
 							type: 'tool',
 							text: name,
 							args: displayedArgs,
+							version: 1,
 						}]);
 						// Save context for potential error reporting later
 						lastToolCallInfo = `${name}${displayedArgs}`;
@@ -99,6 +100,7 @@ export async function runAgentForOnePass(
 					emitToListeners('PushNewMessages', [{
 						type: 'agent',
 						text: `Cost limit exceeded: $${estimatedTotalCost.toFixed(4)} > $${trackedState.maxCost.toFixed(4)}`,
+						version: 1,
 					}]);
 					if (controller) {
 						controller.abort();

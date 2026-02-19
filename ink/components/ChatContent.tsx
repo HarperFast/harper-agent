@@ -1,11 +1,12 @@
-import { Box, Text, useInput, useStdout } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { Tab, Tabs } from 'ink-tab';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { handleExit } from '../../lifecycle/handleExit';
 import { useMessageListener } from '../bindings/useMessageListener';
 import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners } from '../emitters/listener';
+import { wrapText } from '../library/wrapText';
 import type { Message } from '../models/message';
 import { CostView } from './CostView';
 import { GoalView } from './GoalView';
@@ -13,37 +14,20 @@ import { type LineItem, MessageLineItem } from './MessageLineItem';
 import { SettingsView } from './SettingsView';
 import { ShellView } from './ShellView';
 import { UserInput } from './UserInput';
-import { VirtualList } from './VirtualList';
+import { useTerminalSize, VirtualList } from './VirtualList';
 
 export function ChatContent() {
-	const { stdout } = useStdout();
 	const { messages, userInputMode } = useChat();
-	const [size, setSize] = useState({
-		columns: stdout?.columns || 80,
-		rows: stdout?.rows || 24,
-	});
+	const size = useTerminalSize();
 
 	useMessageListener();
 	const [activeTab, setActiveTab] = useState('goal');
 
-	useEffect(() => {
-		const onResize = () => {
-			setSize({
-				columns: stdout?.columns || 80,
-				rows: stdout?.rows || 24,
-			});
-		};
-
-		stdout?.on('resize', onResize);
-		return () => {
-			stdout?.off('resize', onResize);
-		};
-	}, [stdout]);
-
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
-	// Recompute selection when the flattened line list changes (set later)
-	// Placeholder: will update after lines are computed
+	const wrapCache = useRef<Map<number, { version: number; width: number; lineItems: LineItem[] }>>(
+		new Map(),
+	);
 
 	useInput((input, key) => {
 		if (key.upArrow) {
@@ -76,77 +60,57 @@ export function ChatContent() {
 
 	const availableTextWidth = timelineWidth - 6; // -2 border, -2 paddingX, -2 selection indicator
 
-	function wrapText(text: string, width: number): string[] {
-		if (width <= 1) { return text ? [text] : ['']; }
-		const hardLines = text.split('\n');
-		const allWrappedLines: string[] = [];
-
-		for (const hardLine of hardLines) {
-			if (hardLine.length === 0) {
-				allWrappedLines.push('');
-				continue;
-			}
-
-			const words = hardLine.split(/(\s+)/);
-			let currentLine = '';
-			for (const token of words) {
-				if (token.length === 0) { continue; }
-				if (currentLine.length + token.length <= width) {
-					currentLine += token;
-				} else {
-					if (currentLine) { allWrappedLines.push(currentLine.trimEnd()); }
-					if (token.trim().length === 0) {
-						// Skip leading whitespace on subsequent wrapped lines
-						currentLine = '';
-					} else if (token.length > width) {
-						// hard wrap very long token
-						for (let i = 0; i < token.length; i += width) {
-							const chunk = token.slice(i, i + width);
-							if (chunk.length === width) {
-								allWrappedLines.push(chunk);
-							} else {
-								currentLine = chunk;
-							}
-						}
-					} else {
-						currentLine = token;
-					}
-				}
-			}
-			if (currentLine) { allWrappedLines.push(currentLine.trimEnd()); }
-		}
-		return allWrappedLines.length ? allWrappedLines : [''];
-	}
-
-	const lineItems: LineItem[] = React.useMemo(() => {
+	const lineItems: LineItem[] = useMemo(() => {
 		const acc: LineItem[] = [];
 		for (const msg of messages) {
 			const labelWidth = labelWidthFor(msg.type);
 			const firstLineWidth = Math.max(1, availableTextWidth - labelWidth);
-			const textLines = wrapText(msg.text ?? '', firstLineWidth);
-			textLines.forEach((txt, idx) => {
-				acc.push({
-					key: `${msg.id}:text:${idx}`,
-					messageId: msg.id,
-					type: msg.type,
-					text: txt,
-					isFirstLine: idx === 0,
-				});
-			});
-			if (msg.args) {
-				const argsLines = wrapText(String(msg.args), firstLineWidth);
-				argsLines.forEach((txt, idx) => {
-					acc.push({
-						key: `${msg.id}:args:${idx}`,
+
+			let entry = wrapCache.current.get(msg.id);
+			if (!entry || entry.version !== msg.version || entry.width !== firstLineWidth) {
+				const textLines = wrapText(msg.text ?? '', firstLineWidth);
+				const argsLines = msg.args ? wrapText(String(msg.args), firstLineWidth) : [];
+
+				const msgLineItems: LineItem[] = [];
+				textLines.forEach((txt, idx) => {
+					msgLineItems.push({
+						key: `${msg.id}:text:${idx}`,
 						messageId: msg.id,
 						type: msg.type,
 						text: txt,
-						isFirstLine: idx === 0 && textLines.length === 0,
-						isArgsLine: true,
+						isFirstLine: idx === 0,
 					});
 				});
+				if (argsLines.length > 0) {
+					argsLines.forEach((txt, idx) => {
+						msgLineItems.push({
+							key: `${msg.id}:args:${idx}`,
+							messageId: msg.id,
+							type: msg.type,
+							text: txt,
+							isFirstLine: idx === 0 && textLines.length === 0,
+							isArgsLine: true,
+						});
+					});
+				}
+
+				entry = { version: msg.version, width: firstLineWidth, lineItems: msgLineItems };
+				wrapCache.current.set(msg.id, entry);
+			}
+
+			acc.push(...entry.lineItems);
+		}
+
+		// Cleanup cache for messages that no longer exist
+		if (wrapCache.current.size > messages.length * 2) {
+			const messageIds = new Set(messages.map(m => m.id));
+			for (const id of wrapCache.current.keys()) {
+				if (!messageIds.has(id)) {
+					wrapCache.current.delete(id);
+				}
 			}
 		}
+
 		return acc;
 	}, [messages, availableTextWidth, labelWidthFor]);
 
@@ -178,12 +142,15 @@ export function ChatContent() {
 							selectedIndex={selectedIndex}
 							renderOverflowBottom={() => undefined}
 							keyExtractor={(it) => it.key}
-							renderItem={({ item, isSelected }) => (
-								<MessageLineItem
-									item={item}
-									isSelected={isSelected}
-									indent={item.isFirstLine ? 0 : (labelWidthFor(item.type))}
-								/>
+							renderItem={useCallback(
+								({ item, isSelected }: { item: LineItem; isSelected: boolean }) => (
+									<MessageLineItem
+										item={item}
+										isSelected={isSelected}
+										indent={item.isFirstLine ? 0 : (labelWidthFor(item.type))}
+									/>
+								),
+								[labelWidthFor],
 							)}
 						/>
 					</Box>

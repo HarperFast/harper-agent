@@ -27,7 +27,7 @@ export const ChatProvider = ({
 	useListener('PushNewMessages', (messages) => {
 		setMessages(prev =>
 			prev.concat(
-				messages.map(message => ({ ...message, id: messageId++ })),
+				messages.map(message => ({ ...message, id: messageId++, version: 1 })),
 			)
 		);
 	}, []);
@@ -49,6 +49,7 @@ export const ChatProvider = ({
 			updated[prev.length - 1] = {
 				...last,
 				text: last.text + text,
+				version: last.version + 1,
 			};
 			return updated;
 		});

@@ -81,6 +81,7 @@ export function trackCompaction(session: WithRunCompaction) {
 				type: 'agent',
 				text:
 					`${name}:${code}${statusStr} ${message}${hint}${compactionCtx}${argsSnippet}${responseDataSnippet}${stack}`,
+				version: 1,
 			}]);
 
 			return undefined as any;
