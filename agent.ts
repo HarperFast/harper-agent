@@ -42,7 +42,9 @@ import { getStdin } from './utils/shell/getStdin';
 
 	getStdin().then((stdinPrompt) => {
 		if (stdinPrompt?.trim?.()?.length) {
-			emitToListeners('PushNewMessages', [{ type: 'user', text: stdinPrompt }]);
+			emitToListeners('PushNewMessages', [
+				{ type: 'user', text: stdinPrompt.trim(), version: 1 },
+			]);
 		}
 	});
 })();
