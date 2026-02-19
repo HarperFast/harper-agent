@@ -1,5 +1,4 @@
 import { tool } from '@openai/agents';
-import chalk from 'chalk';
 import { exec } from 'node:child_process';
 import { unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';

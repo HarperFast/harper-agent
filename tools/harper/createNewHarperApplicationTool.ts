@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
 import { buildCreateCommand } from '../../utils/package/buildHarperCreateCommand';
-import { pickPreferredPackageManager, PM_DISPLAY } from '../../utils/package/pickPreferredPackageManager';
+import { pickPreferredPackageManager } from '../../utils/package/pickPreferredPackageManager';
 import { execute as changeCwd } from '../files/changeCwdTool';
 
 const ToolParameters = z.object({
