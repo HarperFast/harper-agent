@@ -97,6 +97,8 @@ export async function runAgentForOnePass(
 				if (estimatedTotalCost > trackedState.maxCost) {
 					emitToListeners('SetInputMode', 'denied');
 					setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
+					// When we hit the max cost, we can stop thinking; we're about to exit.
+					emitToListeners('SetThinking', false);
 					emitToListeners('PushNewMessages', [{
 						type: 'agent',
 						text: `Cost limit exceeded: $${estimatedTotalCost.toFixed(4)} > $${trackedState.maxCost.toFixed(4)}`,
@@ -125,6 +127,8 @@ export async function runAgentForOnePass(
 		});
 
 		if (stream.interruptions?.length) {
+			// When we're interrupted and need to ask for approval, we can stop thinking.
+			emitToListeners('SetThinking', false);
 			emitToListeners('SetInputMode', 'approving');
 
 			for (const interruption of stream.interruptions) {
@@ -144,7 +148,10 @@ export async function runAgentForOnePass(
 					stream.state.reject(interruption);
 				}
 			}
-			setTimeout(curryEmitToListeners('SetInputMode', 'thinking'), 1000);
+
+			// After we finish gathering approvals or denials, we will start thinking again.
+			emitToListeners('SetThinking', true);
+			setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
 			return stream.state;
 		} else {
 			costTracker.recordTurn(

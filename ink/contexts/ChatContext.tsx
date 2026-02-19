@@ -23,6 +23,7 @@ export const ChatProvider = ({
 }) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [userInputMode, setUserInputMode] = useState<UserInputMode>('waiting');
+	const [isThinking, setIsThinking] = useState<boolean>(false);
 
 	useListener('PushNewMessages', (messages) => {
 		setMessages(prev =>
@@ -34,6 +35,14 @@ export const ChatProvider = ({
 
 	useListener('SetInputMode', newInputMode => {
 		setUserInputMode(newInputMode);
+	}, []);
+
+	useListener('SetThinking', (value) => {
+		setIsThinking(Boolean(value));
+	}, []);
+
+	useListener('InterruptThought', () => {
+		setIsThinking(false);
 	}, []);
 
 	useListener('UpdateLastMessageText', (text) => {
@@ -58,7 +67,8 @@ export const ChatProvider = ({
 	const value = useMemo(() => ({
 		messages,
 		userInputMode,
-	} satisfies ChatContextType), [messages, userInputMode]);
+		isThinking,
+	} satisfies ChatContextType), [messages, userInputMode, isThinking]);
 
 	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
