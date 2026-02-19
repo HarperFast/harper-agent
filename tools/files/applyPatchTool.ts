@@ -1,9 +1,7 @@
 import { type RunContext, tool } from '@openai/agents';
-import chalk from 'chalk';
 import { z } from 'zod';
 import { agentManager } from '../../agent/AgentManager';
 import { trackedState } from '../../lifecycle/trackedState';
-import { printDiff } from '../../utils/files/printDiff';
 import { getEnv } from '../../utils/getEnv';
 import { execute as getHarperSkillExecute, skills as harperSkills } from '../harper/getHarperSkillTool';
 import { WorkspaceEditor } from './workspaceEditor';

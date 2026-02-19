@@ -1,7 +1,5 @@
 import { tool } from '@openai/agents';
-import chalk from 'chalk';
 import { z } from 'zod';
-import { emitToListeners } from '../../ink/emitters/listener';
 import { mentionsIgnoredPath } from '../../utils/files/mentionsIgnoredPath';
 import { getEnv } from '../../utils/getEnv';
 import { isRiskyCommand } from '../../utils/shell/isRiskyCommand';
