@@ -6,15 +6,16 @@ import type { Message } from '../models/message';
 export const MessageItem = memo(({ message, isSelected }: { message: Message; isSelected: boolean }) => {
 	const color = messageTypeToColor(message.type);
 	const label = message.type === 'interrupted' ? '- thought interrupted with esc key -' : message.type.toUpperCase();
+	const pipe = (
+		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+			{isSelected ? '┃ ' : '│ '}
+		</Text>
+	);
 
 	return (
-		<Box flexDirection="column" paddingLeft={isSelected ? 0 : 2}>
+		<Box flexDirection="column">
 			<Box>
-				{isSelected && (
-					<Text color="gray" bold>
-						❯{' '}
-					</Text>
-				)}
+				{pipe}
 				<Text>
 					<Text bold color={color}>
 						{label}
@@ -24,10 +25,13 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 				</Text>
 			</Box>
 			{message.args && (
-				<Box paddingLeft={isSelected ? 2 : 0}>
-					<Text dimColor italic wrap="truncate-end">
-						Args: {message.args}
-					</Text>
+				<Box>
+					{pipe}
+					<Box paddingLeft={2}>
+						<Text dimColor italic wrap="truncate-end">
+							Args: {message.args}
+						</Text>
+					</Box>
 				</Box>
 			)}
 		</Box>

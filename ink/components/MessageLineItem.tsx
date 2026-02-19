@@ -11,39 +11,40 @@ export interface LineItem {
 	isArgsLine?: boolean;
 }
 
-export const MessageLineItem = memo(({ item, isSelected }: { item: LineItem; isSelected: boolean }) => {
-	const color = messageTypeToColor(item.type);
-	const label = item.type === 'interrupted' ? '- thought interrupted with esc key -' : item.type.toUpperCase();
+export const MessageLineItem = memo(
+	({ item, isSelected, indent = 0 }: { item: LineItem; isSelected: boolean; indent?: number }) => {
+		const color = messageTypeToColor(item.type);
+		const label = item.type === 'interrupted' ? '- thought interrupted with esc key -' : item.type.toUpperCase();
 
-	return (
-		<Box>
-			{isSelected && (
-				<Text color="gray" bold>
-					❯{' '}
+		return (
+			<Box>
+				<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+					{isSelected ? '┃ ' : '│ '}
 				</Text>
-			)}
-			{/* Label only on the first content line for a message */}
-			{item.isFirstLine
-				? (
-					<Text>
-						<Text bold color={color}>
-							{label}
-							{item.isArgsLine ? ' args: ' : ': '}
-						</Text>
-						<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>
-							{item.text}
-						</Text>
-					</Text>
-				)
-				: (
-					<Text>
-						{/* indent to align with where text starts on first line (label + ": ") is handled upstream via padding in container */}
-						<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>{item.text}</Text>
-					</Text>
-				)}
-		</Box>
-	);
-});
+				<Box paddingLeft={indent}>
+					{/* Label only on the first content line for a message */}
+					{item.isFirstLine
+						? (
+							<Text>
+								<Text bold color={color}>
+									{label}
+									{item.isArgsLine ? ' args: ' : ': '}
+								</Text>
+								<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>
+									{item.text}
+								</Text>
+							</Text>
+						)
+						: (
+							<Text>
+								<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>{item.text}</Text>
+							</Text>
+						)}
+				</Box>
+			</Box>
+		);
+	},
+);
 
 function messageTypeToColor(type: Message['type']) {
 	switch (type) {

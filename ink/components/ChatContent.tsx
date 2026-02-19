@@ -74,7 +74,7 @@ export function ChatContent() {
 		return type === 'agent' ? 7 : 6;
 	}, []);
 
-	const availableTextWidth = timelineWidth - 4; // -2 border, -2 paddingX
+	const availableTextWidth = timelineWidth - 6; // -2 border, -2 paddingX, -2 selection indicator
 
 	function wrapText(text: string, width: number): string[] {
 		if (width <= 1) { return text ? [text] : ['']; }
@@ -179,10 +179,11 @@ export function ChatContent() {
 							renderOverflowBottom={() => undefined}
 							keyExtractor={(it) => it.key}
 							renderItem={({ item, isSelected }) => (
-								// indent continuation lines to align under the first line text start
-								<Box paddingLeft={item.isFirstLine ? 0 : (labelWidthFor(item.type))}>
-									<MessageLineItem item={item} isSelected={isSelected} />
-								</Box>
+								<MessageLineItem
+									item={item}
+									isSelected={isSelected}
+									indent={item.isFirstLine ? 0 : (labelWidthFor(item.type))}
+								/>
 							)}
 						/>
 					</Box>
