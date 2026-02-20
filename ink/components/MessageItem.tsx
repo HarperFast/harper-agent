@@ -4,8 +4,9 @@ import type { Message } from '../models/message';
 
 // Memoized message item for performance
 export const MessageItem = memo(({ message, isSelected }: { message: Message; isSelected: boolean }) => {
-	const color = messageTypeToColor(message.type);
-	const label = message.type === 'interrupted' ? '- thought interrupted with esc key -' : message.type.toUpperCase();
+	const labelColor = messageTypeToLabelColor(message.type);
+	const textColor = messageTypeToTextColor(message.type);
+	const label = message.type === 'interrupted' ? '' : message.type.toUpperCase();
 	const pipe = (
 		<Text color={isSelected ? 'cyan' : 'gray'} dimColor={!isSelected} bold={isSelected}>
 			{isSelected ? '┃  ' : '│  '}
@@ -17,11 +18,13 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 			<Box>
 				{pipe}
 				<Text>
-					<Text bold color={color}>
-						{label}
-						{message.text ? ': ' : ''}
-					</Text>
-					<Text>{message.text}</Text>
+					{label && (
+						<Text bold color={labelColor}>
+							{label}
+							{message.text ? ': ' : ''}
+						</Text>
+					)}
+					<Text color={textColor}>{message.text}</Text>
 				</Text>
 			</Box>
 			{message.args && (
@@ -38,7 +41,7 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 	);
 });
 
-function messageTypeToColor(type: Message['type']) {
+function messageTypeToLabelColor(type: Message['type']) {
 	switch (type) {
 		case 'user':
 			return 'green';
@@ -48,5 +51,16 @@ function messageTypeToColor(type: Message['type']) {
 			return 'gray';
 		default:
 			return 'magenta';
+	}
+}
+
+function messageTypeToTextColor(type: Message['type']) {
+	switch (type) {
+		case 'interrupted':
+			return 'gray';
+		case 'user':
+		case 'agent':
+		default:
+			return 'white';
 	}
 }

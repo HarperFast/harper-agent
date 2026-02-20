@@ -2,6 +2,7 @@ import { tool } from '@openai/agents';
 import { statSync } from 'node:fs';
 import { z } from 'zod';
 import { agentManager } from '../../agent/AgentManager';
+import { emitToListeners } from '../../ink/emitters/listener';
 import { readAgentsMD } from '../../lifecycle/readAgentsMD';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
@@ -21,14 +22,17 @@ export async function execute({ path }: z.infer<typeof ToolParameters>) {
 		}
 		process.chdir(target);
 		trackedState.cwd = process.cwd();
-		// TODO: console.log(`Switched current working directory to ${trackedState.cwd}`);
 
 		const agentsMDContents = readAgentsMD();
 		if (agentsMDContents) {
 			if (agentManager.agent) {
 				agentManager.agent.instructions = agentsMDContents;
 			}
-			// TODO: console.log('Detected AGENTS.md, reading its contents.');
+			emitToListeners('PushNewMessages', [{
+				type: 'agent',
+				text: 'Detected AGENTS.md, reading its contents.',
+				version: 1,
+			}]);
 			return `Switched current working directory to ${trackedState.cwd}, with a AGENTS.md file containing:\n${agentsMDContents}\nI strongly suggest you use these newfound skills!`;
 		}
 

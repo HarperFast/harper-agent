@@ -14,6 +14,7 @@ import { runAgentForOnePass } from './runAgentForOnePass';
 export class AgentManager {
 	private isInitialized = false;
 	private controller: AbortController | null = null;
+	private queuedUserInputs: string[] = [];
 
 	public agent: Agent | null = null;
 	public session: CombinedSession | null = null;
@@ -109,6 +110,12 @@ export class AgentManager {
 		this.isInitialized = true;
 	}
 
+	public enqueueUserInput(text: string) {
+		if (typeof text === 'string' && text.trim().length > 0) {
+			this.queuedUserInputs.push(text);
+		}
+	}
+
 	public async runTask(task: string) {
 		this.controller = new AbortController();
 
@@ -120,6 +127,13 @@ export class AgentManager {
 		}
 		// When the pass finishes execution, we can stop thinking.
 		emitToListeners('SetThinking', false);
+
+		// If any user inputs arrived while thinking, batch them and kick off a new run immediately.
+		if (this.queuedUserInputs.length > 0) {
+			const batched = this.queuedUserInputs.splice(0).join('\n\n');
+			// Fire-and-forget next run with batched messages
+			void this.runTask(batched);
+		}
 	}
 
 	public interrupt() {

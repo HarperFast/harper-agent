@@ -3,8 +3,10 @@ import { handleExit } from '../../lifecycle/handleExit';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners, useListener } from '../emitters/listener';
 
+let hasShownInterruptHint = false;
+
 export function useMessageListener() {
-	const { userInputMode } = useChat();
+	const { userInputMode, isThinking } = useChat();
 
 	useListener('InterruptThought', () => {
 		agentManager.interrupt();
@@ -12,7 +14,7 @@ export function useMessageListener() {
 			{
 				id: Date.now(),
 				type: 'interrupted',
-				text: '',
+				text: '- thought interrupted -',
 				version: 1,
 			},
 		]);
@@ -27,10 +29,23 @@ export function useMessageListener() {
 					await handleExit();
 				}
 
-				if (userInputMode === 'waiting' && !message.handled) {
+				// If we're currently thinking, enqueue the message to be processed on the next turn
+				// and mark it handled so it doesn't trigger duplicate runs later.
+				if (isThinking) {
+					if (!hasShownInterruptHint) {
+						hasShownInterruptHint = true;
+						emitToListeners('PushNewMessages', [{
+							type: 'interrupted',
+							text: '- to interrupt the current thinking, press escape -',
+							version: 1,
+						}]);
+					}
+					agentManager.enqueueUserInput(message.text);
+					message.handled = true;
+				} else if (!message.handled) {
 					void agentManager.runTask(message.text);
 				}
 			}
 		}
-	}, [userInputMode]);
+	}, [userInputMode, isThinking]);
 }
