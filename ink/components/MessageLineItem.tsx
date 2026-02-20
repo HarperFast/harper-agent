@@ -25,9 +25,24 @@ export const MessageLineItem = memo(
 		indent?: number;
 	}) => {
 		const color = messageTypeToColor(item.type);
-		const label = item.type === 'interrupted' ? '- thought interrupted with esc key -' : item.type.toUpperCase();
+		const label = item.type === 'interrupted' ? 'THOUGHT INTERRUPTED' : item.type.toUpperCase();
 
-		const selectionColor = isFocused ? 'blue' : 'gray';
+		const selectionColor = isFocused ? 'cyan' : 'gray';
+
+		if (item.type === 'interrupted') {
+			return (
+				<Box>
+					<Text color={isSelected ? selectionColor : 'gray'} dimColor={!isSelected} bold={isSelected}>
+						{isSelected ? '┃  ' : '│  '}
+					</Text>
+					<Box paddingLeft={indent}>
+						<Text bold color={color}>
+							{label}
+						</Text>
+					</Box>
+				</Box>
+			);
+		}
 
 		return (
 			<Box>

@@ -20,8 +20,8 @@ export const ActionItemRow = memo(
 			: (item.status === 'denied' || item.status === 'failed'
 					|| (typeof item.exitCode === 'number' && item.exitCode !== 0))
 			? 'red'
-			: 'blue';
-		const selectionColor = isFocused ? 'blue' : 'gray';
+			: 'cyan';
+		const selectionColor = isFocused ? 'cyan' : 'gray';
 		const pipe = (
 			<Text color={isSelected ? selectionColor : 'gray'} bold={isSelected}>
 				{isSelected ? '┃  ' : '│  '}

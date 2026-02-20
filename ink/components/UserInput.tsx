@@ -19,7 +19,7 @@ export function UserInput() {
 	const [resetKey, setResetKey] = useState(0);
 	const [, setBlankLines] = useState(0);
 
-	const borderColor = focusedArea === 'input' ? 'blue' : 'gray';
+	const borderColor = focusedArea === 'input' ? 'cyan' : 'gray';
 	const placeholder = calculatePlaceholder(userInputMode);
 
 	const onSubmitResetKey = useCallback((value: string) => {
