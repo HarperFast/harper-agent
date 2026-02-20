@@ -3,10 +3,15 @@ import { Box, Text } from 'ink';
 import React, { memo } from 'react';
 import type { ShellCommand } from '../models/shellCommand';
 
-export const ShellCommandItem = memo(({ command, isSelected }: { command: ShellCommand; isSelected: boolean }) => {
+export const ShellCommandItem = memo(({
+	command,
+	isSelected,
+	isFocused,
+}: { command: ShellCommand; isSelected: boolean; isFocused: boolean }) => {
 	const statusColor = command.running ? 'yellow' : command.exitCode === 0 ? 'green' : 'red';
+	const selectionColor = isFocused ? 'blue' : 'gray';
 	const pipe = (
-		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+		<Text color={isSelected ? selectionColor : 'gray'} dimColor={!isSelected} bold={isSelected}>
 			{isSelected ? '┃  ' : '│  '}
 		</Text>
 	);

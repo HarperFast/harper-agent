@@ -15,7 +15,9 @@ export function ShellView({ height, isFocused }: Props) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
 	useEffect(() => {
-		setSelectedIndex(commands.length - 1);
+		if (commands.length > 0) {
+			setSelectedIndex(commands.length - 1);
+		}
 	}, [commands.length]);
 
 	useInput((_, key) => {
@@ -29,6 +31,34 @@ export function ShellView({ height, isFocused }: Props) {
 			setSelectedIndex(prev => Math.min(commands.length - 1, prev + 1));
 		}
 	});
+
+	const renderOverflowTop = useCallback((count: number) => (
+		<Box>
+			<Text color="gray" dimColor>│</Text>
+			{count > 0 && <Text dimColor>▲ {count} more</Text>}
+		</Box>
+	), []);
+
+	const renderOverflowBottom = useCallback((count: number) => (
+		<Box>
+			<Text color="gray" dimColor>│</Text>
+			{count > 0 && <Text dimColor>▼ {count} more</Text>}
+		</Box>
+	), []);
+
+	const renderFiller = useCallback((h: number) => (
+		<Box flexDirection="column">
+			{Array.from({ length: h }).map((_, i) => (
+				<Box key={i}>
+					<Text color="gray" dimColor>│</Text>
+				</Box>
+			))}
+		</Box>
+	), []);
+
+	const getItemHeight = useCallback((_item: ShellCommand) => {
+		return 2; // Status line + Args line
+	}, []);
 
 	if (commands.length === 0) {
 		return (
@@ -48,10 +78,6 @@ export function ShellView({ height, isFocused }: Props) {
 		);
 	}
 
-	const getItemHeight = (_item: ShellCommand) => {
-		return 2; // Status line + Args line
-	};
-
 	return (
 		<Box flexDirection="column" flexGrow={1}>
 			<VirtualList
@@ -59,28 +85,12 @@ export function ShellView({ height, isFocused }: Props) {
 				getItemHeight={getItemHeight}
 				height={height}
 				selectedIndex={selectedIndex}
-				renderOverflowTop={useCallback((count: number) => (
-					<Box>
-						<Text color="gray" dimColor>│</Text>
-						{count > 0 && <Text dimColor>▲ {count} more</Text>}
-					</Box>
-				), [])}
-				renderOverflowBottom={useCallback((count: number) => (
-					<Box>
-						<Text color="gray" dimColor>│</Text>
-						{count > 0 && <Text dimColor>▼ {count} more</Text>}
-					</Box>
-				), [])}
-				renderFiller={useCallback((h: number) => (
-					<Box flexDirection="column">
-						{Array.from({ length: h }).map((_, i) => (
-							<Box key={i}>
-								<Text color="gray" dimColor>│</Text>
-							</Box>
-						))}
-					</Box>
-				), [])}
-				renderItem={({ item, isSelected }) => <ShellCommandItem command={item} isSelected={isSelected} />}
+				renderOverflowTop={renderOverflowTop}
+				renderOverflowBottom={renderOverflowBottom}
+				renderFiller={renderFiller}
+				renderItem={({ item, isSelected }) => (
+					<ShellCommandItem command={item} isSelected={isSelected} isFocused={isFocused} />
+				)}
 			/>
 		</Box>
 	);

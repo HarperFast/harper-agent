@@ -268,26 +268,29 @@ export function ChatContent() {
 				</Box>
 
 				{/* Divider */}
-				<Box
-					flexDirection="column"
-					width={1}
-					borderStyle="round"
-					borderColor={dividerColor}
-					borderTop={false}
-					borderBottom={false}
-					borderRight={false}
-				/>
+				{activeTab !== 'shell' && (
+					<Box
+						flexDirection="column"
+						width={1}
+						borderStyle="round"
+						borderColor={dividerColor}
+						borderTop={false}
+						borderBottom={false}
+						borderRight={false}
+					/>
+				)}
 
 				{/* Status pane (Right) */}
 				<Box
 					flexDirection="column"
-					width={statusWidth - 1}
+					width={activeTab === 'shell' ? statusWidth : (statusWidth - 1)}
 					borderStyle="round"
 					borderColor={statusColor}
 					borderTop={false}
 					borderBottom={false}
 					borderLeft={false}
-					paddingX={1}
+					paddingLeft={activeTab === 'shell' ? 0 : 1}
+					paddingRight={1}
 				>
 					<Box flexDirection="column" flexGrow={1} marginTop={0}>
 						{activeTab === 'settings' && (
