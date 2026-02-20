@@ -7,7 +7,7 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 	const color = messageTypeToColor(message.type);
 	const label = message.type === 'interrupted' ? '- thought interrupted with esc key -' : message.type.toUpperCase();
 	const pipe = (
-		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+		<Text color={isSelected ? 'cyan' : 'gray'} dimColor={!isSelected} bold={isSelected}>
 			{isSelected ? '┃  ' : '│  '}
 		</Text>
 	);

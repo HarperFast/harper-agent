@@ -1,13 +1,21 @@
 import { agentManager } from '../../agent/AgentManager';
 import { handleExit } from '../../lifecycle/handleExit';
 import { useChat } from '../contexts/ChatContext';
-import { useListener } from '../emitters/listener';
+import { emitToListeners, useListener } from '../emitters/listener';
 
 export function useMessageListener() {
 	const { userInputMode } = useChat();
 
 	useListener('InterruptThought', () => {
 		agentManager.interrupt();
+		emitToListeners('PushNewMessages', [
+			{
+				id: Date.now(),
+				type: 'interrupted',
+				text: '',
+				version: 1,
+			},
+		]);
 	}, []);
 
 	useListener('PushNewMessages', async (messages) => {

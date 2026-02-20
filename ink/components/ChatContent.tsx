@@ -85,8 +85,12 @@ export function ChatContent() {
 
 	// Compute line-based virtualization
 	const labelWidthFor = useCallback((type: Message['type']) => {
-		// agent: 'AGENT: ' (7 incl. colon+space), user: 'USER: ' (6), interrupted has a longer label but keep same for alignment
-		return type === 'agent' ? 7 : 6;
+		// agent: 'AGENT: ' (7 incl. colon+space), user: 'USER: ' (6)
+		if (type === 'agent') { return 7; }
+		if (type === 'user') { return 6; }
+		if (type === 'interrupted') { return 0; // No indent for interrupted label
+		 }
+		return 6;
 	}, []);
 
 	const availableTextWidth = timelineWidth - 4; // -0 left border, -1 paddingRight, -3 selection indicator
@@ -199,19 +203,19 @@ export function ChatContent() {
 	const tabsTotalWidth = tabs.reduce((acc, t) => acc + t.label.length + 2, 0) + (tabs.length - 1);
 	const statusDashes = Math.max(0, statusWidth - tabsTotalWidth - 2); // -1 for '┬', -1 for '╮'
 
-	const timelineColor = focusedArea === 'timeline' ? 'blue' : 'gray';
-	const statusColor = focusedArea === 'status' ? 'blue' : 'gray';
+	const timelineColor = focusedArea === 'timeline' ? 'cyan' : 'gray';
+	const statusColor = focusedArea === 'status' ? 'cyan' : 'gray';
 
-	const dividerColor = (focusedArea === 'timeline' || focusedArea === 'status') ? 'blue' : 'gray';
+	const dividerColor = (focusedArea === 'timeline' || focusedArea === 'status') ? 'cyan' : 'gray';
 
-	const timelineBottomColor = (focusedArea === 'timeline' || focusedArea === 'input') ? 'blue' : 'gray';
-	const statusBottomColor = (focusedArea === 'status' || focusedArea === 'input') ? 'blue' : 'gray';
+	const timelineBottomColor = (focusedArea === 'timeline' || focusedArea === 'input') ? 'cyan' : 'gray';
+	const statusBottomColor = (focusedArea === 'status' || focusedArea === 'input') ? 'cyan' : 'gray';
 
-	const junctionLeftColor = (focusedArea === 'timeline' || focusedArea === 'input') ? 'blue' : 'gray';
+	const junctionLeftColor = (focusedArea === 'timeline' || focusedArea === 'input') ? 'cyan' : 'gray';
 	const junctionMiddleColor = (focusedArea === 'timeline' || focusedArea === 'status' || focusedArea === 'input')
-		? 'blue'
+		? 'cyan'
 		: 'gray';
-	const junctionRightColor = (focusedArea === 'status' || focusedArea === 'input') ? 'blue' : 'gray';
+	const junctionRightColor = (focusedArea === 'status' || focusedArea === 'input') ? 'cyan' : 'gray';
 
 	const timelinePipeFiller = useCallback((count: number) => (
 		<Box flexDirection="column">
