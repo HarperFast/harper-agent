@@ -7,7 +7,7 @@ export const ShellCommandItem = memo(({ command, isSelected }: { command: ShellC
 	const statusColor = command.running ? 'yellow' : command.exitCode === 0 ? 'green' : 'red';
 	const pipe = (
 		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
-			{isSelected ? '┃ ' : '│ '}
+			{isSelected ? '┃  ' : '│  '}
 		</Text>
 	);
 

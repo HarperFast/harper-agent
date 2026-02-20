@@ -1,7 +1,8 @@
-import { Select, TextInput } from '@inkjs/ui';
+import { Select } from '@inkjs/ui';
 import { Box, Text, useInput } from 'ink';
 import { useStepperInput } from 'ink-stepper';
 import React, { useEffect, useState } from 'react';
+import { BlinkingTextInput } from '../components/BlinkingTextInput';
 import { emitToListeners } from '../emitters/listener';
 
 export function ModelSelectionStep({
@@ -37,7 +38,7 @@ export function ModelSelectionStep({
 		return (
 			<Box flexDirection="column">
 				<Text>Enter custom model name for: {title}</Text>
-				<TextInput
+				<BlinkingTextInput
 					onSubmit={(v) => {
 						if (v === 'exit') {
 							emitToListeners('ExitUI', undefined);

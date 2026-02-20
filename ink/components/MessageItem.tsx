@@ -8,7 +8,7 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 	const label = message.type === 'interrupted' ? '- thought interrupted with esc key -' : message.type.toUpperCase();
 	const pipe = (
 		<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
-			{isSelected ? '┃ ' : '│ '}
+			{isSelected ? '┃  ' : '│  '}
 		</Text>
 	);
 

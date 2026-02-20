@@ -31,7 +31,7 @@ export const MessageLineItem = memo(
 		return (
 			<Box>
 				<Text color={isSelected ? selectionColor : 'gray'} dimColor={!isSelected} bold={isSelected}>
-					{isSelected ? '┃ ' : '│ '}
+					{isSelected ? '┃  ' : '│  '}
 				</Text>
 				<Box paddingLeft={indent}>
 					{/* Label only on the first content line for a message */}

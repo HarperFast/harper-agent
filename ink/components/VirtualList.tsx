@@ -1,5 +1,5 @@
 import { Box, Text, useStdout } from 'ink';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 export interface Viewport {
 	offset: number;
@@ -20,6 +20,7 @@ export interface VirtualListProps<T> {
 	overflowIndicatorThreshold?: number;
 	renderOverflowTop?: (count: number) => React.ReactNode;
 	renderOverflowBottom?: (count: number) => React.ReactNode;
+	renderFiller?: (height: number) => React.ReactNode;
 	onViewportChange?: (viewport: Viewport) => void;
 }
 
@@ -85,6 +86,7 @@ const VirtualListInner = <T,>(
 		overflowIndicatorThreshold = 1,
 		renderOverflowTop,
 		renderOverflowBottom,
+		renderFiller,
 		onViewportChange,
 	} = props;
 
@@ -112,7 +114,26 @@ const VirtualListInner = <T,>(
 
 	const [viewportOffset, setViewportOffset] = useState(0);
 
+	// Use a ref to track if we're in the middle of an items update.
+	// This helps avoid intermediate renders using the old items with the old viewport offset.
+	const lastItemsLength = useRef(items.length);
+
+	// Use a ref for viewportOffset to avoid stale value issues in visibility check
+	// while still allowing viewportOffset state to trigger re-renders.
+	const viewportOffsetRef = useRef(viewportOffset);
+	useEffect(() => {
+		viewportOffsetRef.current = viewportOffset;
+	}, [viewportOffset]);
+
+	const clampedSelectedIndex = Math.max(0, Math.min(selectedIndex, items.length - 1));
+
+	// Separate effect to handle manual scrolling/pinning if needed,
+	// but we want to avoid the "pop" where it scrolls back to top because of stale viewportOffset.
+	// Actually, if we include viewportOffset in dependencies, it will re-run when we setViewportOffset.
+	// If we DON'T include it, we might use a stale value for isVisible check.
+
 	const { visibleCount, visibleItems } = useMemo(() => {
+		if (availableHeight <= 0) { return { visibleCount: 0, visibleItems: [] }; }
 		let currentHeight = 0;
 		let count = 0;
 		const visibleItems: T[] = [];
@@ -130,27 +151,23 @@ const VirtualListInner = <T,>(
 		return { visibleCount: count, visibleItems };
 	}, [items, viewportOffset, availableHeight, getItemHeight]);
 
-	const viewport = useMemo(
-		() => ({
-			offset: viewportOffset,
-			visibleCount,
-			totalCount: items.length,
-		}),
-		[viewportOffset, visibleCount, items.length],
-	);
-
-	useEffect(() => {
-		onViewportChange?.(viewport);
-	}, [viewport, onViewportChange]);
-
-	const clampedSelectedIndex = Math.max(0, Math.min(selectedIndex, items.length - 1));
-
 	// Handle selectedIndex visibility
 	useEffect(() => {
-		if (items.length === 0) { return; }
+		if (items.length === 0 || availableHeight <= 0) {
+			lastItemsLength.current = items.length;
+			return;
+		}
+
+		const currentViewportOffset = viewportOffsetRef.current;
+		// If we were at the very bottom before items changed, or we are specifically
+		// selecting the last item, we should stick to the bottom.
+		const isSelectingLast = clampedSelectedIndex === items.length - 1;
+		const wasAtBottom = lastItemsLength.current > 0 && currentViewportOffset + visibleCount >= lastItemsLength.current;
+
+		lastItemsLength.current = items.length;
 
 		// Check if selectedIndex is above viewport
-		if (clampedSelectedIndex < viewportOffset) {
+		if (clampedSelectedIndex < currentViewportOffset) {
 			setViewportOffset(clampedSelectedIndex);
 			return;
 		}
@@ -158,7 +175,7 @@ const VirtualListInner = <T,>(
 		// Check if selectedIndex is below viewport
 		let heightToSelected = 0;
 		let isVisible = false;
-		for (let i = viewportOffset; i <= clampedSelectedIndex; i++) {
+		for (let i = currentViewportOffset; i <= clampedSelectedIndex; i++) {
 			const h = getItemHeight(items[i]!, i);
 			if (heightToSelected + h > availableHeight) {
 				// Not fully visible
@@ -171,7 +188,7 @@ const VirtualListInner = <T,>(
 			}
 		}
 
-		if (!isVisible) {
+		if (!isVisible || isSelectingLast || wasAtBottom) {
 			// Need to scroll down until selectedIndex is visible at the bottom
 			let tempOffset = clampedSelectedIndex;
 			let hSum = 0;
@@ -185,9 +202,49 @@ const VirtualListInner = <T,>(
 				if (tempOffset === 0) { break; }
 				tempOffset--;
 			}
-			setViewportOffset(Math.max(0, tempOffset));
+
+			const finalOffset = Math.max(0, tempOffset);
+			if (finalOffset !== currentViewportOffset) {
+				setViewportOffset(finalOffset);
+			}
 		}
-	}, [clampedSelectedIndex, items, availableHeight, getItemHeight, viewportOffset]);
+	}, [clampedSelectedIndex, items, availableHeight, getItemHeight, visibleCount]);
+
+	const viewport = useMemo(
+		() => ({
+			offset: viewportOffset,
+			visibleCount,
+			totalCount: items.length,
+		}),
+		[viewportOffset, visibleCount, items.length],
+	);
+
+	const isInitialMount = useRef(true);
+	useEffect(() => {
+		if (isInitialMount.current) {
+			if (items.length > 0 && availableHeight > 0) {
+				isInitialMount.current = false;
+				// Force a scroll to bottom on initial mount if we have items
+				let tempOffset = items.length - 1;
+				let hSum = 0;
+				while (tempOffset >= 0) {
+					const h = getItemHeight(items[tempOffset]!, tempOffset);
+					if (hSum + h > availableHeight) {
+						tempOffset++;
+						break;
+					}
+					hSum += h;
+					if (tempOffset === 0) { break; }
+					tempOffset--;
+				}
+				setViewportOffset(Math.max(0, tempOffset));
+			}
+		}
+	}, [availableHeight, items.length, getItemHeight]);
+
+	useEffect(() => {
+		onViewportChange?.(viewport);
+	}, [viewport, onViewportChange]);
 
 	useImperativeHandle(
 		ref,
@@ -282,46 +339,69 @@ const VirtualListInner = <T,>(
 	}
 	const overflowBottom = Math.max(0, items.length - viewportOffset - itemsFittingBelow);
 
-	const defaultOverflowTop = (count: number) => (
-		<Box paddingLeft={2}>
-			<Text dimColor>▲ {count} more</Text>
-		</Box>
-	);
+	const defaultOverflowTop = (count: number) => {
+		if (count < overflowIndicatorThreshold) {
+			return null;
+		}
 
-	const defaultOverflowBottom = (count: number) => (
-		<Box paddingLeft={2}>
-			<Text dimColor>▼ {count} more</Text>
-		</Box>
-	);
+		return (
+			<Box paddingLeft={2}>
+				<Text dimColor>▲ {count} more</Text>
+			</Box>
+		);
+	};
+
+	const defaultOverflowBottom = (count: number) => {
+		if (count < overflowIndicatorThreshold) {
+			return null;
+		}
+
+		return (
+			<Box paddingLeft={2}>
+				<Text dimColor>▼ {count} more</Text>
+			</Box>
+		);
+	};
 
 	const topIndicator = renderOverflowTop ?? defaultOverflowTop;
 	const bottomIndicator = renderOverflowBottom ?? defaultOverflowBottom;
 
 	return (
-		<Box flexDirection="column">
-			{showOverflowIndicators
-				&& overflowTop >= overflowIndicatorThreshold
-				&& topIndicator(overflowTop)}
-			{visibleItems.map((item, idx) => {
-				const actualIndex = viewportOffset + idx;
-				const key = keyExtractor
-					? keyExtractor(item, actualIndex)
-					: getDefaultKey(item, actualIndex);
-				const itemProps = {
-					item,
-					index: actualIndex,
-					isSelected: actualIndex === clampedSelectedIndex,
-				};
+		<Box flexDirection="column" height={resolvedHeight}>
+			{showOverflowIndicators && (
+				<Box height={1}>
+					{topIndicator(overflowTop)}
+				</Box>
+			)}
+			<Box flexDirection="column" flexGrow={1}>
+				{visibleItems.map((item, idx) => {
+					const actualIndex = viewportOffset + idx;
+					const key = keyExtractor
+						? keyExtractor(item, actualIndex)
+						: getDefaultKey(item, actualIndex);
+					const itemProps = {
+						item,
+						index: actualIndex,
+						isSelected: actualIndex === clampedSelectedIndex,
+					};
 
-				return (
-					<Box key={key} height={getItemHeight(item, actualIndex)} overflow="hidden">
-						{renderItem(itemProps)}
+					return (
+						<Box key={key} height={getItemHeight(item, actualIndex)} overflow="hidden">
+							{renderItem(itemProps)}
+						</Box>
+					);
+				})}
+				{renderFiller && hSum < availableHeight && (
+					<Box flexDirection="column" flexGrow={1}>
+						{renderFiller(availableHeight - hSum)}
 					</Box>
-				);
-			})}
-			{showOverflowIndicators
-				&& overflowBottom >= overflowIndicatorThreshold
-				&& bottomIndicator(overflowBottom)}
+				)}
+			</Box>
+			{showOverflowIndicators && (
+				<Box height={1}>
+					{bottomIndicator(overflowBottom)}
+				</Box>
+			)}
 		</Box>
 	);
 };
