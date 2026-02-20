@@ -1,10 +1,8 @@
 import { type RunContext, tool } from '@openai/agents';
-import chalk from 'chalk';
 import { z } from 'zod';
+import { agentManager } from '../../agent/AgentManager';
 import { trackedState } from '../../lifecycle/trackedState';
-import { printDiff } from '../../utils/files/printDiff';
 import { getEnv } from '../../utils/getEnv';
-import { spinner } from '../../utils/shell/spinner';
 import { execute as getHarperSkillExecute, skills as harperSkills } from '../harper/getHarperSkillTool';
 import { WorkspaceEditor } from './workspaceEditor';
 
@@ -22,7 +20,7 @@ function normalizedPath(p: string): string {
 
 async function getSkillsRead(): Promise<string[]> {
 	try {
-		const s = trackedState.session as any;
+		const s = agentManager.session;
 		const arr = await Promise.resolve(s?.getSkillsRead?.());
 		return Array.isArray(arr) ? arr as string[] : [];
 	} catch {
@@ -80,19 +78,16 @@ export async function needsApproval(
 
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', 'APPLY_PATCH_AUTO_APPROVE') === '1';
 
-		spinner.stop();
-		if (autoApproved) {
-			console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
-		} else {
-			console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
-		}
-		console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
-		if (operation.diff) {
-			printDiff(operation.diff);
-		}
-		if (autoApproved) {
-			spinner.start();
-		}
+		// TODO:
+		//   if (autoApproved) {
+		//   	console.log(`\n${chalk.bold.bgGreen.black(' Apply patch (auto-approved): ')}`);
+		//   } else {
+		//   	console.log(`\n${chalk.bold.bgYellow.black(' Apply patch approval required: ')}`);
+		//   }
+		//   console.log(`${chalk.bold(operation.type)}: ${operation.path}`);
+		//   if (operation.diff) {
+		//   	printDiff(operation.diff);
+		//   }
 
 		return !autoApproved;
 	} catch (err) {
@@ -107,7 +102,7 @@ export async function execute(operation: z.infer<typeof ApplyPatchParameters>) {
 		const needed = await requiredSkillForOperation(operation.path, operation.type);
 		if (needed) {
 			const content = await getHarperSkillExecute({ skill: needed });
-			console.log(`Understanding ${needed} is necessary before applying this patch.`);
+			// TODO: console.log(`Understanding ${needed} is necessary before applying this patch.`);
 			return { status: 'failed, skill guarded', output: content } as const;
 		}
 		switch (operation.type) {

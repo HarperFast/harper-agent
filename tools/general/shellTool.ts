@@ -1,11 +1,9 @@
 import { tool } from '@openai/agents';
-import chalk from 'chalk';
 import { z } from 'zod';
 import { mentionsIgnoredPath } from '../../utils/files/mentionsIgnoredPath';
 import { getEnv } from '../../utils/getEnv';
 import { isRiskyCommand } from '../../utils/shell/isRiskyCommand';
 import { LocalShell } from '../../utils/shell/LocalShell';
-import { spinner } from '../../utils/shell/spinner';
 
 const ShellParameters = z.object({
 	commands: z.array(z.string()).describe('The commands to execute.'),
@@ -40,32 +38,27 @@ export const shellTool = tool({
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_SHELL', 'SHELL_AUTO_APPROVE') === '1' && !foundRiskyCommand
 			&& !foundIgnoredInteraction;
 
-		spinner.stop();
-		if (autoApproved) {
-			console.log(
-				chalk.bold.bgGreen.black('\n Shell command (auto-approved): \n'),
-			);
-		} else if (foundRiskyCommand) {
-			console.log(
-				chalk.bold.bgYellow.black('\n Shell command approval of risky command required: \n'),
-			);
-		} else if (foundIgnoredInteraction) {
-			console.log(
-				chalk.bold.bgYellow.black('\n Shell command approval of ignored file interaction required: \n'),
-			);
-		} else {
-			console.log(
-				chalk.bold.bgYellow.black('\n Shell command approval required: \n'),
-			);
-		}
-
-		for (const cmd of commands) {
-			console.log(chalk.dim(`  > ${cmd}`));
-		}
-
-		if (autoApproved) {
-			spinner.start();
-		}
+		// TODO:
+		//   if (autoApproved) {
+		//   	console.log(
+		//   		chalk.bold.bgGreen.black('\n Shell command (auto-approved): \n'),
+		//   	);
+		//   } else if (foundRiskyCommand) {
+		//   	console.log(
+		//   		chalk.bold.bgYellow.black('\n Shell command approval of risky command required: \n'),
+		//   	);
+		//   } else if (foundIgnoredInteraction) {
+		//   	console.log(
+		//   		chalk.bold.bgYellow.black('\n Shell command approval of ignored file interaction required: \n'),
+		//   	);
+		//   } else {
+		//   	console.log(
+		//   		chalk.bold.bgYellow.black('\n Shell command approval required: \n'),
+		//   	);
+		//   }
+		//   for (const cmd of commands) {
+		//   	console.log(chalk.dim(`  > ${cmd}`));
+		//   }
 
 		return !autoApproved;
 	},

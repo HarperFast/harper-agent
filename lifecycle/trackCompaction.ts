@@ -1,25 +1,10 @@
-import chalk from 'chalk';
-import { harperResponse } from '../utils/shell/harperResponse';
-import { spinner } from '../utils/shell/spinner';
+import { curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
 import { trackedState } from './trackedState';
 import type { WithRunCompaction } from './withRunCompaction';
 
 export function trackCompaction(session: WithRunCompaction) {
 	const originalRunCompaction = session.runCompaction.bind(session);
 	session.runCompaction = async (args) => {
-		const originalMessage = spinner.message;
-		spinner.message = 'Compacting conversation history...';
-		const wasSpinning = spinner.isSpinning;
-		let timeout: NodeJS.Timeout | null = null;
-		if (!wasSpinning) {
-			if (!trackedState.atStartOfLine) {
-				process.stdout.write('\n');
-				trackedState.atStartOfLine = true;
-			}
-			timeout = setTimeout(() => {
-				spinner.start();
-			}, 50);
-		}
 		try {
 			return await originalRunCompaction(args);
 		} catch (error: any) {
@@ -89,19 +74,17 @@ export function trackCompaction(session: WithRunCompaction) {
 				} catch {}
 			}
 			const stack = err.stack ? `\nStack: ${String(err.stack).split('\n').slice(0, 8).join('\n')}` : '';
-			const composed =
-				`${name}:${code}${statusStr} ${message}${hint}${compactionCtx}${argsSnippet}${responseDataSnippet}${stack}`;
-			harperResponse(chalk.red(composed));
-			trackedState.atStartOfLine = true;
+
+			emitToListeners('SetInputMode', 'denied');
+			setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
+			emitToListeners('PushNewMessages', [{
+				type: 'agent',
+				text:
+					`${name}:${code}${statusStr} ${message}${hint}${compactionCtx}${argsSnippet}${responseDataSnippet}${stack}`,
+				version: 1,
+			}]);
+
 			return undefined as any;
-		} finally {
-			if (timeout) {
-				clearTimeout(timeout);
-			}
-			if (!wasSpinning) {
-				spinner.stop();
-			}
-			spinner.message = originalMessage;
 		}
 	};
 }

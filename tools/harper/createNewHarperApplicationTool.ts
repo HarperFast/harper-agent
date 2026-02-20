@@ -2,6 +2,7 @@ import { tool } from '@openai/agents';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { z } from 'zod';
+import { emitToListeners } from '../../ink/emitters/listener';
 import { trackedState } from '../../lifecycle/trackedState';
 import { resolvePath } from '../../utils/files/paths';
 import { buildCreateCommand } from '../../utils/package/buildHarperCreateCommand';
@@ -27,17 +28,24 @@ export async function execute({ directoryName, template }: z.infer<typeof ToolPa
 	const appName = isCurrentDir ? '.' : path.basename(resolvedPath);
 
 	try {
-		console.log(`Creating new Harper application in ${resolvedPath} using template ${template}...`);
-
 		const pm = pickPreferredPackageManager();
 		const { cmd, label } = buildCreateCommand(pm, appName, template);
-		console.log(`Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`);
+
+		emitToListeners('PushNewMessages', [{
+			type: 'agent',
+			text: `Detected ${PM_DISPLAY[pm]}. Executing: ${label} in ${executionCwd} for ${appName}`,
+			version: 1,
+		}]);
 		execSync(cmd, {
 			cwd: executionCwd,
 			encoding: 'utf8',
 		});
 
-		console.log(`Initializing new Git repository in ${resolvedPath}...`);
+		emitToListeners('PushNewMessages', [{
+			type: 'agent',
+			text: `Initializing new Git repository in ${resolvedPath}...`,
+			version: 1,
+		}]);
 		execSync('git init', { cwd: resolvedPath, stdio: 'ignore' });
 
 		// Automatically switch into the newly created app directory

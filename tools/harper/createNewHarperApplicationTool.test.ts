@@ -1,11 +1,15 @@
-vi.mock('node:child_process', () => ({
-	execSync: vi.fn((command: any) => {
-		if (typeof command === 'string' && command.startsWith('npm create harper')) {
-			return 'created ok';
-		}
-		return Buffer.from('');
-	}),
-}));
+vi.mock('node:child_process', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('node:child_process')>();
+	return {
+		...actual,
+		execSync: vi.fn((command: any) => {
+			if (typeof command === 'string' && command.startsWith('npm create harper')) {
+				return 'created ok';
+			}
+			return Buffer.from('');
+		}),
+	};
+});
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
