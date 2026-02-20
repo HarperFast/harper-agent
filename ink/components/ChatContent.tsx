@@ -10,8 +10,8 @@ import { wrapText } from '../library/wrapText';
 import type { FocusedArea } from '../models/ChatContextType';
 import type { Message } from '../models/message';
 import { CostView } from './CostView';
-import { GoalView } from './GoalView';
 import { type LineItem, MessageLineItem } from './MessageLineItem';
+import { PlanView } from './PlanView';
 import { SettingsView } from './SettingsView';
 import { ShellView } from './ShellView';
 import { UserInput } from './UserInput';
@@ -22,7 +22,7 @@ export function ChatContent() {
 	const size = useTerminalSize();
 
 	useMessageListener();
-	const [activeTab, setActiveTab] = useState('goal');
+	const [activeTab, setActiveTab] = useState('planDescription');
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -56,7 +56,7 @@ export function ChatContent() {
 
 		if (focusedArea === 'status') {
 			if (key.leftArrow || key.rightArrow) {
-				const tabNames = ['goal', 'shell', 'settings', 'cost'];
+				const tabNames = ['planDescription', 'shell', 'settings', 'cost'];
 				const currentIndex = tabNames.indexOf(activeTab);
 				if (key.leftArrow) {
 					const nextIndex = (currentIndex - 1 + tabNames.length) % tabNames.length;
@@ -159,7 +159,7 @@ export function ChatContent() {
 	}, [size.rows, size.columns]);
 
 	const tabs = useMemo(() => [
-		{ name: 'goal', label: 'GOAL' },
+		{ name: 'planDescription', label: 'PLAN' },
 		{ name: 'shell', label: 'SHELL' },
 		{ name: 'settings', label: 'SETTINGS' },
 		{ name: 'cost', label: 'COST' },
@@ -291,7 +291,7 @@ export function ChatContent() {
 					paddingX={1}
 				>
 					<Box flexDirection="column" flexGrow={1} marginTop={0}>
-						{activeTab === 'goal' && <GoalView />}
+						{activeTab === 'planDescription' && <PlanView />}
 						{activeTab === 'shell' && <ShellView height={contentHeight - 2} isFocused={focusedArea === 'status'} />}
 						{activeTab === 'settings' && <SettingsView />}
 						{activeTab === 'cost' && <CostView />}
