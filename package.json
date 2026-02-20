@@ -20,6 +20,7 @@
 		"format": "dprint check",
 		"format:fix": "dprint fmt",
 		"format:staged": "dprint check --staged --allow-no-files",
+		"format-and-lint:fix": "npm run format:fix && npm run lint:fix",
 		"test": "vitest --run",
 		"test:coverage": "vitest run --coverage",
 		"test:watch": "vitest",
