@@ -22,7 +22,7 @@ export function ChatContent() {
 	const size = useTerminalSize();
 
 	useMessageListener();
-	const [activeTab, setActiveTab] = useState('planDescription');
+	const [activeTab, setActiveTab] = useState('settings');
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -56,7 +56,7 @@ export function ChatContent() {
 
 		if (focusedArea === 'status') {
 			if (key.leftArrow || key.rightArrow) {
-				const tabNames = ['planDescription', 'shell', 'settings', 'cost'];
+				const tabNames = ['settings', 'planDescription', 'shell'];
 				const currentIndex = tabNames.indexOf(activeTab);
 				if (key.leftArrow) {
 					const nextIndex = (currentIndex - 1 + tabNames.length) % tabNames.length;
@@ -159,10 +159,9 @@ export function ChatContent() {
 	}, [size.rows, size.columns]);
 
 	const tabs = useMemo(() => [
+		{ name: 'settings', label: 'SETTINGS' },
 		{ name: 'planDescription', label: 'PLAN' },
 		{ name: 'shell', label: 'SHELL' },
-		{ name: 'settings', label: 'SETTINGS' },
-		{ name: 'cost', label: 'COST' },
 	], []);
 
 	const timelineTitle = 'TIMELINE:';
@@ -291,10 +290,16 @@ export function ChatContent() {
 					paddingX={1}
 				>
 					<Box flexDirection="column" flexGrow={1} marginTop={0}>
+						{activeTab === 'settings' && (
+							<Box flexDirection="column">
+								<CostView isDense />
+								<Box marginTop={1}>
+									<SettingsView isDense />
+								</Box>
+							</Box>
+						)}
 						{activeTab === 'planDescription' && <PlanView />}
 						{activeTab === 'shell' && <ShellView height={contentHeight - 2} isFocused={focusedArea === 'status'} />}
-						{activeTab === 'settings' && <SettingsView />}
-						{activeTab === 'cost' && <CostView />}
 					</Box>
 				</Box>
 			</Box>

@@ -2,12 +2,12 @@ import { Box, Text } from 'ink';
 import React from 'react';
 import { useCost } from '../contexts/CostContext';
 
-export function CostView() {
+export function CostView({ isDense = false }: { isDense?: boolean }) {
 	const { cost } = useCost();
 
 	return (
-		<Box flexDirection="column" paddingLeft={1} paddingTop={1}>
-			<Box marginBottom={1}>
+		<Box flexDirection="column" paddingLeft={1} paddingTop={isDense ? 0 : 1}>
+			<Box marginBottom={isDense ? 0 : 1}>
 				<Text bold underline color="cyan">Session Cost Breakdown</Text>
 			</Box>
 
@@ -16,7 +16,7 @@ export function CostView() {
 					<Text>Total Cost:</Text>
 				</Box>
 				<Text color="green">${cost.totalCost.toFixed(4)}</Text>
-				{cost.hasUnknownPrices && <Text color="yellow">(estimated - some prices unknown)</Text>}
+				{cost.hasUnknownPrices && <Text color="yellow">(est.)</Text>}
 			</Box>
 
 			<Box>
