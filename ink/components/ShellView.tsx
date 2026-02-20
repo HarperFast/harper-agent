@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from 'ink';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useShell } from '../contexts/ShellContext';
 import type { ShellCommand } from '../models/shellCommand';
 import { ShellCommandItem } from './ShellCommandItem';
@@ -32,10 +32,18 @@ export function ShellView({ height, isFocused }: Props) {
 
 	if (commands.length === 0) {
 		return (
-			<Box flexDirection="column" flexGrow={1}>
-				<Text italic color="gray">
-					No shell commands have been executed yet.
-				</Text>
+			<Box flexDirection="column" flexGrow={1} height={height}>
+				<Box>
+					<Text color="gray" dimColor>│</Text>
+					<Text italic color="gray">
+						No shell commands have been executed yet.
+					</Text>
+				</Box>
+				{Array.from({ length: height - 1 }).map((_, i) => (
+					<Box key={i}>
+						<Text color="gray" dimColor>│</Text>
+					</Box>
+				))}
 			</Box>
 		);
 	}
@@ -51,7 +59,27 @@ export function ShellView({ height, isFocused }: Props) {
 				getItemHeight={getItemHeight}
 				height={height}
 				selectedIndex={selectedIndex}
-				renderOverflowBottom={() => undefined}
+				renderOverflowTop={useCallback((count: number) => (
+					<Box>
+						<Text color="gray" dimColor>│</Text>
+						{count > 0 && <Text dimColor>▲ {count} more</Text>}
+					</Box>
+				), [])}
+				renderOverflowBottom={useCallback((count: number) => (
+					<Box>
+						<Text color="gray" dimColor>│</Text>
+						{count > 0 && <Text dimColor>▼ {count} more</Text>}
+					</Box>
+				), [])}
+				renderFiller={useCallback((h: number) => (
+					<Box flexDirection="column">
+						{Array.from({ length: h }).map((_, i) => (
+							<Box key={i}>
+								<Text color="gray" dimColor>│</Text>
+							</Box>
+						))}
+					</Box>
+				), [])}
 				renderItem={({ item, isSelected }) => <ShellCommandItem command={item} isSelected={isSelected} />}
 			/>
 		</Box>

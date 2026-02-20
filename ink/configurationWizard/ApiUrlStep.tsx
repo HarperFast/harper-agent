@@ -1,7 +1,7 @@
-import { TextInput } from '@inkjs/ui';
 import { Box, Text, useInput } from 'ink';
 import { useStepperInput } from 'ink-stepper';
 import React, { useEffect } from 'react';
+import { BlinkingTextInput } from '../components/BlinkingTextInput';
 import { emitToListeners } from '../emitters/listener';
 import type { ModelProvider } from '../models/config';
 
@@ -32,7 +32,7 @@ export function ApiUrlStep(
 		<Box flexDirection="column">
 			<Text>Where are you hosting {provider}?</Text>
 			<Box marginTop={1}>
-				<TextInput
+				<BlinkingTextInput
 					placeholder={defaultApi[provider] || ''}
 					onSubmit={(v) => {
 						if (v === 'exit') {

@@ -37,7 +37,7 @@ import { getStdin } from './utils/shell/getStdin';
 	// 	  console.log(chalk.dim(`Working directory: ${chalk.cyan(trackedState.cwd)}`));
 	// 	  console.log(chalk.dim(`Harper app detected: ${chalk.cyan(harperAppExists ? 'Yes' : 'No')}`));
 
-	agentManager.initialize();
+	await agentManager.initialize();
 	bootstrapMain();
 
 	getStdin().then((stdinPrompt) => {

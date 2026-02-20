@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
+import { agentManager } from '../../agent/AgentManager';
 import { useListener } from '../emitters/listener';
 import type { ChatContextType, FocusedArea } from '../models/ChatContextType';
 import type { Message } from '../models/message';
@@ -15,13 +16,32 @@ export const useChat = () => {
 };
 
 let messageId = 0;
+let initialMessages: Message[] = [];
+
+function getInitialMessages() {
+	if (initialMessages.length === 0) {
+		initialMessages = agentManager.initialMessages
+			? agentManager.initialMessages.map(m => ({
+				...m,
+				id: m.id ?? messageId++,
+				version: m.version ?? 1,
+			}))
+			: [{
+				id: messageId++,
+				type: 'agent',
+				text: 'What shall we build today? (type "exit" or Ctrl+X to quit)',
+				version: 1,
+			}];
+	}
+	return initialMessages;
+}
 
 export const ChatProvider = ({
 	children,
 }: {
 	children: ReactNode;
 }) => {
-	const [messages, setMessages] = useState<Message[]>([]);
+	const [messages, setMessages] = useState<Message[]>(getInitialMessages());
 	const [userInputMode, setUserInputMode] = useState<UserInputMode>('waiting');
 	const [isThinking, setIsThinking] = useState<boolean>(false);
 	const [focusedArea, setFocusedArea] = useState<FocusedArea>('input');

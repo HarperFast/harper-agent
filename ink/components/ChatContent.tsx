@@ -88,7 +88,7 @@ export function ChatContent() {
 		return type === 'agent' ? 7 : 6;
 	}, []);
 
-	const availableTextWidth = timelineWidth - 5; // -1 left border, -2 paddingX, -2 selection indicator
+	const availableTextWidth = timelineWidth - 4; // -0 left border, -1 paddingRight, -3 selection indicator
 
 	const lineItems: LineItem[] = useMemo(() => {
 		const acc: LineItem[] = [];
@@ -146,8 +146,17 @@ export function ChatContent() {
 
 	// Keep selection pinned to last line when new content arrives
 	useEffect(() => {
-		setSelectedIndex(Math.max(0, lineItems.length - 1));
+		if (lineItems.length > 0) {
+			setSelectedIndex(lineItems.length - 1);
+		}
 	}, [lineItems.length]);
+
+	// Ensure selection is visible when window is resized
+	useEffect(() => {
+		if (lineItems.length > 0) {
+			setSelectedIndex(lineItems.length - 1);
+		}
+	}, [size.rows, size.columns]);
 
 	const tabs = useMemo(() => [
 		{ name: 'goal', label: 'GOAL' },
@@ -176,6 +185,16 @@ export function ChatContent() {
 		? 'blue'
 		: 'gray';
 	const junctionRightColor = (focusedArea === 'status' || focusedArea === 'input') ? 'blue' : 'gray';
+
+	const timelinePipeFiller = useCallback((count: number) => (
+		<Box flexDirection="column">
+			{Array.from({ length: count }).map((_, i) => (
+				<Box key={i}>
+					<Text color="gray" dimColor>│</Text>
+				</Box>
+			))}
+		</Box>
+	), []);
 
 	return (
 		<Box flexDirection="column" height={size.rows} padding={0}>
@@ -211,12 +230,8 @@ export function ChatContent() {
 				<Box
 					flexDirection="column"
 					width={timelineWidth}
-					borderStyle="round"
-					borderColor={timelineColor}
-					borderTop={false}
-					borderBottom={false}
-					borderRight={false}
-					paddingX={1}
+					paddingLeft={0}
+					paddingRight={1}
 				>
 					<Box flexDirection="column" flexGrow={1}>
 						<VirtualList
@@ -224,7 +239,19 @@ export function ChatContent() {
 							itemHeight={1}
 							height={contentHeight - 2}
 							selectedIndex={selectedIndex}
-							renderOverflowBottom={() => undefined}
+							renderOverflowTop={useCallback((count: number) => (
+								<Box>
+									<Text color="gray" dimColor>│</Text>
+									{count > 0 && <Text dimColor>▲ {count} more</Text>}
+								</Box>
+							), [])}
+							renderOverflowBottom={useCallback((count: number) => (
+								<Box>
+									<Text color="gray" dimColor>│</Text>
+									{count > 0 && <Text dimColor>▼ {count} more</Text>}
+								</Box>
+							), [])}
+							renderFiller={timelinePipeFiller}
 							keyExtractor={(it) => it.key}
 							renderItem={useCallback(
 								({ item, isSelected }: { item: LineItem; isSelected: boolean }) => (

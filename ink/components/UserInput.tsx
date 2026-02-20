@@ -1,4 +1,3 @@
-import { TextInput } from '@inkjs/ui';
 import { Box, Text } from 'ink';
 import React, { useCallback, useState } from 'react';
 import { handleExit } from '../../lifecycle/handleExit';
@@ -6,6 +5,7 @@ import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners } from '../emitters/listener';
 import type { UserInputMode } from '../models/userInputMode';
+import { BlinkingTextInput } from './BlinkingTextInput';
 
 const modeSuggestion: Record<UserInputMode, string[]> = {
 	approved: [],
@@ -53,7 +53,7 @@ export function UserInput() {
 					❯
 				</Text>
 			</Box>
-			<TextInput
+			<BlinkingTextInput
 				key={resetKey}
 				placeholder={placeholder}
 				onSubmit={onSubmitResetKey}
@@ -74,6 +74,6 @@ function calculatePlaceholder(mode: UserInputMode) {
 		default:
 		case 'approved':
 		case 'waiting':
-			return prefix + 'What shall we build today? (type "exit" or Ctrl+X to quit)';
+			return '';
 	}
 }
