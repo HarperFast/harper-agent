@@ -7,9 +7,10 @@ import { VirtualList } from './VirtualList';
 
 interface Props {
 	height: number;
+	isFocused: boolean;
 }
 
-export function ShellView({ height }: Props) {
+export function ShellView({ height, isFocused }: Props) {
 	const { commands } = useShell();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -18,6 +19,8 @@ export function ShellView({ height }: Props) {
 	}, [commands.length]);
 
 	useInput((_, key) => {
+		if (!isFocused) { return; }
+
 		if (key.upArrow) {
 			setSelectedIndex(prev => Math.max(0, prev - 1));
 		}

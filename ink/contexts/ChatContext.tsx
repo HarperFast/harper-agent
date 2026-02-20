@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 import { useListener } from '../emitters/listener';
-import type { ChatContextType } from '../models/ChatContextType';
+import type { ChatContextType, FocusedArea } from '../models/ChatContextType';
 import type { Message } from '../models/message';
 import type { UserInputMode } from '../models/userInputMode';
 
@@ -24,6 +24,7 @@ export const ChatProvider = ({
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [userInputMode, setUserInputMode] = useState<UserInputMode>('waiting');
 	const [isThinking, setIsThinking] = useState<boolean>(false);
+	const [focusedArea, setFocusedArea] = useState<FocusedArea>('input');
 
 	useListener('PushNewMessages', (messages) => {
 		setMessages(prev =>
@@ -68,7 +69,9 @@ export const ChatProvider = ({
 		messages,
 		userInputMode,
 		isThinking,
-	} satisfies ChatContextType), [messages, userInputMode, isThinking]);
+		focusedArea,
+		setFocusedArea,
+	} satisfies ChatContextType), [messages, userInputMode, isThinking, focusedArea]);
 
 	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

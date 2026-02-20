@@ -15,11 +15,11 @@ const modeSuggestion: Record<UserInputMode, string[]> = {
 };
 
 export function UserInput() {
-	const { userInputMode } = useChat();
+	const { userInputMode, focusedArea } = useChat();
 	const [resetKey, setResetKey] = useState(0);
 	const [, setBlankLines] = useState(0);
 
-	const borderColor = calculateBorderColor(userInputMode);
+	const borderColor = focusedArea === 'input' ? 'blue' : 'gray';
 	const placeholder = calculatePlaceholder(userInputMode);
 
 	const onSubmitResetKey = useCallback((value: string) => {
@@ -42,13 +42,14 @@ export function UserInput() {
 		<Box
 			height={footerHeight}
 			borderStyle="bold"
+			borderTop={false}
 			borderColor={borderColor}
 			flexDirection="row"
 			alignItems="center"
 			gap={1}
 		>
 			<Box marginLeft={1}>
-				<Text bold color={borderColor === 'gray' ? 'white' : borderColor}>
+				<Text bold color={borderColor}>
 					❯
 				</Text>
 			</Box>
@@ -57,23 +58,10 @@ export function UserInput() {
 				placeholder={placeholder}
 				onSubmit={onSubmitResetKey}
 				suggestions={modeSuggestion[userInputMode]}
+				isDisabled={focusedArea !== 'input'}
 			/>
 		</Box>
 	);
-}
-
-function calculateBorderColor(mode: UserInputMode) {
-	switch (mode) {
-		case 'approved':
-			return 'green';
-		case 'denied':
-			return 'red';
-		case 'approving':
-			return 'yellow';
-		default:
-		case 'waiting':
-			return 'gray';
-	}
 }
 
 function calculatePlaceholder(mode: UserInputMode) {

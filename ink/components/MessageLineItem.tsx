@@ -12,13 +12,25 @@ export interface LineItem {
 }
 
 export const MessageLineItem = memo(
-	({ item, isSelected, indent = 0 }: { item: LineItem; isSelected: boolean; indent?: number }) => {
+	({
+		item,
+		isSelected,
+		isFocused,
+		indent = 0,
+	}: {
+		item: LineItem;
+		isSelected: boolean;
+		isFocused: boolean;
+		indent?: number;
+	}) => {
 		const color = messageTypeToColor(item.type);
 		const label = item.type === 'interrupted' ? '- thought interrupted with esc key -' : item.type.toUpperCase();
 
+		const selectionColor = isFocused ? 'blue' : 'gray';
+
 		return (
 			<Box>
-				<Text color={isSelected ? 'blue' : 'gray'} dimColor={!isSelected} bold={isSelected}>
+				<Text color={isSelected ? selectionColor : 'gray'} dimColor={!isSelected} bold={isSelected}>
 					{isSelected ? '┃ ' : '│ '}
 				</Text>
 				<Box paddingLeft={indent}>

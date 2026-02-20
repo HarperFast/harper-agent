@@ -9,8 +9,6 @@
 	},
 	"homepage": "https://github.com/harperfast",
 	"scripts": {
-		"build-ink-prototype": "tsup ink/ink.ts --format esm --clean --dts --watch --external puppeteer",
-		"start-ink-prototype": "node ./dist/ink.js",
 		"dev": "tsup agent.ts --format esm --clean --dts --watch --external puppeteer",
 		"link": "npm run build && npm link",
 		"build": "tsup agent.ts --format esm --clean --dts --external puppeteer",
@@ -57,7 +55,6 @@
 		"dotenv": "^17.2.4",
 		"ink": "^6.7.0",
 		"ink-stepper": "^0.2.1",
-		"ink-tab": "^5.2.0",
 		"ink-task-list": "^2.0.0",
 		"ink-virtual-list": "^0.2.3",
 		"ollama-ai-provider-v2": "^3.3.0",
