@@ -21,6 +21,7 @@ type Action =
 	| { type: 'move-cursor-left' }
 	| { type: 'move-cursor-right' }
 	| { type: 'insert'; text: string }
+	| { type: 'newline' }
 	| { type: 'delete' };
 
 const reducer = (state: State, action: Action): State => {
@@ -41,6 +42,13 @@ const reducer = (state: State, action: Action): State => {
 				previousValue: state.value,
 				value: state.value.slice(0, state.cursorOffset) + action.text + state.value.slice(state.cursorOffset),
 				cursorOffset: state.cursorOffset + action.text.length,
+			};
+		case 'newline':
+			return {
+				...state,
+				previousValue: state.value,
+				value: state.value.slice(0, state.cursorOffset) + '\n' + state.value.slice(state.cursorOffset),
+				cursorOffset: state.cursorOffset + 1,
 			};
 		case 'delete': {
 			const newCursorOffset = Math.max(0, state.cursorOffset - 1);
@@ -118,6 +126,11 @@ export function BlinkingTextInput({
 			setIsCursorVisible(true);
 
 			if (key.return) {
+				if (key.meta) {
+					dispatch({ type: 'newline' });
+					return;
+				}
+
 				if (suggestion) {
 					onSubmit?.(state.value + suggestion);
 				} else {
@@ -142,46 +155,77 @@ export function BlinkingTextInput({
 
 	const renderedValue = useMemo(() => {
 		if (isDisabled) {
-			return state.value || (placeholder ? chalk.dim(placeholder) : '');
+			const lines = (state.value || (placeholder ? chalk.dim(placeholder) : '')).split('\n');
+			return (
+				<Box flexDirection="column">
+					{lines.map((line, i) => (
+						<Box key={i}>
+							<Text>{line}</Text>
+						</Box>
+					))}
+				</Box>
+			);
 		}
-
-		const cursorChar = isCursorVisible ? chalk.inverse(' ') : ' ';
 
 		if (state.value.length === 0) {
-			return placeholder && placeholder.length > 0
-				? (isCursorVisible ? chalk.inverse(placeholder[0]) : placeholder[0]) + chalk.dim(placeholder.slice(1))
-				: cursorChar;
-		}
-
-		let result = '';
-		let index = 0;
-
-		for (const char of state.value) {
-			if (index === state.cursorOffset) {
-				result += isCursorVisible ? chalk.inverse(char) : char;
+			let displayContent = '';
+			if (placeholder && placeholder.length > 0) {
+				displayContent = (isCursorVisible ? chalk.inverse(placeholder[0]) : placeholder[0])
+					+ chalk.dim(placeholder.slice(1));
 			} else {
-				result += char;
+				displayContent = isCursorVisible ? chalk.inverse(' ') : ' ';
 			}
 
-			index++;
+			return (
+				<Box flexGrow={1} minWidth={1}>
+					<Text wrap="any">{displayContent}</Text>
+				</Box>
+			);
 		}
 
-		if (state.cursorOffset === state.value.length) {
-			if (suggestion) {
-				result += (isCursorVisible ? chalk.inverse(suggestion[0]) : suggestion[0]) + chalk.dim(suggestion.slice(1));
-			} else {
-				result += cursorChar;
+		const lines = state.value.split('\n');
+		const result: React.ReactNode[] = [];
+		let totalOffset = 0;
+
+		lines.forEach((line, lineIndex) => {
+			let lineContent = '';
+			for (let i = 0; i < line.length; i++) {
+				const char = line[i];
+				if (totalOffset === state.cursorOffset) {
+					lineContent += isCursorVisible ? chalk.inverse(char) : char;
+				} else {
+					lineContent += char;
+				}
+				totalOffset++;
 			}
-		} else if (suggestion) {
-			result += chalk.dim(suggestion);
-		}
 
-		return result;
+			if (totalOffset === state.cursorOffset) {
+				if (lineIndex === lines.length - 1 && suggestion) {
+					lineContent += (isCursorVisible ? chalk.inverse(suggestion[0]) : suggestion[0])
+						+ chalk.dim(suggestion.slice(1));
+				} else {
+					lineContent += isCursorVisible ? chalk.inverse(' ') : ' ';
+				}
+			} else if (lineIndex === lines.length - 1 && suggestion) {
+				lineContent += chalk.dim(suggestion);
+			}
+
+			result.push(
+				<Box key={lineIndex} flexGrow={1}>
+					<Text wrap="any">{lineContent}</Text>
+				</Box>,
+			);
+			if (lineIndex < lines.length - 1) {
+				totalOffset++; // Account for the newline character
+			}
+		});
+
+		return <Box flexDirection="column" flexGrow={1}>{result}</Box>;
 	}, [state.value, state.cursorOffset, suggestion, isCursorVisible, isDisabled, placeholder]);
 
 	return (
-		<Box>
-			<Text>{renderedValue}</Text>
+		<Box flexGrow={1} minWidth={1}>
+			{renderedValue}
 		</Box>
 	);
 }

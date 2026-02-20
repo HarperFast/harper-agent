@@ -146,10 +146,10 @@ export function ChatContent() {
 
 	// Keep selection pinned to last line when new content arrives
 	useEffect(() => {
-		if (lineItems.length > 0) {
+		if (lineItems.length > 0 && focusedArea !== 'timeline') {
 			setSelectedIndex(lineItems.length - 1);
 		}
-	}, [lineItems.length]);
+	}, [lineItems.length, focusedArea]);
 
 	// Ensure selection is visible when window is resized
 	useEffect(() => {

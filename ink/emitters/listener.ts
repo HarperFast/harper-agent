@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import type { WatchedValueKeys, WatchedValuesTypeMap } from './watchedValueKeys';
 
 type GenericListenerCallback<T = unknown> = (newValue: T, trigger?: unknown) => void | Promise<void>;
@@ -10,8 +10,14 @@ export function useListener<K extends keyof WatchedValuesTypeMap, T extends Watc
 	listener: GenericListenerCallback<T>,
 	deps: unknown,
 ) {
+	// Keep the listener fresh without triggering the effect unnecessarily or having stale closures in the callback.
+	const listenerRef = React.useRef(listener);
+	React.useEffect(() => {
+		listenerRef.current = listener;
+	}, [listener]);
+
 	// eslint-disable-next-line react-hooks/preserve-manual-memoization,react-hooks/exhaustive-deps
-	const callback = useCallback((newValue: T, trigger?: unknown) => listener(newValue, trigger), [deps]);
+	const callback = useCallback((newValue: T, trigger?: unknown) => listenerRef.current(newValue, trigger), [deps]);
 	useEffect(() => {
 		if (!listenersMap[name]) {
 			listenersMap[name] = [];
@@ -24,7 +30,7 @@ export function useListener<K extends keyof WatchedValuesTypeMap, T extends Watc
 				listenersMap[name]!.splice(index, 1);
 			}
 		};
-	}, [name, listener, callback]);
+	}, [name, callback]);
 }
 
 export async function onceListener<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(

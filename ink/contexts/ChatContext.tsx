@@ -15,19 +15,18 @@ export const useChat = () => {
 	return context;
 };
 
-let messageId = 0;
 let initialMessages: Message[] = [];
 
 function getInitialMessages() {
 	if (initialMessages.length === 0) {
 		initialMessages = agentManager.initialMessages
-			? agentManager.initialMessages.map(m => ({
+			? agentManager.initialMessages.map((m, index) => ({
 				...m,
-				id: m.id ?? messageId++,
+				id: index,
 				version: m.version ?? 1,
 			}))
 			: [{
-				id: messageId++,
+				id: 0,
 				type: 'agent',
 				text: 'What shall we build today? (type "exit" or Ctrl+X to quit)',
 				version: 1,
@@ -47,11 +46,11 @@ export const ChatProvider = ({
 	const [focusedArea, setFocusedArea] = useState<FocusedArea>('input');
 
 	useListener('PushNewMessages', (messages) => {
-		setMessages(prev =>
-			prev.concat(
-				messages.map(message => ({ ...message, id: messageId++, version: 1 })),
-			)
-		);
+		setMessages(prev => {
+			return prev.concat(
+				messages.map((message, index) => ({ ...message, id: prev.length + index, version: 1 })),
+			);
+		});
 	}, []);
 
 	useListener('SetInputMode', newInputMode => {
@@ -71,12 +70,15 @@ export const ChatProvider = ({
 			if (prev.length === 0) {
 				return prev;
 			}
-			const last = prev[prev.length - 1];
-			if (!last) {
+			const lastIndex = [...prev].reverse().findIndex(m => m.type === 'agent');
+			if (lastIndex === -1) {
 				return prev;
 			}
+			const actualIndex = prev.length - 1 - lastIndex;
+			const last = prev[actualIndex]!;
+
 			const updated = [...prev];
-			updated[prev.length - 1] = {
+			updated[actualIndex] = {
 				...last,
 				text: last.text + text,
 				version: last.version + 1,

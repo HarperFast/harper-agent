@@ -40,26 +40,28 @@ export function UserInput() {
 
 	return (
 		<Box
-			height={footerHeight}
+			minHeight={footerHeight}
 			borderStyle="bold"
 			borderTop={false}
 			borderColor={borderColor}
 			flexDirection="row"
-			alignItems="center"
+			alignItems="flex-start"
 			gap={1}
 		>
-			<Box marginLeft={1}>
+			<Box marginLeft={1} height={1}>
 				<Text bold color={borderColor}>
 					❯
 				</Text>
 			</Box>
-			<BlinkingTextInput
-				key={resetKey}
-				placeholder={placeholder}
-				onSubmit={onSubmitResetKey}
-				suggestions={modeSuggestion[userInputMode]}
-				isDisabled={focusedArea !== 'input'}
-			/>
+			<Box flexGrow={1}>
+				<BlinkingTextInput
+					key={resetKey}
+					placeholder={placeholder}
+					onSubmit={onSubmitResetKey}
+					suggestions={modeSuggestion[userInputMode]}
+					isDisabled={focusedArea !== 'input'}
+				/>
+			</Box>
 		</Box>
 	);
 }

@@ -162,7 +162,8 @@ const VirtualListInner = <T,>(
 		// If we were at the very bottom before items changed, or we are specifically
 		// selecting the last item, we should stick to the bottom.
 		const isSelectingLast = clampedSelectedIndex === items.length - 1;
-		const wasAtBottom = lastItemsLength.current > 0 && currentViewportOffset + visibleCount >= lastItemsLength.current;
+		const wasAtBottom = lastItemsLength.current > 0
+			&& currentViewportOffset + visibleCount >= lastItemsLength.current - 1;
 
 		lastItemsLength.current = items.length;
 
