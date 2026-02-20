@@ -1,7 +1,7 @@
 import type { PlanContextType } from '../models/planContextType';
 
 export const globalPlanContext: PlanContextType = {
-	goal: '',
+	planDescription: '',
 	planItems: [],
 	progress: 0,
 };

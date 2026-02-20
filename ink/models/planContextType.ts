@@ -1,7 +1,7 @@
 import type { PlanItem } from './planItem';
 
 export interface PlanContextType {
-	goal: string;
+	planDescription: string;
 	planItems: PlanItem[];
 	progress: number;
 }

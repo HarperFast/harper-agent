@@ -19,7 +19,7 @@ export const PlanProvider = ({
 }: {
 	children: ReactNode;
 }) => {
-	const [goal, setGoal] = useState<string>(globalPlanContext.goal);
+	const [goal, setGoal] = useState<string>(globalPlanContext.planDescription);
 	const [progress, setProgress] = useState<number>(globalPlanContext.progress);
 	const [planItems, setPlanItems] = useState<PlanItem[]>(globalPlanContext.planItems);
 
@@ -33,7 +33,7 @@ export const PlanProvider = ({
 	}, []);
 
 	useListener('SetGoal', newGoal => {
-		globalPlanContext.goal = newGoal;
+		globalPlanContext.planDescription = newGoal;
 		setGoal(newGoal);
 	}, []);
 
