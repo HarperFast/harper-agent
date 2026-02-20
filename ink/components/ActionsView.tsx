@@ -55,7 +55,7 @@ export function ActionsView({ height, isFocused }: Props) {
 		<Box flexDirection="column">
 			{Array.from({ length: h }).map((_, i) => (
 				<Box key={i}>
-					<Text></Text>
+					<Text color="gray" dimColor>│</Text>
 				</Box>
 			))}
 		</Box>
