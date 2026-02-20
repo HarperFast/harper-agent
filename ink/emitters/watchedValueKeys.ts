@@ -1,3 +1,4 @@
+import type { ActionItem } from '../models/actionItem';
 import type { Message } from '../models/message';
 import type { PlanItem } from '../models/planItem';
 import type { ShellCommand } from '../models/shellCommand';
@@ -11,6 +12,8 @@ export interface WatchedValuesTypeMap {
 	SetPlanItems: PlanItem[];
 	AddShellCommand: Omit<ShellCommand, 'id'>;
 	UpdateShellCommand: Partial<ShellCommand> & { id: number };
+	AddActionItem: Omit<ActionItem, 'id'> & { id?: number };
+	UpdateActionItem: Partial<ActionItem> & { id: number };
 	ExitUI: undefined;
 	InterruptThought: undefined;
 	UpdateLastMessageText: string;

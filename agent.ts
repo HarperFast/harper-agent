@@ -29,14 +29,6 @@ import { getStdin } from './utils/shell/getStdin';
 	// TODO: Shift into the UI, less abrasive.
 	//       await checkForUpdate();
 
-	// TODO:
-	// 	  const pkg = getOwnPackageJson();
-	// 	  const packageVersion = pkg.version;
-	// 	  const harperAppExists = existsSync(join(trackedState.cwd, 'config.yaml'));
-	// 	  console.log(chalk.dim(`Version: ${chalk.cyan(packageVersion)}`) + ` ${chalk.redBright('ALPHA')}`);
-	// 	  console.log(chalk.dim(`Working directory: ${chalk.cyan(trackedState.cwd)}`));
-	// 	  console.log(chalk.dim(`Harper app detected: ${chalk.cyan(harperAppExists ? 'Yes' : 'No')}`));
-
 	await agentManager.initialize();
 	bootstrapMain();
 

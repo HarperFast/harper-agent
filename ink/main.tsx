@@ -2,11 +2,11 @@ import { render, useApp } from 'ink';
 import React from 'react';
 import { ChatContent } from './components/ChatContent';
 import { ConfigurationWizard } from './configurationWizard/ConfigurationWizard';
+import { ActionsProvider } from './contexts/ActionsContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { CostProvider } from './contexts/CostContext';
 import { PlanProvider } from './contexts/PlanContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-import { ShellProvider } from './contexts/ShellContext';
 import { useListener } from './emitters/listener';
 
 export function bootstrapConfig(onComplete: (value?: unknown) => void) {
@@ -29,13 +29,13 @@ function MainChat() {
 	return (
 		<CostProvider>
 			<PlanProvider>
-				<ShellProvider>
+				<ActionsProvider>
 					<SettingsProvider>
 						<ChatProvider>
 							<ChatContent />
 						</ChatProvider>
 					</SettingsProvider>
-				</ShellProvider>
+				</ActionsProvider>
 			</PlanProvider>
 		</CostProvider>
 	);

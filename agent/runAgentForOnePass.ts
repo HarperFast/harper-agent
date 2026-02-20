@@ -1,5 +1,5 @@
 import { Agent, type AgentInputItem, run, type RunState } from '@openai/agents';
-import { argumentTruncationPoint } from '../ink/constants/argumentTruncationPoint';
+import { actionId } from '../ink/contexts/ActionsContext';
 import { curryEmitToListeners, emitToListeners, onceListener } from '../ink/emitters/listener';
 import { handleExit } from '../lifecycle/handleExit';
 import type { CombinedSession } from '../lifecycle/session';
@@ -74,7 +74,7 @@ export async function runAgentForOnePass(
 						}
 
 						const displayedArgs = args
-							? `(${args.slice(0, argumentTruncationPoint)}${args.length > argumentTruncationPoint ? '...' : ''})`
+							? `(${args})`
 							: '()';
 						emitToListeners('PushNewMessages', [{
 							type: 'tool',
@@ -82,6 +82,15 @@ export async function runAgentForOnePass(
 							args: displayedArgs,
 							version: 1,
 						}]);
+						// Also add to ACTIONS pane generically
+						emitToListeners('AddActionItem', {
+							kind: name === 'apply_patch' || item.type === 'apply_patch_call'
+								? 'apply_patch'
+								: (name === 'create_new_harper_application' ? 'create_app' : 'tool'),
+							title: name,
+							detail: displayedArgs,
+							running: false,
+						});
 						// Save context for potential error reporting later
 						lastToolCallInfo = `${name}${displayedArgs}`;
 					}
@@ -132,6 +141,15 @@ export async function runAgentForOnePass(
 			emitToListeners('SetInputMode', 'approving');
 
 			for (const interruption of stream.interruptions) {
+				// Track ACTION item for approval with an explicit id so we can update
+				const myApprovalId = actionId;
+				emitToListeners('AddActionItem', {
+					id: myApprovalId,
+					kind: 'approval',
+					title: 'approval',
+					detail: lastToolCallInfo ?? 'awaiting approval',
+					running: true,
+				});
 				const newMessages = await onceListener('PushNewMessages');
 				let approved = false;
 				for (const newMessage of newMessages) {
@@ -142,9 +160,22 @@ export async function runAgentForOnePass(
 				}
 				if (approved) {
 					emitToListeners('SetInputMode', 'approved');
+					// Update approval action item
+					emitToListeners('UpdateActionItem', {
+						id: myApprovalId,
+						running: false,
+						status: 'approved',
+						detail: (lastToolCallInfo ?? '') + ' approved',
+					});
 					stream.state.approve(interruption);
 				} else {
 					emitToListeners('SetInputMode', 'denied');
+					emitToListeners('UpdateActionItem', {
+						id: myApprovalId,
+						running: false,
+						status: 'denied',
+						detail: (lastToolCallInfo ?? '') + ' denied',
+					});
 					stream.state.reject(interruption);
 				}
 			}

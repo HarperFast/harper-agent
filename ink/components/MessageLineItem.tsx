@@ -9,6 +9,7 @@ export interface LineItem {
 	text: string;
 	isFirstLine: boolean;
 	isArgsLine?: boolean;
+	toolName?: string;
 }
 
 export const MessageLineItem = memo(
@@ -40,16 +41,37 @@ export const MessageLineItem = memo(
 							<Text>
 								<Text bold color={color}>
 									{label}
-									{item.isArgsLine ? ' args: ' : ': '}
+									{item.type === 'tool' ? ': ' : item.isArgsLine ? ' args: ' : ': '}
 								</Text>
-								<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>
-									{item.text}
-								</Text>
+								{item.type === 'tool' && item.toolName
+									? (
+										<Text>
+											{item.text.startsWith(item.toolName)
+												? (
+													<>
+														<Text color="white" bold>{item.toolName}</Text>
+														<Text dimColor italic>{item.text.slice(item.toolName.length)}</Text>
+													</>
+												)
+												: (
+													<Text dimColor italic>
+														{item.text.startsWith(' ') ? item.text : ` ${item.text}`}
+													</Text>
+												)}
+										</Text>
+									)
+									: (
+										<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>
+											{item.text}
+										</Text>
+									)}
 							</Text>
 						)
 						: (
 							<Text>
-								<Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>{item.text}</Text>
+								{item.type === 'tool' && item.toolName
+									? <Text dimColor italic>{item.text}</Text>
+									: <Text dimColor={!!item.isArgsLine} italic={!!item.isArgsLine}>{item.text}</Text>}
 							</Text>
 						)}
 				</Box>

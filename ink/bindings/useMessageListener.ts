@@ -22,7 +22,6 @@ export function useMessageListener() {
 				if (userInputMode === 'waiting' && !message.handled) {
 					void agentManager.runTask(message.text);
 				}
-				// TODO: Build up the messages they send while we are thinking?
 			}
 		}
 	}, [userInputMode]);

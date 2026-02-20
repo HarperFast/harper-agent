@@ -6,16 +6,17 @@ import { useMessageListener } from '../bindings/useMessageListener';
 import { footerHeight } from '../constants/footerHeight';
 import { useChat } from '../contexts/ChatContext';
 import { emitToListeners } from '../emitters/listener';
+import { useTerminalSize } from '../library/useTerminalSize';
 import { wrapText } from '../library/wrapText';
 import type { FocusedArea } from '../models/ChatContextType';
 import type { Message } from '../models/message';
+import { ActionsView } from './ActionsView';
 import { CostView } from './CostView';
 import { type LineItem, MessageLineItem } from './MessageLineItem';
 import { PlanView } from './PlanView';
 import { SettingsView } from './SettingsView';
-import { ShellView } from './ShellView';
 import { UserInput } from './UserInput';
-import { useTerminalSize, VirtualList } from './VirtualList';
+import { VirtualList } from './VirtualList';
 
 export function ChatContent() {
 	const { messages, isThinking, focusedArea, setFocusedArea } = useChat();
@@ -56,7 +57,7 @@ export function ChatContent() {
 
 		if (focusedArea === 'status') {
 			if (key.leftArrow || key.rightArrow) {
-				const tabNames = ['settings', 'planDescription', 'shell'];
+				const tabNames = ['settings', 'planDescription', 'actions'];
 				const currentIndex = tabNames.indexOf(activeTab);
 				if (key.leftArrow) {
 					const nextIndex = (currentIndex - 1 + tabNames.length) % tabNames.length;
@@ -102,26 +103,53 @@ export function ChatContent() {
 				const argsLines = msg.args ? wrapText(String(msg.args), firstLineWidth) : [];
 
 				const msgLineItems: LineItem[] = [];
-				textLines.forEach((txt, idx) => {
+				if (msg.type === 'tool') {
+					const toolName = msg.text ?? '';
+					const toolArgs = msg.args ?? '';
+					const toolNameWithSpace = `${toolName} `;
+					const availableForArgs = firstLineWidth - toolNameWithSpace.length;
+
+					let displayedArgs = toolArgs;
+					if (availableForArgs < toolArgs.length) {
+						// Need at least some space for "..."
+						if (availableForArgs > 3) {
+							displayedArgs = toolArgs.slice(0, availableForArgs - 3) + '...';
+						} else {
+							// If very little space, just show what fits or at least "..."
+							displayedArgs = toolArgs.slice(0, Math.max(0, availableForArgs));
+						}
+					}
+
 					msgLineItems.push({
-						key: `${msg.id}:text:${idx}`,
+						key: `${msg.id}:tool:0`,
 						messageId: msg.id,
 						type: msg.type,
-						text: txt,
-						isFirstLine: idx === 0,
+						text: `${toolNameWithSpace}${displayedArgs}`,
+						isFirstLine: true,
+						toolName,
 					});
-				});
-				if (argsLines.length > 0) {
-					argsLines.forEach((txt, idx) => {
+				} else {
+					textLines.forEach((txt, idx) => {
 						msgLineItems.push({
-							key: `${msg.id}:args:${idx}`,
+							key: `${msg.id}:text:${idx}`,
 							messageId: msg.id,
 							type: msg.type,
 							text: txt,
-							isFirstLine: idx === 0 && textLines.length === 0,
-							isArgsLine: true,
+							isFirstLine: idx === 0,
 						});
 					});
+					if (argsLines.length > 0) {
+						argsLines.forEach((txt, idx) => {
+							msgLineItems.push({
+								key: `${msg.id}:args:${idx}`,
+								messageId: msg.id,
+								type: msg.type,
+								text: txt,
+								isFirstLine: idx === 0 && textLines.length === 0,
+								isArgsLine: true,
+							});
+						});
+					}
 				}
 
 				entry = { version: msg.version, width: firstLineWidth, lineItems: msgLineItems };
@@ -161,7 +189,7 @@ export function ChatContent() {
 	const tabs = useMemo(() => [
 		{ name: 'settings', label: 'SETTINGS' },
 		{ name: 'planDescription', label: 'PLAN' },
-		{ name: 'shell', label: 'SHELL' },
+		{ name: 'actions', label: 'ACTIONS' },
 	], []);
 
 	const timelineTitle = 'TIMELINE:';
@@ -241,13 +269,13 @@ export function ChatContent() {
 							renderOverflowTop={useCallback((count: number) => (
 								<Box>
 									<Text color="gray" dimColor>│</Text>
-									{count > 0 && <Text dimColor>▲ {count} more</Text>}
+									{count > 0 && <Text dimColor>{' '}▲ {count} more</Text>}
 								</Box>
 							), [])}
 							renderOverflowBottom={useCallback((count: number) => (
 								<Box>
 									<Text color="gray" dimColor>│</Text>
-									{count > 0 && <Text dimColor>▼ {count} more</Text>}
+									{count > 0 && <Text dimColor>{' '}▼ {count} more</Text>}
 								</Box>
 							), [])}
 							renderFiller={timelinePipeFiller}
@@ -268,7 +296,7 @@ export function ChatContent() {
 				</Box>
 
 				{/* Divider */}
-				{activeTab !== 'shell' && (
+				{activeTab !== 'shell' && activeTab !== 'actions' && (
 					<Box
 						flexDirection="column"
 						width={1}
@@ -283,13 +311,13 @@ export function ChatContent() {
 				{/* Status pane (Right) */}
 				<Box
 					flexDirection="column"
-					width={activeTab === 'shell' ? statusWidth : (statusWidth - 1)}
+					width={activeTab === 'shell' || activeTab === 'actions' ? statusWidth : (statusWidth - 1)}
 					borderStyle="round"
 					borderColor={statusColor}
 					borderTop={false}
 					borderBottom={false}
 					borderLeft={false}
-					paddingLeft={activeTab === 'shell' ? 0 : 1}
+					paddingLeft={activeTab === 'shell' || activeTab === 'actions' ? 0 : 1}
 					paddingRight={1}
 				>
 					<Box flexDirection="column" flexGrow={1} marginTop={0}>
@@ -302,7 +330,7 @@ export function ChatContent() {
 							</Box>
 						)}
 						{activeTab === 'planDescription' && <PlanView />}
-						{activeTab === 'shell' && <ShellView height={contentHeight - 2} isFocused={focusedArea === 'status'} />}
+						{activeTab === 'actions' && <ActionsView height={contentHeight - 2} isFocused={focusedArea === 'status'} />}
 					</Box>
 				</Box>
 			</Box>

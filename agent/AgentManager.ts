@@ -1,5 +1,4 @@
 import { Agent, type AgentInputItem, type RunState } from '@openai/agents';
-import { argumentTruncationPoint } from '../ink/constants/argumentTruncationPoint';
 import { emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
@@ -71,7 +70,7 @@ export class AgentManager {
 										? JSON.stringify(part.arguments)
 										: '';
 									const displayedArgs = args
-										? `(${args.slice(0, argumentTruncationPoint)}${args.length > argumentTruncationPoint ? '...' : ''})`
+										? `(${args})`
 										: '()';
 									messages.push({
 										id: id++,
@@ -90,7 +89,7 @@ export class AgentManager {
 							? JSON.stringify(item.arguments)
 							: '';
 						const displayedArgs = args
-							? `(${args.slice(0, argumentTruncationPoint)}${args.length > argumentTruncationPoint ? '...' : ''})`
+							? `(${args})`
 							: '()';
 						messages.push({
 							id: id++,

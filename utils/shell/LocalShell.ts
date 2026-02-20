@@ -35,10 +35,19 @@ export class LocalShell implements Shell {
 			const firstPart = parts[0]!;
 			const laterParts = parts.slice(1).join(' ') || '';
 
+			// Maintain original Shell pane ID tracking
 			let myCommandId = commandId;
 			emitToListeners('AddShellCommand', {
 				command: firstPart,
 				args: laterParts,
+				running: true,
+			});
+			// Also push to generic ACTIONS pane
+			emitToListeners('AddActionItem', {
+				id: myCommandId,
+				kind: 'shell',
+				title: firstPart,
+				detail: laterParts,
 				running: true,
 			});
 
@@ -67,6 +76,13 @@ export class LocalShell implements Shell {
 				id: myCommandId,
 				running: false,
 				exitCode,
+			});
+			// Update ACTIONS pane item (same id sequence used at time of add)
+			emitToListeners('UpdateActionItem', {
+				id: myCommandId,
+				running: false,
+				exitCode,
+				status: exitCode === 0 ? 'succeeded' : 'failed',
 			});
 
 			output.push({

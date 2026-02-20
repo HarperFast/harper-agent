@@ -1,8 +1,9 @@
 import { Box, Text, useInput } from 'ink';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useShell } from '../contexts/ShellContext';
-import type { ShellCommand } from '../models/shellCommand';
-import { ShellCommandItem } from './ShellCommandItem';
+import { useActions } from '../contexts/ActionsContext';
+import { useTerminalSize } from '../library/useTerminalSize';
+import type { ActionItem } from '../models/actionItem';
+import { ActionItemRow } from './ActionItemRow';
 import { VirtualList } from './VirtualList';
 
 interface Props {
@@ -10,15 +11,19 @@ interface Props {
 	isFocused: boolean;
 }
 
-export function ShellView({ height, isFocused }: Props) {
-	const { commands } = useShell();
+export function ActionsView({ height, isFocused }: Props) {
+	const { actions } = useActions();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
+	const size = useTerminalSize();
+	const timelineWidth = Math.floor(size.columns * 0.65);
+	const statusWidth = size.columns - timelineWidth;
+
 	useEffect(() => {
-		if (commands.length > 0) {
-			setSelectedIndex(commands.length - 1);
+		if (actions.length > 0) {
+			setSelectedIndex(actions.length - 1);
 		}
-	}, [commands.length]);
+	}, [actions.length]);
 
 	useInput((_, key) => {
 		if (!isFocused) { return; }
@@ -28,21 +33,21 @@ export function ShellView({ height, isFocused }: Props) {
 		}
 
 		if (key.downArrow) {
-			setSelectedIndex(prev => Math.min(commands.length - 1, prev + 1));
+			setSelectedIndex(prev => Math.min(actions.length - 1, prev + 1));
 		}
 	});
 
 	const renderOverflowTop = useCallback((count: number) => (
 		<Box>
 			<Text color="gray" dimColor>│</Text>
-			{count > 0 && <Text dimColor>▲ {count} more</Text>}
+			{count > 0 && <Text dimColor>{' '}▲ {count} more</Text>}
 		</Box>
 	), []);
 
 	const renderOverflowBottom = useCallback((count: number) => (
 		<Box>
 			<Text color="gray" dimColor>│</Text>
-			{count > 0 && <Text dimColor>▼ {count} more</Text>}
+			{count > 0 && <Text dimColor>{' '}▼ {count} more</Text>}
 		</Box>
 	), []);
 
@@ -50,28 +55,25 @@ export function ShellView({ height, isFocused }: Props) {
 		<Box flexDirection="column">
 			{Array.from({ length: h }).map((_, i) => (
 				<Box key={i}>
-					<Text color="gray" dimColor>│</Text>
+					<Text></Text>
 				</Box>
 			))}
 		</Box>
 	), []);
 
-	const getItemHeight = useCallback((_item: ShellCommand) => {
-		return 2; // Status line + Args line
-	}, []);
+	const getItemHeight = useCallback((_item: ActionItem) => 1, []);
 
-	if (commands.length === 0) {
+	if (actions.length === 0) {
 		return (
 			<Box flexDirection="column" flexGrow={1} height={height}>
 				<Box>
-					<Text color="gray" dimColor>│</Text>
 					<Text italic color="gray">
-						No shell commands have been executed yet.
+						No actions yet.
 					</Text>
 				</Box>
 				{Array.from({ length: height - 1 }).map((_, i) => (
 					<Box key={i}>
-						<Text color="gray" dimColor>│</Text>
+						<Text></Text>
 					</Box>
 				))}
 			</Box>
@@ -81,7 +83,7 @@ export function ShellView({ height, isFocused }: Props) {
 	return (
 		<Box flexDirection="column" flexGrow={1}>
 			<VirtualList
-				items={commands}
+				items={actions}
 				getItemHeight={getItemHeight}
 				height={height}
 				selectedIndex={selectedIndex}
@@ -89,7 +91,7 @@ export function ShellView({ height, isFocused }: Props) {
 				renderOverflowBottom={renderOverflowBottom}
 				renderFiller={renderFiller}
 				renderItem={({ item, isSelected }) => (
-					<ShellCommandItem command={item} isSelected={isSelected} isFocused={isFocused} />
+					<ActionItemRow item={item} isSelected={isSelected} isFocused={isFocused} width={statusWidth - 2} />
 				)}
 			/>
 		</Box>
