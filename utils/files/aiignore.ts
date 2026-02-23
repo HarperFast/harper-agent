@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { trackedState } from '../../lifecycle/trackedState';
+import { logError } from '../logger';
 
 let ignorePatterns: string[] = [];
 
@@ -18,6 +19,7 @@ export function loadAiIgnore() {
 				.filter(line => line && !line.startsWith('#'))
 				.map(pattern => (pattern.endsWith('/') || pattern.endsWith('\\')) ? pattern.slice(0, -1) : pattern);
 		} catch (error) {
+			logError(error);
 			console.error(`Error reading .aiignore: ${error}`);
 			ignorePatterns = [];
 		}

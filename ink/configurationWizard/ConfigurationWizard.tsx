@@ -7,6 +7,7 @@ import { curryEmitToListeners, emitToListeners } from '../emitters/listener';
 import type { ModelProvider } from '../models/config';
 import { ApiKeyStep } from './ApiKeyStep';
 import { ApiUrlStep } from './ApiUrlStep';
+import { EnvironmentSettingsStep } from './EnvironmentSettingsStep';
 import { compactorModelsByProvider, modelsByProvider } from './modelsByProvider';
 import { ModelSelectionStep } from './ModelSelectionStep';
 import { ProviderStep } from './ProviderStep';
@@ -92,6 +93,17 @@ export function ConfigurationWizard({ onComplete }: Props) {
 							models={compactorModels}
 							onConfirm={(m) => {
 								updateEnv('HARPER_AGENT_COMPACTION_MODEL', m);
+								goNext();
+							}}
+							onBack={goBack}
+						/>
+					)}
+				</Step>
+
+				<Step name="Settings">
+					{({ goNext, goBack }) => (
+						<EnvironmentSettingsStep
+							onConfirm={() => {
 								goNext();
 							}}
 							onBack={goBack}

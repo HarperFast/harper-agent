@@ -31,6 +31,7 @@ export interface WatchedValuesTypeMap {
 	ApproveCurrentApproval: undefined;
 	DenyCurrentApproval: undefined;
 	RegisterToolInfo: ApprovalPayload & { callId: string };
+	SettingsUpdated: undefined;
 }
 
 export type WatchedValueKeys = keyof WatchedValuesTypeMap;

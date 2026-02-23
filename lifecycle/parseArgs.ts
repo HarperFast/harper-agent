@@ -97,6 +97,16 @@ export function parseArgs() {
 		trackedState.useFlexTier = true;
 	}
 
+	if (isTrue(process.env.HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER)) {
+		trackedState.autoApproveCodeInterpreter = true;
+	}
+	if (isTrue(process.env.HARPER_AGENT_AUTO_APPROVE_PATCHES)) {
+		trackedState.autoApprovePatches = true;
+	}
+	if (isTrue(process.env.HARPER_AGENT_AUTO_APPROVE_SHELL)) {
+		trackedState.autoApproveShell = true;
+	}
+
 	// If no model was provided, select a sensible default based on available provider env keys
 	if (!trackedState.model) {
 		if (process.env.ANTHROPIC_API_KEY) {

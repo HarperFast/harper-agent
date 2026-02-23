@@ -1,5 +1,7 @@
 import { tool } from '@openai/agents';
 import { z } from 'zod';
+import { emitToListeners } from '../../ink/emitters/listener';
+import { trackedState } from '../../lifecycle/trackedState';
 import { updateEnv } from '../../utils/files/updateEnv';
 import { getEnv } from '../../utils/getEnv';
 
@@ -24,6 +26,9 @@ export const setInterpreterAutoApproveTool = tool({
 
 		try {
 			updateEnv('HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER', newValue);
+			// Update tracked state so Settings pane reflects immediately
+			trackedState.autoApproveCodeInterpreter = autoApprove;
+			emitToListeners('SettingsUpdated', undefined);
 			return `HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER has been set to ${newValue} in .env and current process.`;
 		} catch (error: any) {
 			return `Error updating .env file: ${error.message}`;

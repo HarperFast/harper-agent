@@ -1,6 +1,8 @@
 import { curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
+import { logError } from '../utils/logger';
 
 export function showErrorToUser(error: any, lastToolCallInfo: string | null) {
+	logError(error);
 	const err: any = error ?? {};
 	const name = err.name || 'Error';
 	const message: string = err.message || String(err);

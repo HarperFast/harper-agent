@@ -6,8 +6,10 @@ export interface TrackedState {
 	useFlexTier: boolean;
 	maxTurns: number;
 	maxCost: number | null;
+	autoApproveCodeInterpreter: boolean;
+	autoApprovePatches: boolean;
+	autoApproveShell: boolean;
 }
-
 export const trackedState: TrackedState = {
 	cwd: process.cwd(),
 	model: '',
@@ -16,4 +18,7 @@ export const trackedState: TrackedState = {
 	useFlexTier: false,
 	maxTurns: 30,
 	maxCost: null,
+	autoApproveCodeInterpreter: false,
+	autoApprovePatches: false,
+	autoApproveShell: false,
 };

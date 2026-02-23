@@ -1,15 +1,19 @@
 #!/usr/bin/env node
-import 'dotenv/config';
 import chalk from 'chalk';
 import { agentManager } from './agent/AgentManager';
 import { emitToListeners } from './ink/emitters/listener';
 import { bootstrapConfig, bootstrapMain } from './ink/main';
 import { handleExit } from './lifecycle/handleExit';
 import { parseArgs } from './lifecycle/parseArgs';
+import { loadEnv } from './utils/envLoader';
+import { setupGlobalErrorHandlers } from './utils/logger';
 import { ensureApiKey } from './utils/shell/ensureApiKey';
 import { getStdin } from './utils/shell/getStdin';
 
 (async function() {
+	setupGlobalErrorHandlers();
+	loadEnv();
+
 	process.on('SIGINT', handleExit);
 	process.on('SIGTERM', handleExit);
 

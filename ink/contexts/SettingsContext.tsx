@@ -1,5 +1,6 @@
-import { createContext, type ReactNode, useContext, useMemo } from 'react';
+import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 import { trackedState } from '../../lifecycle/trackedState';
+import { useListener } from '../emitters/listener';
 import type { SettingsContextType } from '../models/SettingsContextType';
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -17,7 +18,14 @@ export const SettingsProvider = ({
 }: {
 	children: ReactNode;
 }) => {
+	const [version, setVersion] = useState(0);
+
+	useListener('SettingsUpdated', () => {
+		setVersion((v) => v + 1);
+	}, []);
+
 	const value = useMemo(() => ({
+		version,
 		model: trackedState.model,
 		compactionModel: trackedState.compactionModel,
 		sessionPath: trackedState.sessionPath,
@@ -25,7 +33,10 @@ export const SettingsProvider = ({
 		useFlexTier: trackedState.useFlexTier,
 		maxTurns: trackedState.maxTurns,
 		maxCost: trackedState.maxCost,
-	} satisfies SettingsContextType), []);
+		autoApproveCodeInterpreter: trackedState.autoApproveCodeInterpreter,
+		autoApprovePatches: trackedState.autoApprovePatches,
+		autoApproveShell: trackedState.autoApproveShell,
+	} satisfies SettingsContextType), [version]);
 
 	return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
