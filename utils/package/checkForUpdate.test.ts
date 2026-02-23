@@ -1,5 +1,7 @@
 import spawn from 'cross-spawn';
+import { render } from 'ink';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { updateEnv } from '../files/updateEnv';
 import { checkForUpdate } from './checkForUpdate';
 import { getLatestVersion } from './getLatestVersion';
 import { getOwnPackageJson } from './getOwnPackageJson';
@@ -9,6 +11,14 @@ vi.mock('./getLatestVersion.js');
 vi.mock('./getOwnPackageJson.js');
 vi.mock('./isVersionNewer.js');
 vi.mock('cross-spawn');
+vi.mock('ink', async (importOriginal) => {
+	const original = await importOriginal<typeof import('ink')>();
+	return {
+		...original,
+		render: vi.fn(),
+	};
+});
+vi.mock('../files/updateEnv.js');
 
 describe('checkForUpdate', () => {
 	const originalEnv = process.env;
@@ -21,6 +31,17 @@ describe('checkForUpdate', () => {
 		vi.spyOn(console, 'log').mockImplementation(() => {});
 		vi.spyOn(process, 'exit').mockImplementation(() => {
 			return undefined as never;
+		});
+
+		// Default mock for render to simulate a selection
+		vi.mocked(render).mockImplementation((element: any) => {
+			const { onSelect } = element.props;
+			// We'll override this in specific tests if needed
+			if (onSelect) {
+				// Default to 'now' to satisfy existing tests that expect update
+				setTimeout(() => onSelect('now'), 0);
+			}
+			return { unmount: vi.fn() } as any;
 		});
 	});
 
@@ -56,9 +77,6 @@ describe('checkForUpdate', () => {
 
 		await checkForUpdate();
 
-		expect(console.log).toHaveBeenCalledWith(
-			expect.stringContaining('A new version of @harperfast/agent is available'),
-		);
 		expect(spawn.sync).toHaveBeenCalledWith(
 			'npx',
 			expect.arrayContaining(['-y', '@harperfast/agent@latest']),
@@ -118,5 +136,38 @@ describe('checkForUpdate', () => {
 
 		const version = await checkForUpdate();
 		expect(version).toBe('1.0.0');
+	});
+
+	it('should return version if user chooses to update later', async () => {
+		vi.mocked(getOwnPackageJson).mockReturnValue({ name: '@harperfast/agent', version: '1.0.0' });
+		vi.mocked(getLatestVersion).mockResolvedValue('1.1.0');
+		vi.mocked(isVersionNewer).mockReturnValue(true);
+
+		vi.mocked(render).mockImplementation((element: any) => {
+			const { onSelect } = element.props;
+			setTimeout(() => onSelect('later'), 0);
+			return { unmount: vi.fn() } as any;
+		});
+
+		const version = await checkForUpdate();
+		expect(version).toBe('1.0.0');
+		expect(spawn.sync).not.toHaveBeenCalledWith('npx', expect.anything(), expect.anything());
+	});
+
+	it('should update env and return version if user chooses to never ask again', async () => {
+		vi.mocked(getOwnPackageJson).mockReturnValue({ name: '@harperfast/agent', version: '1.0.0' });
+		vi.mocked(getLatestVersion).mockResolvedValue('1.1.0');
+		vi.mocked(isVersionNewer).mockReturnValue(true);
+
+		vi.mocked(render).mockImplementation((element: any) => {
+			const { onSelect } = element.props;
+			setTimeout(() => onSelect('never'), 0);
+			return { unmount: vi.fn() } as any;
+		});
+
+		const version = await checkForUpdate();
+		expect(version).toBe('1.0.0');
+		expect(updateEnv).toHaveBeenCalledWith('HARPER_AGENT_SKIP_UPDATE', '1');
+		expect(spawn.sync).not.toHaveBeenCalledWith('npx', expect.anything(), expect.anything());
 	});
 });

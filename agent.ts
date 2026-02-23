@@ -7,6 +7,7 @@ import { handleExit } from './lifecycle/handleExit';
 import { parseArgs } from './lifecycle/parseArgs';
 import { loadEnv } from './utils/envLoader';
 import { setupGlobalErrorHandlers } from './utils/logger';
+import { checkForUpdate } from './utils/package/checkForUpdate';
 import { ensureApiKey } from './utils/shell/ensureApiKey';
 import { getStdin } from './utils/shell/getStdin';
 
@@ -16,6 +17,8 @@ import { getStdin } from './utils/shell/getStdin';
 
 	process.on('SIGINT', handleExit);
 	process.on('SIGTERM', handleExit);
+
+	await checkForUpdate();
 
 	parseArgs();
 	if (!ensureApiKey()) {
@@ -29,9 +32,6 @@ import { getStdin } from './utils/shell/getStdin';
 			process.exit(1);
 		}
 	}
-
-	// TODO: Shift into the UI, less abrasive.
-	//       await checkForUpdate();
 
 	await agentManager.initialize();
 	bootstrapMain();
