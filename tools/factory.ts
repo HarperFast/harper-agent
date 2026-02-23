@@ -14,6 +14,7 @@ import { findTool } from './files/findTool';
 import { readDirTool } from './files/readDirTool';
 import { readFileTool } from './files/readFileTool';
 import { codeInterpreterTool } from './general/codeInterpreterTool';
+import { collectFeedbackTool } from './general/collectFeedbackTool';
 import { setInterpreterAutoApproveTool } from './general/setInterpreterAutoApproveTool';
 import { setPatchAutoApproveTool } from './general/setPatchAutoApproveTool';
 import { setShellAutoApproveTool } from './general/setShellAutoApproveTool';
@@ -54,6 +55,7 @@ export function createTools() {
 		addPlanItemTool,
 		changeCwdTool,
 		checkHarperStatusTool,
+		collectFeedbackTool,
 		codeInterpreterTool,
 		createApplyPatchTool(),
 		createNewHarperApplicationTool,
