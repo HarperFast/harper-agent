@@ -22,7 +22,7 @@ describe('envLoader', () => {
 		loadEnv();
 
 		expect(dotenv.config).toHaveBeenCalledTimes(1);
-		expect(dotenv.config).toHaveBeenCalledWith({ path: topLevelEnvPath });
+		expect(dotenv.config).toHaveBeenCalledWith({ path: topLevelEnvPath, quiet: true });
 	});
 
 	it('should load only local .env if top-level does not exist', () => {
@@ -31,7 +31,7 @@ describe('envLoader', () => {
 		loadEnv();
 
 		expect(dotenv.config).toHaveBeenCalledTimes(1);
-		expect(dotenv.config).toHaveBeenCalledWith({ path: localEnvPath, override: true });
+		expect(dotenv.config).toHaveBeenCalledWith({ path: localEnvPath, override: true, quiet: true });
 	});
 
 	it('should load both and override if both exist', () => {
@@ -40,8 +40,8 @@ describe('envLoader', () => {
 		loadEnv();
 
 		expect(dotenv.config).toHaveBeenCalledTimes(2);
-		expect(dotenv.config).toHaveBeenNthCalledWith(1, { path: topLevelEnvPath });
-		expect(dotenv.config).toHaveBeenNthCalledWith(2, { path: localEnvPath, override: true });
+		expect(dotenv.config).toHaveBeenNthCalledWith(1, { path: topLevelEnvPath, quiet: true });
+		expect(dotenv.config).toHaveBeenNthCalledWith(2, { path: localEnvPath, override: true, quiet: true });
 	});
 
 	it('should load nothing if neither exist', () => {
