@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 import { trackedState } from '../../lifecycle/trackedState';
+import { rateLimitTracker } from '../../utils/sessions/rateLimits';
 import { useListener } from '../emitters/listener';
 import type { SettingsContextType } from '../models/SettingsContextType';
 
@@ -36,6 +37,9 @@ export const SettingsProvider = ({
 		autoApproveCodeInterpreter: trackedState.autoApproveCodeInterpreter,
 		autoApprovePatches: trackedState.autoApprovePatches,
 		autoApproveShell: trackedState.autoApproveShell,
+		monitorRateLimits: trackedState.monitorRateLimits,
+		rateLimitThreshold: trackedState.rateLimitThreshold,
+		rateLimitStatus: rateLimitTracker.getStatus(),
 	} satisfies SettingsContextType), [version]);
 
 	return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

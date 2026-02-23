@@ -7,7 +7,7 @@ import type { UserInputMode } from '../models/userInputMode';
 
 export interface WatchedValuesTypeMap {
 	PushNewMessages: Omit<Message, 'id'>[];
-	SetGoal: string;
+	SetPlanDescription: string;
 	SetInputMode: UserInputMode;
 	SetThinking: boolean;
 	SetPlanItems: PlanItem[];

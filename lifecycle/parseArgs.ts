@@ -29,6 +29,7 @@ export function parseArgs() {
 			['sessionPath', ['--session', '-s', 'session']],
 			['maxTurns', ['--max-turns']],
 			['maxCost', ['--max-cost']],
+			['rateLimitThreshold', ['--rate-limit-threshold']],
 		] as const;
 
 		let handled = false;
@@ -37,7 +38,7 @@ export function parseArgs() {
 				if (arg === prefix) {
 					if (args[i + 1]) {
 						const val = stripQuotes(args[++i]!);
-						if (key === 'maxTurns' || key === 'maxCost') {
+						if (key === 'maxTurns' || key === 'maxCost' || key === 'rateLimitThreshold') {
 							(trackedState as any)[key] = parseFloat(val);
 						} else {
 							trackedState[key] = val;
@@ -47,7 +48,7 @@ export function parseArgs() {
 					break;
 				} else if (arg.startsWith(`${prefix}=`)) {
 					const val = stripQuotes(arg.slice(prefix.length + 1));
-					if (key === 'maxTurns' || key === 'maxCost') {
+					if (key === 'maxTurns' || key === 'maxCost' || key === 'rateLimitThreshold') {
 						(trackedState as any)[key] = parseFloat(val);
 					} else {
 						trackedState[key] = val;
@@ -64,6 +65,8 @@ export function parseArgs() {
 		// Handle boolean flags
 		if (arg === '--flex-tier') {
 			trackedState.useFlexTier = true;
+		} else if (arg === '--no-monitor-rate-limits') {
+			trackedState.monitorRateLimits = false;
 		}
 	}
 
@@ -83,6 +86,12 @@ export function parseArgs() {
 	}
 	if (process.env.HARPER_AGENT_MAX_COST) {
 		trackedState.maxCost = parseFloat(process.env.HARPER_AGENT_MAX_COST);
+	}
+	if (process.env.HARPER_AGENT_RATE_LIMIT_THRESHOLD) {
+		trackedState.rateLimitThreshold = parseFloat(process.env.HARPER_AGENT_RATE_LIMIT_THRESHOLD);
+	}
+	if (process.env.HARPER_AGENT_MONITOR_RATE_LIMITS === 'false') {
+		trackedState.monitorRateLimits = false;
 	}
 
 	// Resolve immediately so the path remains stable if CWD changes later

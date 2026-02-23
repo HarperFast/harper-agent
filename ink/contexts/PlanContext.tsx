@@ -19,9 +19,14 @@ export const PlanProvider = ({
 }: {
 	children: ReactNode;
 }) => {
-	const [goal, setGoal] = useState<string>(globalPlanContext.planDescription);
-	const [progress, setProgress] = useState<number>(globalPlanContext.progress);
+	const [planDescription, setPlanDescription] = useState<string>(globalPlanContext.planDescription);
 	const [planItems, setPlanItems] = useState<PlanItem[]>(globalPlanContext.planItems);
+	const [progress, setProgress] = useState<number>(globalPlanContext.progress);
+
+	useListener('SetPlanDescription', newGoal => {
+		globalPlanContext.planDescription = newGoal;
+		setPlanDescription(newGoal);
+	}, []);
 
 	useListener('SetPlanItems', (planItems) => {
 		globalPlanContext.planItems = planItems;
@@ -32,16 +37,11 @@ export const PlanProvider = ({
 		setProgress(progress);
 	}, []);
 
-	useListener('SetGoal', newGoal => {
-		globalPlanContext.planDescription = newGoal;
-		setGoal(newGoal);
-	}, []);
-
 	const value = useMemo(() => ({
 		progress,
-		goal,
+		planDescription,
 		planItems,
-	}), [progress, goal, planItems]);
+	}), [progress, planDescription, planItems]);
 
 	return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 };

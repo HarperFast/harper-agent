@@ -4,7 +4,9 @@ import { addListener, curryEmitToListeners, emitToListeners, onceListener } from
 import { handleExit } from '../lifecycle/handleExit';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
+import { sleep } from '../utils/promises/sleep';
 import { costTracker } from '../utils/sessions/cost';
+import { rateLimitTracker } from '../utils/sessions/rateLimits';
 import { isTrue } from '../utils/strings/isTrue';
 import { showErrorToUser } from './showErrorToUser';
 
@@ -31,6 +33,67 @@ export async function runAgentForOnePass(
 		});
 
 		for await (const event of stream) {
+			// Rate limit monitoring: if approaching limits, either slow down or require approval
+			if (trackedState.monitorRateLimits) {
+				const { requests, tokens } = rateLimitTracker.isApproachingLimit(trackedState.rateLimitThreshold);
+				const veryCloseThreshold = Math.min(99, trackedState.rateLimitThreshold + 15);
+				const veryClose = rateLimitTracker.isApproachingLimit(veryCloseThreshold);
+				if (veryClose.requests || veryClose.tokens) {
+					// Pause and require approval
+					emitToListeners('SetInputMode', 'approving');
+					emitToListeners('PushNewMessages', [{
+						type: 'agent',
+						text: 'Rate limit nearly exhausted. Approve to continue or wait for reset.',
+						version: 1,
+					}]);
+					const approval = await new Promise<'approved' | 'denied'>((resolve) => {
+						const removeApprove = addListener('ApproveCurrentApproval', () => {
+							removeApprove();
+							removeDeny();
+							resolve('approved');
+						});
+						const removeDeny = addListener('DenyCurrentApproval', () => {
+							removeApprove();
+							removeDeny();
+							resolve('denied');
+						});
+					});
+					if (approval === 'denied') {
+						emitToListeners('SetInputMode', 'denied');
+						emitToListeners('PushNewMessages', [{
+							type: 'agent',
+							text: 'Operation canceled due to rate limits.',
+							version: 1,
+						}]);
+						if (controller) { controller.abort(); }
+						process.exitCode = 1;
+						await handleExit();
+					}
+				} else if (requests || tokens) {
+					// Artificially slow down
+					emitToListeners('PushNewMessages', [{ type: 'agent', text: 'Throttling to avoid rate limits…', version: 1 }]);
+					// Try to honor reset headers if present
+					const status = rateLimitTracker.getStatus();
+					let backoffMs = 1500;
+					const parseReset = (s?: string | null) => {
+						if (!s) { return null; }
+						// expected formats like "1ms", "20s", "1m0s"
+						const ms = /([0-9]+)ms/.exec(s)?.[1];
+						if (ms) { return parseInt(ms, 10); }
+						const sec = /([0-9]+)s/.exec(s)?.[1];
+						if (sec) { return parseInt(sec, 10) * 1000; }
+						const min = /([0-9]+)m/.exec(s)?.[1];
+						if (min) { return parseInt(min, 10) * 60_000; }
+						return null;
+					};
+					const resets = [parseReset(status.resetRequests || undefined), parseReset(status.resetTokens || undefined)]
+						.filter(Boolean) as number[];
+					if (resets.length > 0) {
+						backoffMs = Math.max(backoffMs, Math.min(...resets));
+					}
+					await sleep(backoffMs);
+				}
+			}
 			switch (event.type) {
 				case 'raw_model_stream_event':
 					const data = event.data;
@@ -58,6 +121,21 @@ export async function runAgentForOnePass(
 							emitToListeners('SetInputMode', 'waiting');
 							break;
 					}
+					// Update cost and tokens during the stream whenever new data arrives
+					const currentEstimatedCost = costTracker.getEstimatedTotalCost(
+						stream.state.usage,
+						trackedState.model,
+						trackedState.compactionModel,
+					);
+					const sessionStats = costTracker.getSessionStats();
+					emitToListeners('UpdateCost', {
+						totalCost: currentEstimatedCost,
+						inputTokens: sessionStats.inputTokens + stream.state.usage.inputTokens,
+						outputTokens: sessionStats.outputTokens + stream.state.usage.outputTokens,
+						cachedInputTokens: sessionStats.cachedInputTokens
+							+ costTracker.extractCachedTokens(stream.state.usage.inputTokensDetails),
+						hasUnknownPrices: sessionStats.hasUnknownPrices,
+					});
 					break;
 				case 'run_item_stream_event':
 					if (event.name === 'tool_called') {
@@ -137,9 +215,14 @@ export async function runAgentForOnePass(
 			trackedState.model,
 			trackedState.compactionModel,
 		);
+		const sessionStats = costTracker.getSessionStats();
 		emitToListeners('UpdateCost', {
-			...costTracker.getSessionStats(),
 			totalCost: estimatedTotalCost,
+			inputTokens: sessionStats.inputTokens + stream.state.usage.inputTokens,
+			outputTokens: sessionStats.outputTokens + stream.state.usage.outputTokens,
+			cachedInputTokens: sessionStats.cachedInputTokens
+				+ costTracker.extractCachedTokens(stream.state.usage.inputTokensDetails),
+			hasUnknownPrices: sessionStats.hasUnknownPrices,
 		});
 
 		if (stream.interruptions?.length) {

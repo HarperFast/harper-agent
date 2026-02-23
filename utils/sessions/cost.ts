@@ -132,6 +132,12 @@ class CostTracker {
 		return this.getTotalCost() + turnCost + compactionCost;
 	}
 
+	public extractCachedTokens(
+		inputTokenDetails?: Array<Record<string, number>> | Record<string, number>,
+	): number {
+		return extractCachedTokens(inputTokenDetails);
+	}
+
 	public recordTurn(
 		model: string,
 		usage: Pick<Usage, 'requestUsageEntries' | 'outputTokens' | 'inputTokens' | 'inputTokensDetails'>,

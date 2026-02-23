@@ -19,12 +19,16 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 		autoApproveCodeInterpreter: initialAutoApproveCodeInterpreter,
 		autoApprovePatches: initialAutoApprovePatches,
 		autoApproveShell: initialAutoApproveShell,
+		monitorRateLimits: initialMonitorRateLimits,
+		rateLimitThreshold: initialRateLimitThreshold,
+		rateLimitStatus,
 	} = useSettings();
 	const { focusedArea } = useChat();
 
 	const [autoApproveCodeInterpreter, setAutoApproveCodeInterpreter] = useState(initialAutoApproveCodeInterpreter);
 	const [autoApprovePatches, setAutoApprovePatches] = useState(initialAutoApprovePatches);
 	const [autoApproveShell, setAutoApproveShell] = useState(initialAutoApproveShell);
+	const [monitorRateLimits, setMonitorRateLimits] = useState(initialMonitorRateLimits);
 
 	useEffect(() => {
 		setAutoApproveCodeInterpreter(initialAutoApproveCodeInterpreter);
@@ -37,6 +41,10 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 	useEffect(() => {
 		setAutoApproveShell(initialAutoApproveShell);
 	}, [initialAutoApproveShell]);
+
+	useEffect(() => {
+		setMonitorRateLimits(initialMonitorRateLimits);
+	}, [initialMonitorRateLimits]);
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -60,6 +68,16 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 			setter: setAutoApproveShell,
 		},
 		{
+			label: 'Monitor Rate Limits',
+			value: monitorRateLimits,
+			envKey: 'HARPER_AGENT_MONITOR_RATE_LIMITS',
+			setter: (val: boolean) => {
+				setMonitorRateLimits(val);
+				updateEnv('HARPER_AGENT_MONITOR_RATE_LIMITS', val ? 'true' : 'false');
+				emitToListeners('SettingsUpdated', undefined);
+			},
+		},
+		{
 			label: '<edit settings>',
 			isAction: true,
 			action: () => {
@@ -69,7 +87,7 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 				});
 			},
 		},
-	], [autoApproveCodeInterpreter, autoApprovePatches, autoApproveShell]);
+	], [autoApproveCodeInterpreter, autoApprovePatches, autoApproveShell, monitorRateLimits]);
 
 	useInput((_input, key) => {
 		if (focusedArea !== 'status') { return; }
@@ -146,6 +164,33 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 				</Box>
 				<Text>{maxTurns}</Text>
 			</Box>
+			<Box marginBottom={marginBottom}>
+				<Box width={20}>
+					<Text>Rate Limit Threshold:</Text>
+				</Box>
+				<Text>{initialRateLimitThreshold}%</Text>
+			</Box>
+			{rateLimitStatus && rateLimitStatus.limitRequests !== null && (
+				<Box marginBottom={marginBottom} flexDirection="column">
+					<Box>
+						<Box width={20}>
+							<Text>RPM Limit:</Text>
+						</Box>
+						<Text>
+							{rateLimitStatus.remainingRequests} / {rateLimitStatus.limitRequests} (Reset:{' '}
+							{rateLimitStatus.resetRequests})
+						</Text>
+					</Box>
+					<Box>
+						<Box width={20}>
+							<Text>TPM Limit:</Text>
+						</Box>
+						<Text>
+							{rateLimitStatus.remainingTokens} / {rateLimitStatus.limitTokens} (Reset: {rateLimitStatus.resetTokens})
+						</Text>
+					</Box>
+				</Box>
+			)}
 			{maxCost !== null && (
 				<Box marginBottom={marginBottom}>
 					<Box width={20}>

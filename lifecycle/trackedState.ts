@@ -9,6 +9,8 @@ export interface TrackedState {
 	autoApproveCodeInterpreter: boolean;
 	autoApprovePatches: boolean;
 	autoApproveShell: boolean;
+	monitorRateLimits: boolean;
+	rateLimitThreshold: number;
 }
 export const trackedState: TrackedState = {
 	cwd: process.cwd(),
@@ -21,4 +23,6 @@ export const trackedState: TrackedState = {
 	autoApproveCodeInterpreter: false,
 	autoApprovePatches: false,
 	autoApproveShell: false,
+	monitorRateLimits: true,
+	rateLimitThreshold: 80,
 };
