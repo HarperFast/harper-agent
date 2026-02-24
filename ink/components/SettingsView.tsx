@@ -14,6 +14,7 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 		sessionPath,
 		cwd,
 		useFlexTier,
+		currentTurn,
 		maxTurns,
 		maxCost,
 		autoApproveCodeInterpreter: initialAutoApproveCodeInterpreter,
@@ -160,13 +161,13 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 			</Box>
 			<Box marginBottom={marginBottom}>
 				<Box width={20}>
-					<Text>Max Turns:</Text>
+					<Text>Current Turn:</Text>
 				</Box>
-				<Text>{maxTurns}</Text>
+				<Text>{currentTurn} / {maxTurns}</Text>
 			</Box>
 			<Box marginBottom={marginBottom}>
 				<Box width={20}>
-					<Text>Rate Limit Threshold:</Text>
+					<Text>Rate Limit @:</Text>
 				</Box>
 				<Text>{initialRateLimitThreshold}%</Text>
 			</Box>

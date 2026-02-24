@@ -24,12 +24,15 @@ function resetState() {
 	trackedState.useFlexTier = false;
 	trackedState.maxTurns = 30;
 	trackedState.maxCost = null;
+	trackedState.autonomous = false;
+	trackedState.prompt = null;
 }
 
 function clearAllEnv() {
 	clearProviderEnv();
 	delete process.env.HARPER_AGENT_MAX_TURNS;
 	delete process.env.HARPER_AGENT_MAX_COST;
+	delete process.env.HARPER_AGENT_AUTONOMOUS;
 }
 
 function clearProviderEnv() {
@@ -346,6 +349,35 @@ describe('parseArgs edge cases and mixed scenarios', () => {
 		process.env.HARPER_AGENT_MAX_TURNS = '75';
 		parseArgs();
 		expect(trackedState.maxTurns).toBe(75);
+	});
+	it('sets autonomous from --autonomous flag', () => {
+		process.argv = ['node', 'agent.js', '--autonomous'];
+		parseArgs();
+		expect(trackedState.autonomous).toBe(true);
+	});
+
+	it('sets autonomous from -a flag', () => {
+		process.argv = ['node', 'agent.js', '-a'];
+		parseArgs();
+		expect(trackedState.autonomous).toBe(true);
+	});
+
+	it('sets autonomous from HARPER_AGENT_AUTONOMOUS env', () => {
+		process.env.HARPER_AGENT_AUTONOMOUS = 'true';
+		parseArgs();
+		expect(trackedState.autonomous).toBe(true);
+	});
+
+	it('sets prompt from --prompt flag', () => {
+		process.argv = ['node', 'agent.js', '--prompt', 'hello world'];
+		parseArgs();
+		expect(trackedState.prompt).toBe('hello world');
+	});
+
+	it('sets prompt from -p flag', () => {
+		process.argv = ['node', 'agent.js', '-p', 'hello world'];
+		parseArgs();
+		expect(trackedState.prompt).toBe('hello world');
 	});
 });
 

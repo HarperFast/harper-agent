@@ -6,6 +6,7 @@ import { useMessageListener } from '../bindings/useMessageListener';
 import { footerHeight } from '../constants/footerHeight';
 import { useApproval } from '../contexts/ApprovalContext';
 import { useChat } from '../contexts/ChatContext';
+import { usePlan } from '../contexts/PlanContext';
 import { emitToListeners } from '../emitters/listener';
 import { useTerminalSize } from '../library/useTerminalSize';
 import { wrapText } from '../library/wrapText';
@@ -26,6 +27,17 @@ export function ChatContent() {
 
 	useMessageListener();
 	const [activeTab, setActiveTab] = useState('settings');
+	const [userHasSwitchedTab, setUserHasSwitchedTab] = useState(false);
+	const { planDescription, planItems } = usePlan();
+
+	useEffect(() => {
+		if (!userHasSwitchedTab && activeTab === 'settings') {
+			const hasPlan = planDescription.trim().length > 0 || planItems.length > 0;
+			if (hasPlan) {
+				setActiveTab('planDescription');
+			}
+		}
+	}, [planDescription, planItems, userHasSwitchedTab, activeTab]);
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -82,10 +94,14 @@ export function ChatContent() {
 				const currentIndex = tabNames.indexOf(activeTab);
 				if (key.leftArrow) {
 					const nextIndex = (currentIndex - 1 + tabNames.length) % tabNames.length;
-					setActiveTab(tabNames[nextIndex]!);
+					const newTab = tabNames[nextIndex]!;
+					setActiveTab(newTab);
+					setUserHasSwitchedTab(true);
 				} else {
 					const nextIndex = (currentIndex + 1) % tabNames.length;
-					setActiveTab(tabNames[nextIndex]!);
+					const newTab = tabNames[nextIndex]!;
+					setActiveTab(newTab);
+					setUserHasSwitchedTab(true);
 				}
 			}
 		}
@@ -108,6 +124,7 @@ export function ChatContent() {
 	const labelWidthFor = useCallback((type: Message['type']) => {
 		// agent: 'AGENT: ' (7 incl. colon+space), user: 'USER: ' (6)
 		if (type === 'agent') { return 7; }
+		if (type === 'prompt') { return 7; }
 		if (type === 'user') { return 6; }
 		if (type === 'interrupted') { return 0; // No indent for interrupted label
 		 }

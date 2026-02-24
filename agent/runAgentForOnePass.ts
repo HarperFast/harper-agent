@@ -16,6 +16,7 @@ export async function runAgentForOnePass(
 	session: CombinedSession,
 	input: string | AgentInputItem[] | RunState<undefined, Agent>,
 	controller: AbortController,
+	isPrompt?: boolean,
 ): Promise<null | RunState<undefined, Agent>> {
 	let lastToolCallInfo: string | null = null;
 	const toolInfoMap = new Map<string, any>();
@@ -30,9 +31,12 @@ export async function runAgentForOnePass(
 		let adjustedInput = input;
 		const noPlanYet = globalPlanContext.planItems.length === 0
 			&& (!globalPlanContext.planDescription || globalPlanContext.planDescription.trim().length === 0);
-		if (noPlanYet && (typeof input === 'string' || Array.isArray(input))) {
+
+		if (noPlanYet && typeof input === 'string') {
 			const planningInstruction = [
-				'If there is no current plan, first establish one and keep it updated:',
+				isPrompt
+					? 'The following request is from a non-interactive prompt. You MUST establish a comprehensive plan first, then execute it autonomously until completion.'
+					: 'If there is no current plan, first establish one and keep it updated:',
 				'- Use the tools to manage the plan:',
 				'  • set_plan_description(description)',
 				'  • set_plan_items(items: string[])',
@@ -41,17 +45,13 @@ export async function runAgentForOnePass(
 				'- After setting the plan, as you progress, mark items as in-progress, done, or not-needed.',
 				'- Keep the plan concise and actionable. Update statuses as you move forward.',
 			].join('\n');
-			if (typeof input === 'string') {
-				adjustedInput = [
-					system(planningInstruction),
-					{ type: 'message', role: 'user', content: input } as AgentInputItem,
-				];
-			} else {
-				adjustedInput = [system(planningInstruction), ...input as AgentInputItem[]];
-			}
+			adjustedInput = [
+				system(planningInstruction),
+				{ type: 'message', role: 'user', content: input } as AgentInputItem,
+			];
 		}
 
-		const stream = await run(agent, adjustedInput as any, {
+		const stream = await run(agent, adjustedInput, {
 			session,
 			stream: true,
 			signal: controller.signal,
@@ -135,8 +135,8 @@ export async function runAgentForOnePass(
 							}
 							break;
 						case 'response_done':
-							const tier = (data as any).response?.providerData?.service_tier
-								|| (data as any).providerData?.service_tier;
+							const tier = data.response?.providerData?.service_tier
+								|| data.providerData?.service_tier;
 							if (tier) {
 								(stream.state.usage as any).serviceTier = tier;
 								const entries = stream.state.usage.requestUsageEntries;
@@ -162,6 +162,14 @@ export async function runAgentForOnePass(
 							+ costTracker.extractCachedTokens(stream.state.usage.inputTokensDetails),
 						hasUnknownPrices: sessionStats.hasUnknownPrices,
 					});
+
+					if (
+						trackedState.currentTurn !== stream.state._currentTurn || trackedState.maxTurns !== stream.state._maxTurns
+					) {
+						trackedState.currentTurn = stream.state._currentTurn;
+						trackedState.maxTurns = stream.state._maxTurns;
+						emitToListeners('SettingsUpdated', undefined);
+					}
 					break;
 				case 'run_item_stream_event':
 					if (event.name === 'tool_called') {
@@ -184,7 +192,7 @@ export async function runAgentForOnePass(
 						const displayedArgs = args
 							? `(${args})`
 							: '()';
-						const callId = item.callId || (item as any).id;
+						const callId = item.callId || item.id;
 						emitToListeners('PushNewMessages', [{
 							type: 'tool',
 							text: name,
@@ -250,6 +258,10 @@ export async function runAgentForOnePass(
 				+ costTracker.extractCachedTokens(stream.state.usage.inputTokensDetails),
 			hasUnknownPrices: sessionStats.hasUnknownPrices,
 		});
+
+		trackedState.currentTurn = stream.state._currentTurn;
+		trackedState.maxTurns = stream.state._maxTurns;
+		emitToListeners('SettingsUpdated', undefined);
 
 		if (stream.interruptions?.length) {
 			// When we're interrupted and need to ask for approval, we can stop thinking.
@@ -344,8 +356,18 @@ export async function runAgentForOnePass(
 		}
 
 		removeToolListener();
+
+		// If we reached max turns, return the state so the manager can decide whether to continue
+		if (stream.state._currentTurn + 1 >= stream.state._maxTurns) {
+			return stream.state;
+		}
+
 		return null;
 	} catch (error: any) {
+		// If it's a max turns error, we can also return the state
+		if (error?.message?.includes('MaxTurnsExceededError') || error?.message?.includes('Max turns')) {
+			return error.state || error.runState || null;
+		}
 		showErrorToUser(error, lastToolCallInfo);
 		return null;
 	}

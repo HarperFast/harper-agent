@@ -22,7 +22,7 @@ export function useMessageListener() {
 
 	useListener('PushNewMessages', async (messages) => {
 		for (const message of messages) {
-			if (message.type === 'user' && message.text) {
+			if ((message.type === 'user' || message.type === 'prompt') && message.text) {
 				const lowerText = message.text.toLowerCase();
 
 				if (lowerText === 'exit' || lowerText === 'bye') {
@@ -43,7 +43,7 @@ export function useMessageListener() {
 					agentManager.enqueueUserInput(message.text);
 					message.handled = true;
 				} else if (!message.handled) {
-					void agentManager.runTask(message.text);
+					void agentManager.runTask(message.text, message.type === 'prompt');
 				}
 			}
 		}

@@ -8,6 +8,7 @@ export interface TrackedState {
 	originalSessionPath: string | null;
 	sessionPath: string | null;
 	useFlexTier: boolean;
+	currentTurn: number;
 	maxTurns: number;
 	maxCost: number | null;
 	autoApproveCodeInterpreter: boolean;
@@ -15,6 +16,8 @@ export interface TrackedState {
 	autoApproveShell: boolean;
 	monitorRateLimits: boolean;
 	rateLimitThreshold: number;
+	autonomous: boolean;
+	prompt: string | null;
 }
 export const trackedState: TrackedState = {
 	originalCwd: process.cwd(),
@@ -31,6 +34,7 @@ export const trackedState: TrackedState = {
 	},
 
 	useFlexTier: false,
+	currentTurn: 0,
 	maxTurns: 30,
 	maxCost: null,
 	autoApproveCodeInterpreter: false,
@@ -38,4 +42,6 @@ export const trackedState: TrackedState = {
 	autoApproveShell: false,
 	monitorRateLimits: true,
 	rateLimitThreshold: 80,
+	autonomous: false,
+	prompt: null,
 };

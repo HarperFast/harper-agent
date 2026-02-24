@@ -43,6 +43,7 @@ export const MessageItem = memo(({ message, isSelected }: { message: Message; is
 
 function messageTypeToLabelColor(type: Message['type']) {
 	switch (type) {
+		case 'prompt':
 		case 'user':
 			return 'green';
 		case 'agent':
@@ -58,6 +59,7 @@ function messageTypeToTextColor(type: Message['type']) {
 	switch (type) {
 		case 'interrupted':
 			return 'gray';
+		case 'prompt':
 		case 'user':
 		case 'agent':
 		default:

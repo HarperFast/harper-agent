@@ -84,6 +84,7 @@ export const MessageLineItem = memo(
 
 function messageTypeToColor(type: Message['type']) {
 	switch (type) {
+		case 'prompt':
 		case 'user':
 			return 'green';
 		case 'agent':

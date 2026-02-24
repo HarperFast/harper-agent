@@ -5,6 +5,7 @@ export interface SettingsContextType {
 	sessionPath: string | null;
 	cwd: string;
 	useFlexTier: boolean;
+	currentTurn: number;
 	maxTurns: number;
 	maxCost: number | null;
 	autoApproveCodeInterpreter: boolean;

@@ -29,7 +29,7 @@ export function isVersionRequest(args: string[]): boolean {
  */
 export function handleHelp(): void {
 	console.log(`
-${chalk.bold('harper-agent')} - AI to help you with Harper app management
+${chalk.bold('harper-agent')} - AI to help you with Harper app creation and modification
 
 ${chalk.bold('USAGE')}
   $ harper-agent [options]
@@ -46,7 +46,6 @@ ${chalk.bold('OPTIONS')}
   -s, --session           Specify a path to a SQLite database file to persist the chat session.
                           Can also be set via HARPER_AGENT_SESSION environment variable.
   --max-turns             Specify the maximum number of turns for the agent run.
-                          In task-driven mode, this defaults to unlimited.
                           Can also be set via HARPER_AGENT_MAX_TURNS environment variable.
   --max-cost              Specify the maximum cost (in USD) for the agent run.
                           If exceeded, the agent will exit with a non-zero code.
@@ -54,6 +53,7 @@ ${chalk.bold('OPTIONS')}
   --flex-tier             Force the use of the flex service tier for lower costs but potentially 
                           more errors under high system load.
                           Can also be set via HARPER_AGENT_FLEX_TIER=true environment variable.
+  -p, --prompt            Specify a prompt to be executed autonomously until completion.
 
 ${chalk.bold('COMMANDS')}
   --help           Show help information

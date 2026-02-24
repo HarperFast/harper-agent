@@ -5,12 +5,12 @@ import { emitToListeners } from './ink/emitters/listener';
 import { bootstrapConfig, bootstrapMain } from './ink/main';
 import { handleExit } from './lifecycle/handleExit';
 import { parseArgs } from './lifecycle/parseArgs';
+import { trackedState } from './lifecycle/trackedState';
 import { loadEnv } from './utils/envLoader';
 import { setupGlobalErrorHandlers } from './utils/logger';
 import { checkForUpdate } from './utils/package/checkForUpdate';
 import { rateLimitTracker } from './utils/sessions/rateLimits';
 import { ensureApiKey } from './utils/shell/ensureApiKey';
-import { getStdin } from './utils/shell/getStdin';
 
 (async function() {
 	setupGlobalErrorHandlers();
@@ -50,11 +50,10 @@ import { getStdin } from './utils/shell/getStdin';
 	await agentManager.initialize();
 	bootstrapMain();
 
-	getStdin().then((stdinPrompt) => {
-		if (stdinPrompt?.trim?.()?.length) {
-			emitToListeners('PushNewMessages', [
-				{ type: 'user', text: stdinPrompt.trim(), version: 1 },
-			]);
-		}
-	});
+	if (trackedState.prompt?.trim?.()?.length) {
+		trackedState.autonomous = true;
+		emitToListeners('PushNewMessages', [
+			{ type: 'prompt', text: trackedState.prompt.trim(), version: 1 },
+		]);
+	}
 })();

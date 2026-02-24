@@ -41,6 +41,7 @@ export function parseArgs() {
 			['maxTurns', ['--max-turns']],
 			['maxCost', ['--max-cost']],
 			['rateLimitThreshold', ['--rate-limit-threshold']],
+			['prompt', ['--prompt', '-p']],
 		] as const;
 
 		let handled = false;
@@ -78,6 +79,8 @@ export function parseArgs() {
 			trackedState.useFlexTier = true;
 		} else if (arg === '--no-monitor-rate-limits') {
 			trackedState.monitorRateLimits = false;
+		} else if (arg === '--autonomous' || arg === '-a') {
+			trackedState.autonomous = true;
 		}
 	}
 
@@ -122,6 +125,9 @@ export function parseArgs() {
 	}
 	if (isTrue(process.env.HARPER_AGENT_AUTO_APPROVE_SHELL)) {
 		trackedState.autoApproveShell = true;
+	}
+	if (isTrue(process.env.HARPER_AGENT_AUTONOMOUS)) {
+		trackedState.autonomous = true;
 	}
 
 	// If no model was provided, or it was explicitly set to the sentinel 'default',

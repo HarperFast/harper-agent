@@ -32,6 +32,7 @@ export const SettingsProvider = ({
 		sessionPath: trackedState.sessionPath,
 		cwd: trackedState.cwd,
 		useFlexTier: trackedState.useFlexTier,
+		currentTurn: trackedState.currentTurn,
 		maxTurns: trackedState.maxTurns,
 		maxCost: trackedState.maxCost,
 		autoApproveCodeInterpreter: trackedState.autoApproveCodeInterpreter,

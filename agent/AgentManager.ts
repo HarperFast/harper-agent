@@ -17,6 +17,7 @@ export class AgentManager {
 	private isInitialized = false;
 	private controller: AbortController | null = null;
 	private queuedUserInputs: string[] = [];
+	private resumeState: RunState<undefined, Agent> | null = null;
 
 	public agent: Agent | null = null;
 	public session: CombinedSession | null = null;
@@ -38,21 +39,21 @@ export class AgentManager {
 
 		// Restore plan state from session storage, if present
 		try {
-			const plan = await (this.session as any)?.getPlanState?.();
+			const plan = await this.session?.getPlanState?.();
 			if (plan && typeof plan === 'object') {
 				if (typeof plan.planDescription === 'string') {
 					globalPlanContext.planDescription = plan.planDescription;
 					emitToListeners('SetPlanDescription', plan.planDescription);
 				}
 				if (Array.isArray(plan.planItems)) {
-					globalPlanContext.planItems = plan.planItems as any;
+					globalPlanContext.planItems = plan.planItems;
 					// compute progress like PlanProvider does
-					const completedCount = plan.planItems.filter((it: any) =>
+					const completedCount = plan.planItems.filter((it) =>
 						it?.status === 'done' || it?.status === 'not-needed'
 					).length;
 					const progress = plan.planItems.length === 0 ? 0 : Math.round((completedCount / plan.planItems.length) * 100);
 					globalPlanContext.progress = progress;
-					emitToListeners('SetPlanItems', plan.planItems as any);
+					emitToListeners('SetPlanItems', plan.planItems);
 				}
 			}
 		} catch {}
@@ -61,10 +62,10 @@ export class AgentManager {
 		try {
 			addListener('SetPlanDescription', async (desc: string) => {
 				try {
-					await (this.session as any)?.setPlanState?.({ planDescription: desc });
+					await this.session?.setPlanState?.({ planDescription: desc });
 				} catch {}
 			});
-			addListener('SetPlanItems', async (items: any[]) => {
+			addListener('SetPlanItems', async (items) => {
 				try {
 					const completedCount = Array.isArray(items)
 						? items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length
@@ -72,7 +73,7 @@ export class AgentManager {
 					const progress = Array.isArray(items) && items.length > 0
 						? Math.round((completedCount / items.length) * 100)
 						: 0;
-					await (this.session as any)?.setPlanState?.({ planItems: items, progress });
+					await this.session?.setPlanState?.({ planItems: items, progress });
 				} catch {}
 			});
 		} catch {}
@@ -82,12 +83,12 @@ export class AgentManager {
 			if (items.length > 0) {
 				const messages: Message[] = [];
 				let id = 0;
-				for (const item of items as any[]) {
+				for (const item of items) {
 					if (item.type === 'message' && item.role === 'user') {
 						messages.push({
 							id: id++,
 							type: 'user',
-							text: item.content,
+							text: item.content as string,
 							version: 1,
 						});
 					} else if (item.type === 'message' && item.role === 'assistant') {
@@ -99,7 +100,7 @@ export class AgentManager {
 								version: 1,
 							});
 						} else if (Array.isArray(item.content)) {
-							for (const part of item.content) {
+							for (const part of item.content as any[]) {
 								if (part.type === 'text' || part.type === 'output_text') {
 									messages.push({
 										id: id++,
@@ -159,16 +160,52 @@ export class AgentManager {
 		}
 	}
 
-	public async runTask(task: string) {
+	public async runTask(task: string, isPrompt?: boolean) {
 		this.controller = new AbortController();
 
 		await this.runCompactionIfWeWereIdle();
 
 		// We think while the pass executes.
 		emitToListeners('SetThinking', true);
+
 		let taskOrState: null | string | AgentInputItem[] | RunState<undefined, Agent> = task;
+
+		// Handle resumption if the user asked to continue
+		const lowerTask = task.toLowerCase();
+		if (
+			this.resumeState
+			&& (lowerTask.includes('continue') || lowerTask.includes('keep going') || lowerTask.includes('more')
+				|| lowerTask === 'y' || lowerTask === 'yes')
+		) {
+			taskOrState = this.resumeState;
+			this.resumeState = null;
+		} else {
+			// New task, clear any previous resume state
+			this.resumeState = null;
+		}
+
 		while (taskOrState) {
-			taskOrState = await runAgentForOnePass(this.agent!, this.session!, taskOrState, this.controller);
+			taskOrState = await runAgentForOnePass(this.agent!, this.session!, taskOrState, this.controller, isPrompt);
+
+			if (taskOrState && !trackedState.autonomous) {
+				// If we have state but no interruptions, it means we hit max turns
+				if (taskOrState.getInterruptions().length === 0) {
+					this.resumeState = taskOrState;
+					emitToListeners('SetThinking', false);
+					emitToListeners('PushNewMessages', [{
+						id: Date.now(),
+						type: 'interrupted',
+						text: `Reached maximum turns (${trackedState.maxTurns}). Would you like me to continue?`,
+						version: 1,
+					}]);
+					break;
+				}
+			}
+
+			if (taskOrState && trackedState.autonomous) {
+				// In autonomous mode, we might want to run compaction between loops to keep the context clean
+				await this.runCompactionIfWeWereIdle(true);
+			}
 		}
 		// When the pass finishes execution, we can stop thinking.
 		emitToListeners('SetThinking', false);
@@ -181,8 +218,16 @@ export class AgentManager {
 		}
 	}
 
-	private async runCompactionIfWeWereIdle() {
+	private async runCompactionIfWeWereIdle(force = false) {
 		if (this.session) {
+			if (force) {
+				try {
+					await this.session.runCompaction({ force: true });
+				} catch (err) {
+					logError(err);
+				}
+				return;
+			}
 			// Determine idle duration from provider-stamped timestamps in history using
 			// the session helper (does not require fetching history).
 			const lastTs = await this.session.getLatestAddedTimestamp();
