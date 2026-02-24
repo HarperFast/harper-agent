@@ -10,6 +10,7 @@ import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
 import { createTools } from '../tools/factory';
 import { logError } from '../utils/logger';
+import { sleep } from '../utils/promises/sleep';
 import { createSession } from '../utils/sessions/createSession';
 import { getModelSettings } from '../utils/sessions/modelSettings';
 import { runAgentForOnePass } from './runAgentForOnePass';
@@ -199,40 +200,41 @@ export class AgentManager {
 					this.resumeState = taskOrState;
 					emitToListeners('SetThinking', false);
 					emitToListeners('PushNewMessages', [{
-						id: Date.now(),
 						type: 'interrupted',
-						text: `Reached maximum turns (${trackedState.maxTurns}). Would you like me to continue?`,
+						text: `Would you like me to continue?`,
 						version: 1,
 					}]);
 					break;
 				}
 			}
 
-			if (taskOrState && trackedState.autonomous) {
-				// In autonomous mode, we might want to run compaction between loops to keep the context clean
-				await this.runCompactionIfWeWereIdle(true);
-			}
-
-			// If autonomous and the plan is 100% accomplished, we can exit.
 			if (trackedState.autonomous && !this.resumeState) {
+				// If autonomous and the plan is 100% accomplished, we can exit.
 				const planItems = globalPlanContext.planItems;
 				const hasPlan = planItems.length > 0;
 				const allDone = hasPlan && planItems.every(item => item.status === 'done' || item.status === 'not-needed');
 				if (allDone) {
-					// Plan is accomplished
 					emitToListeners('SetThinking', false);
 					emitToListeners('PushNewMessages', [{
-						id: Date.now(),
 						type: 'agent',
 						text: 'Plan 100% accomplished. Exiting autonomous mode.',
 						version: 1,
 					}]);
 					// Allow some time for the message to be seen or for any final UI updates
-					await new Promise(resolve => setTimeout(resolve, 1000));
+					await sleep(1000);
 					await handleExit();
+				} else {
+					// In autonomous mode, we might want to run compaction between loops to keep the context clean
+					await this.session?.runCompaction({ force: true });
+					await sleep(5_000);
+					trackedState.currentTurn = 0;
+					this.resumeState = null;
+					this.controller = new AbortController();
+					taskOrState = 'Keep going';
 				}
 			}
 		}
+
 		// When the pass finishes execution, we can stop thinking.
 		emitToListeners('SetThinking', false);
 
@@ -244,16 +246,8 @@ export class AgentManager {
 		}
 	}
 
-	private async runCompactionIfWeWereIdle(force = false) {
+	private async runCompactionIfWeWereIdle() {
 		if (this.session) {
-			if (force) {
-				try {
-					await this.session.runCompaction({ force: true });
-				} catch (err) {
-					logError(err);
-				}
-				return;
-			}
 			// Determine idle duration from provider-stamped timestamps in history using
 			// the session helper (does not require fetching history).
 			const lastTs = await this.session.getLatestAddedTimestamp();

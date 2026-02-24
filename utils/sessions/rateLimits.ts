@@ -1,5 +1,3 @@
-import { logError } from '../logger';
-
 export interface RateLimitStatus {
 	limitRequests: number | null;
 	limitTokens: number | null;

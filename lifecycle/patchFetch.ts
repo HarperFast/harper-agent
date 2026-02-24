@@ -48,7 +48,7 @@ if (originalFetch) {
 			const seconds = parseInt(retryAfter, 10);
 			if (!isNaN(seconds) && seconds > 0) {
 				emitToListeners('PushNewMessages', [{
-					type: 'agent',
+					type: 'interrupted',
 					text: `Rate limit reached. Sleeping for ${seconds} seconds (Retry-After)...`,
 					version: 1,
 				}]);

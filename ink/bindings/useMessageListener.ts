@@ -12,7 +12,6 @@ export function useMessageListener() {
 		agentManager.interrupt();
 		emitToListeners('PushNewMessages', [
 			{
-				id: Date.now(),
 				type: 'interrupted',
 				text: '- thought interrupted -',
 				version: 1,

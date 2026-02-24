@@ -169,6 +169,16 @@ export async function runAgentForOnePass(
 						trackedState.currentTurn = stream.state._currentTurn;
 						trackedState.maxTurns = stream.state._maxTurns;
 						emitToListeners('SettingsUpdated', undefined);
+						if (trackedState.currentTurn + 1 >= trackedState.maxTurns) {
+							trackedState.currentTurn = 0;
+							emitToListeners('PushNewMessages', [{
+								type: 'interrupted',
+								text: `- max turns reached${trackedState.autonomous ? ', thinking for a moment' : ''} -`,
+								version: 1,
+							}]);
+							controller.abort();
+							return null;
+						}
 					}
 					break;
 				case 'run_item_stream_event':
@@ -357,16 +367,23 @@ export async function runAgentForOnePass(
 
 		removeToolListener();
 
-		// If we reached max turns, return the state so the manager can decide whether to continue
-		if (stream.state._currentTurn + 1 >= stream.state._maxTurns) {
-			return stream.state;
-		}
-
 		return null;
 	} catch (error: any) {
-		// If it's a max turns error, we can also return the state
-		if (error?.message?.includes('MaxTurnsExceededError') || error?.message?.includes('Max turns')) {
-			return error.state || error.runState || null;
+		if (error?.name?.includes('MaxTurnsExceededError')) {
+			emitToListeners('PushNewMessages', [{
+				type: 'interrupted',
+				text: `Max turns exceeded. Please ask me to continue or pivot.`,
+				version: 1,
+			}]);
+			return null;
+		}
+		if (error?.name?.includes('rate_limit_exceeded')) {
+			emitToListeners('PushNewMessages', [{
+				type: 'interrupted',
+				text: `Rate limit reached. Please ask me to continue in a few minutes.`,
+				version: 1,
+			}]);
+			return null;
 		}
 		showErrorToUser(error, lastToolCallInfo);
 		return null;
