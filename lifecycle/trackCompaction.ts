@@ -1,4 +1,5 @@
 import { curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
+import { logError } from '../utils/logger';
 import { trackedState } from './trackedState';
 import type { WithRunCompaction } from './withRunCompaction';
 
@@ -8,6 +9,7 @@ export function trackCompaction(session: WithRunCompaction) {
 		try {
 			return await originalRunCompaction(args);
 		} catch (error: any) {
+			logError(error);
 			// Do not let compaction failures break the session. Provide rich diagnostics instead.
 			const err: any = error ?? {};
 			const name = err.name || 'Error';
