@@ -1,3 +1,4 @@
+import '../lifecycle/patchFetch';
 import 'dotenv/config';
 import { type SystemMessageItem, type UserMessageItem } from '@openai/agents';
 import { readFileSync } from 'node:fs';

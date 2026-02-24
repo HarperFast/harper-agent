@@ -20,5 +20,6 @@ export interface SettingsContextType {
 		remainingTokens: number | null;
 		resetRequests: string | null;
 		resetTokens: string | null;
+		retryAfter: number | null;
 	};
 }

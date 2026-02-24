@@ -171,25 +171,38 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 				</Box>
 				<Text>{initialRateLimitThreshold}%</Text>
 			</Box>
-			{rateLimitStatus && rateLimitStatus.limitRequests !== null && (
+			{rateLimitStatus && (
 				<Box marginBottom={marginBottom} flexDirection="column">
-					<Box>
-						<Box width={20}>
-							<Text>RPM Limit:</Text>
+					{rateLimitStatus.retryAfter !== null && (
+						<Box>
+							<Box width={20}>
+								<Text color="red">Retry After:</Text>
+							</Box>
+							<Text color="red">{rateLimitStatus.retryAfter}s</Text>
 						</Box>
-						<Text>
-							{rateLimitStatus.remainingRequests} / {rateLimitStatus.limitRequests} (Reset:{' '}
-							{rateLimitStatus.resetRequests})
-						</Text>
-					</Box>
-					<Box>
-						<Box width={20}>
-							<Text>TPM Limit:</Text>
+					)}
+					{(rateLimitStatus.limitRequests !== null || rateLimitStatus.remainingRequests !== null) && (
+						<Box>
+							<Box width={20}>
+								<Text>RPM Limit:</Text>
+							</Box>
+							<Text>
+								{rateLimitStatus.remainingRequests ?? '?'} / {rateLimitStatus.limitRequests ?? '?'} (Reset:{' '}
+								{rateLimitStatus.resetRequests ?? '?'})
+							</Text>
 						</Box>
-						<Text>
-							{rateLimitStatus.remainingTokens} / {rateLimitStatus.limitTokens} (Reset: {rateLimitStatus.resetTokens})
-						</Text>
-					</Box>
+					)}
+					{(rateLimitStatus.remainingTokens !== null) && (
+						<Box>
+							<Box width={20}>
+								<Text>TPM Limit:</Text>
+							</Box>
+							<Text>
+								{rateLimitStatus.remainingTokens ?? '?'} / {rateLimitStatus.limitTokens ?? '?'} (Reset:{' '}
+								{rateLimitStatus.resetTokens ?? '?'})
+							</Text>
+						</Box>
+					)}
 				</Box>
 			)}
 			{maxCost !== null && (

@@ -4,6 +4,7 @@ import { addListener, emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from '../lifecycle/getModel';
+import { handleExit } from '../lifecycle/handleExit';
 import { readAgentsMD } from '../lifecycle/readAgentsMD';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
@@ -66,6 +67,11 @@ export class AgentManager {
 				} catch {}
 			});
 			addListener('SetPlanItems', async (items) => {
+				if (Array.isArray(items)) {
+					globalPlanContext.planItems = items;
+					const completedCount = items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length;
+					globalPlanContext.progress = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
+				}
 				try {
 					const completedCount = Array.isArray(items)
 						? items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length
@@ -205,6 +211,26 @@ export class AgentManager {
 			if (taskOrState && trackedState.autonomous) {
 				// In autonomous mode, we might want to run compaction between loops to keep the context clean
 				await this.runCompactionIfWeWereIdle(true);
+			}
+
+			// If autonomous and the plan is 100% accomplished, we can exit.
+			if (trackedState.autonomous && !this.resumeState) {
+				const planItems = globalPlanContext.planItems;
+				const hasPlan = planItems.length > 0;
+				const allDone = hasPlan && planItems.every(item => item.status === 'done' || item.status === 'not-needed');
+				if (allDone) {
+					// Plan is accomplished
+					emitToListeners('SetThinking', false);
+					emitToListeners('PushNewMessages', [{
+						id: Date.now(),
+						type: 'agent',
+						text: 'Plan 100% accomplished. Exiting autonomous mode.',
+						version: 1,
+					}]);
+					// Allow some time for the message to be seen or for any final UI updates
+					await new Promise(resolve => setTimeout(resolve, 1000));
+					await handleExit();
+				}
 			}
 		}
 		// When the pass finishes execution, we can stop thinking.

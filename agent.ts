@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './lifecycle/patchFetch';
 import chalk from 'chalk';
 import { agentManager } from './agent/AgentManager';
 import { emitToListeners } from './ink/emitters/listener';
@@ -9,25 +10,11 @@ import { trackedState } from './lifecycle/trackedState';
 import { loadEnv } from './utils/envLoader';
 import { setupGlobalErrorHandlers } from './utils/logger';
 import { checkForUpdate } from './utils/package/checkForUpdate';
-import { rateLimitTracker } from './utils/sessions/rateLimits';
 import { ensureApiKey } from './utils/shell/ensureApiKey';
 
 (async function() {
 	setupGlobalErrorHandlers();
 	loadEnv();
-
-	// Intercept fetch to monitor rate limit headers
-	const originalFetch = globalThis.fetch;
-	globalThis.fetch = async (...args) => {
-		const response = await originalFetch(...args);
-		const headers: Record<string, string> = {};
-		response.headers.forEach((value, key) => {
-			headers[key] = value;
-		});
-		rateLimitTracker.updateFromHeaders(headers);
-		emitToListeners('SettingsUpdated', undefined);
-		return response;
-	};
 
 	process.on('SIGINT', handleExit);
 	process.on('SIGTERM', handleExit);
