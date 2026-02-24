@@ -7,6 +7,7 @@ import {
 	type Session,
 } from '@openai/agents';
 import { trackedState } from '../../lifecycle/trackedState';
+import type { PlanState, WithPlanState } from '../../lifecycle/withPlanState';
 import type { WithSkillsRead } from '../../lifecycle/withSkillsRead';
 import { excludeFalsy } from '../arrays/excludeFalsy';
 import { compactConversation } from './compactConversation';
@@ -22,11 +23,12 @@ export interface MemoryCompactionSessionOptions {
  * This is intended for use with non-OpenAI models where OpenAI's built-in
  * compaction is not available.
  */
-export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSession, WithSkillsRead {
+export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSession, WithSkillsRead, WithPlanState {
 	private readonly underlyingSession: Session;
 	private readonly triggerTokens?: number;
 	private itemsAddedSinceLastCompaction: number = 0;
 	private skillsReadLocal: Set<string> = new Set();
+	private planStateLocal?: PlanState;
 
 	constructor(options: MemoryCompactionSessionOptions) {
 		this.underlyingSession = options.underlyingSession ?? new MemorySession();
@@ -58,6 +60,45 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 		}
 		const merged = new Set<string>([...base, ...this.skillsReadLocal]);
 		return Array.from(merged);
+	}
+
+	async getPlanState(): Promise<PlanState | null> {
+		const u = this.underlyingSession as unknown as WithPlanState;
+		let base: PlanState | null = null;
+		if (u && typeof u.getPlanState === 'function') {
+			try {
+				base = await Promise.resolve(u.getPlanState());
+			} catch {}
+		}
+		// Merge local over base if present
+		if (this.planStateLocal) {
+			const existing = base ?? { planDescription: '', planItems: [], progress: 0 } as PlanState;
+			const merged: PlanState = {
+				...existing,
+				...this.planStateLocal,
+				planItems: Array.isArray(this.planStateLocal.planItems)
+					? this.planStateLocal.planItems
+					: existing.planItems,
+			};
+			return merged;
+		}
+		return base;
+	}
+
+	async setPlanState(state: Partial<PlanState>): Promise<void> {
+		const u = this.underlyingSession as unknown as WithPlanState;
+		if (u && typeof u.setPlanState === 'function') {
+			try {
+				return await Promise.resolve(u.setPlanState(state));
+			} catch {}
+		}
+		// Fallback to local cache if underlying doesn't support it
+		const existing = this.planStateLocal ?? { planDescription: '', planItems: [], progress: 0 } as PlanState;
+		this.planStateLocal = {
+			...existing,
+			...state,
+			planItems: Array.isArray(state.planItems) ? state.planItems : existing.planItems,
+		} as PlanState;
 	}
 
 	async getItems(limit?: number): Promise<AgentInputItem[]> {

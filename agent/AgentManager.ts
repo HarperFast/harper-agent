@@ -1,5 +1,6 @@
 import { Agent, type AgentInputItem, type RunState } from '@openai/agents';
-import { emitToListeners } from '../ink/emitters/listener';
+import { globalPlanContext } from '../ink/contexts/globalPlanContext';
+import { addListener, emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from '../lifecycle/getModel';
@@ -34,6 +35,47 @@ export class AgentManager {
 			tools: createTools(),
 		});
 		this.session = createSession(trackedState.sessionPath);
+
+		// Restore plan state from session storage, if present
+		try {
+			const plan = await (this.session as any)?.getPlanState?.();
+			if (plan && typeof plan === 'object') {
+				if (typeof plan.planDescription === 'string') {
+					globalPlanContext.planDescription = plan.planDescription;
+					emitToListeners('SetPlanDescription', plan.planDescription);
+				}
+				if (Array.isArray(plan.planItems)) {
+					globalPlanContext.planItems = plan.planItems as any;
+					// compute progress like PlanProvider does
+					const completedCount = plan.planItems.filter((it: any) =>
+						it?.status === 'done' || it?.status === 'not-needed'
+					).length;
+					const progress = plan.planItems.length === 0 ? 0 : Math.round((completedCount / plan.planItems.length) * 100);
+					globalPlanContext.progress = progress;
+					emitToListeners('SetPlanItems', plan.planItems as any);
+				}
+			}
+		} catch {}
+
+		// Persist plan state changes to session storage
+		try {
+			addListener('SetPlanDescription', async (desc: string) => {
+				try {
+					await (this.session as any)?.setPlanState?.({ planDescription: desc });
+				} catch {}
+			});
+			addListener('SetPlanItems', async (items: any[]) => {
+				try {
+					const completedCount = Array.isArray(items)
+						? items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length
+						: 0;
+					const progress = Array.isArray(items) && items.length > 0
+						? Math.round((completedCount / items.length) * 100)
+						: 0;
+					await (this.session as any)?.setPlanState?.({ planItems: items, progress });
+				} catch {}
+			});
+		} catch {}
 
 		if (trackedState.sessionPath) {
 			const items = await this.session.getItems();

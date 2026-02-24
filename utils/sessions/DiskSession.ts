@@ -2,18 +2,20 @@ import { type AgentInputItem, MemorySession } from '@openai/agents';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import type { PlanState, WithPlanState } from '../../lifecycle/withPlanState';
 import type { WithSkillsRead } from '../../lifecycle/withSkillsRead';
 
 interface Storage {
 	sessions: Record<string, AgentInputItem[]>;
 	skillsRead?: Record<string, string[]>;
+	plan?: Record<string, PlanState>;
 }
 
 /**
  * A session that persists items to a JSON file on disk.
  * Extends MemorySession to provide in-memory caching and basic session functionality.
  */
-export class DiskSession extends MemorySession implements WithSkillsRead {
+export class DiskSession extends MemorySession implements WithSkillsRead, WithPlanState {
 	private readonly filePath: string;
 	private readonly ready: Promise<void>;
 
@@ -32,9 +34,23 @@ export class DiskSession extends MemorySession implements WithSkillsRead {
 
 		// If no sessionId was provided, try to use an existing one from the storage
 		if (!options?.sessionId) {
-			const sessionIds = Object.keys(storage.sessions);
+			let candidate: string | undefined;
+			const sessionIds = Object.keys(storage.sessions ?? {});
 			if (sessionIds.length > 0) {
-				sessionId = sessionIds[0];
+				candidate = sessionIds[0];
+			} else {
+				const planIds = Object.keys(storage.plan ?? {});
+				if (planIds.length > 0) {
+					candidate = planIds[0];
+				} else {
+					const skillsIds = Object.keys(storage.skillsRead ?? {});
+					if (skillsIds.length > 0) {
+						candidate = skillsIds[0];
+					}
+				}
+			}
+			if (candidate) {
+				sessionId = candidate;
 				(this as any).sessionId = sessionId;
 			}
 		}
@@ -71,12 +87,13 @@ export class DiskSession extends MemorySession implements WithSkillsRead {
 				// Ensure required structures exist for backward compatibility
 				parsed.sessions = parsed.sessions || {} as any;
 				parsed.skillsRead = parsed.skillsRead || {};
+				parsed.plan = parsed.plan || {};
 				return parsed;
 			} catch (e) {
 				console.error(`Failed to read session file ${this.filePath}:`, e);
 			}
 		}
-		return { sessions: {}, skillsRead: {} };
+		return { sessions: {}, skillsRead: {}, plan: {} };
 	}
 
 	private async updateStorage(update: (storage: Storage) => void): Promise<void> {
@@ -155,6 +172,9 @@ export class DiskSession extends MemorySession implements WithSkillsRead {
 			if (storage.skillsRead) {
 				delete storage.skillsRead[sessionId];
 			}
+			if (storage.plan) {
+				delete storage.plan[sessionId];
+			}
 		});
 	}
 
@@ -173,5 +193,27 @@ export class DiskSession extends MemorySession implements WithSkillsRead {
 		const sessionId = await this.getSessionId();
 		const storage = await this.loadStorage();
 		return storage.skillsRead?.[sessionId] ?? [];
+	}
+
+	async getPlanState(): Promise<PlanState | null> {
+		await this.ready;
+		const sessionId = await this.getSessionId();
+		const storage = await this.loadStorage();
+		return storage.plan?.[sessionId] ?? null;
+	}
+
+	async setPlanState(state: Partial<PlanState>): Promise<void> {
+		await this.ready;
+		const sessionId = await this.getSessionId();
+		await this.updateStorage((storage) => {
+			if (!storage.plan) { storage.plan = {}; }
+			const existing = storage.plan[sessionId] ?? { planDescription: '', planItems: [], progress: 0 } as PlanState;
+			storage.plan[sessionId] = {
+				...existing,
+				...state,
+				// Ensure arrays/objects are properly merged for planItems
+				planItems: Array.isArray(state.planItems) ? state.planItems : existing.planItems,
+			} as PlanState;
+		});
 	}
 }
