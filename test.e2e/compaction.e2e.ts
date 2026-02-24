@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { type SystemMessageItem, type UserMessageItem } from '@openai/agents';
 import { readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { parseArgs } from '../lifecycle/parseArgs';
@@ -16,13 +17,12 @@ import { createSession } from '../utils/sessions/createSession';
  *   [system(compaction notice), ...last3]
  */
 describe('Memory compaction integration (real LLM)', () => {
-	const originalCwd = process.cwd();
 	let tempFile: string;
 
 	beforeAll(() => parseArgs());
 
 	beforeEach(async () => {
-		tempFile = path.join(originalCwd, `.tmp-compaction-${Date.now()}-${Math.random().toString(36).slice(2)}.json`);
+		tempFile = path.join(os.tmpdir(), `harper-compaction-${Date.now()}-${Math.random().toString(36).slice(2)}.json`);
 	});
 
 	afterEach(async () => {

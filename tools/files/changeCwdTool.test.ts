@@ -1,4 +1,5 @@
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, realpath, rm } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { trackedState } from '../../lifecycle/trackedState';
@@ -7,12 +8,16 @@ import { execute as changeCwd } from './changeCwdTool';
 describe('changeCwdTool', () => {
 	const originalCwd = process.cwd();
 	let tempDir: string;
+	let baseRoot: string;
 
 	beforeEach(async () => {
-		// Create a temp directory inside the repository workspace to satisfy resolvePath constraints
-		const base = path.join(originalCwd, `.tmp-cwd-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-		tempDir = base;
-		await mkdir(tempDir, { recursive: true });
+		// Use OS temp directory as the root to satisfy resolvePath constraints
+		baseRoot = os.tmpdir();
+		process.chdir(baseRoot);
+		// Keep trackedState in sync with the actual cwd (realpath may differ on macOS)
+		trackedState.cwd = process.cwd();
+		// Create the temp directory under the current (tmp) cwd to ensure resolvePath allows it
+		tempDir = await mkdtemp(path.join(process.cwd(), 'harper-cwd-'));
 	});
 
 	afterEach(async () => {
@@ -28,8 +33,9 @@ describe('changeCwdTool', () => {
 	it('switches to an absolute directory path', async () => {
 		const result = await changeCwd({ path: tempDir } as any);
 		expect(result).toContain('Switched current working directory');
-		expect(process.cwd()).toBe(tempDir);
-		expect(trackedState.cwd).toBe(tempDir);
+		const expected = await realpath(tempDir);
+		expect(process.cwd()).toBe(expected);
+		expect(trackedState.cwd).toBe(expected);
 	});
 
 	it('switches to a relative directory path from current tracked cwd', async () => {
@@ -39,8 +45,9 @@ describe('changeCwdTool', () => {
 		await (await import('node:fs/promises')).mkdir(child);
 		const result = await changeCwd({ path: 'child' } as any);
 		expect(result).toContain('Switched current working directory');
-		expect(process.cwd()).toBe(child);
-		expect(trackedState.cwd).toBe(child);
+		const expected = await realpath(child);
+		expect(process.cwd()).toBe(expected);
+		expect(trackedState.cwd).toBe(expected);
 	});
 
 	it('returns an error for non-existent path and does not change cwd', async () => {

@@ -1,4 +1,5 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { trackedState } from '../../lifecycle/trackedState';
@@ -6,10 +7,11 @@ import { execute as readFile } from './readFileTool';
 
 describe('readFileTool', () => {
 	const originalCwd = process.cwd();
-	const testDir = join(originalCwd, '.tmp-read-file-test');
+	let testDir: string;
 
 	beforeEach(async () => {
-		await mkdir(testDir, { recursive: true });
+		// Create a unique temp directory for each test run under the OS temp dir
+		testDir = await mkdtemp(join(os.tmpdir(), 'harper-read-file-test-'));
 		trackedState.cwd = testDir;
 	});
 

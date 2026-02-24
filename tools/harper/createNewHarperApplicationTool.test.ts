@@ -10,7 +10,8 @@ vi.mock('node:child_process', async (importOriginal) => {
 		}),
 	};
 });
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { trackedState } from '../../lifecycle/trackedState';
@@ -22,7 +23,7 @@ describe('createNewHarperApplicationTool', () => {
 
 	beforeEach(async () => {
 		vi.restoreAllMocks();
-		baseDir = path.join(originalCwd, `.tmp-create-app-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+		baseDir = await mkdtemp(path.join(os.tmpdir(), 'harper-create-app-'));
 		await mkdir(baseDir, { recursive: true });
 		process.chdir(baseDir);
 		trackedState.cwd = baseDir;
@@ -44,8 +45,9 @@ describe('createNewHarperApplicationTool', () => {
 		expect(result).toContain('Successfully created a new Harper application');
 		expect(result).toContain('I strongly suggest you use these newfound skills!');
 		expect(result).toContain('AGENTS.md');
-		expect(process.cwd()).toBe(resolved);
-		expect(trackedState.cwd).toBe(resolved);
+		const expected = await realpath(resolved);
+		expect(process.cwd()).toBe(expected);
+		expect(trackedState.cwd).toBe(expected);
 	});
 
 	it('does not strongly suggest reading AGENTS.md if it does not exist', async () => {
@@ -57,7 +59,8 @@ describe('createNewHarperApplicationTool', () => {
 		expect(result).toContain('Successfully created a new Harper application');
 		expect(result).not.toContain('I strongly suggest you read it next');
 		expect(result).not.toContain('AGENTS.md');
-		expect(process.cwd()).toBe(resolved);
-		expect(trackedState.cwd).toBe(resolved);
+		const expected = await realpath(resolved);
+		expect(process.cwd()).toBe(expected);
+		expect(trackedState.cwd).toBe(expected);
 	});
 });
