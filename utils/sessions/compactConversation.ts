@@ -1,4 +1,5 @@
 import { Agent, type AgentInputItem, run, system } from '@openai/agents';
+import { emitToListeners } from '../../ink/emitters/listener';
 import { getModel, isOpenAIModel } from '../../lifecycle/getModel';
 import { trackedState } from '../../lifecycle/trackedState';
 import { excludeFalsy } from '../arrays/excludeFalsy';
@@ -30,10 +31,12 @@ export async function compactConversation(
 					? trackedState.compactionModel
 					: getModel(trackedState.compactionModel),
 				modelSettings: getModelSettings(trackedState.compactionModel),
-				instructions: 'Compact the provided conversation history into key observations. '
-					+ 'Focus on what seems likely to be needed later. '
-					+ 'Be concise and avoid repeating information.',
+				instructions: 'Compact the provided conversation history.'
+					+ '\n- Focus on what is NOT completed and needs to be remembered for later.'
+					+ '\n- Do NOT include file content or patches, it is available on the filesystem already. '
+					+ '\n- Be concise.',
 			});
+			emitToListeners('SetCompacting', true);
 			const result = await run(
 				agent,
 				itemsToCompact,
@@ -41,9 +44,7 @@ export async function compactConversation(
 
 			const summary = result.finalOutput;
 			if (summary && summary.trim().length > 0) {
-				// Collapse excessive whitespace and make the notice compact
-				const s = summary.replace(/\s+/g, ' ').trim();
-				noticeContent = `Key observations from earlier:\n${s}`;
+				noticeContent = `Key observations from earlier:\n${summary.trim()}`;
 			}
 		} catch (err: any) {
 			// Keep default notice if summarization fails. Suppress noisy tracing errors
@@ -55,6 +56,8 @@ export async function compactConversation(
 				// eslint-disable-next-line no-console
 				console.warn('Compaction summarization failed:', msg);
 			}
+		} finally {
+			emitToListeners('SetCompacting', false);
 		}
 	}
 

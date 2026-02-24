@@ -141,7 +141,7 @@ export function parseArgs() {
 		} else if (m.startsWith('ollama-')) {
 			trackedState.compactionModel = 'ollama-qwen2.5-coder';
 		} else {
-			trackedState.compactionModel = 'gpt-4o-mini';
+			trackedState.compactionModel = 'gpt-5-nano';
 		}
 	}
 

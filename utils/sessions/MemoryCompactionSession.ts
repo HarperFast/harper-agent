@@ -61,11 +61,36 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 	}
 
 	async getItems(limit?: number): Promise<AgentInputItem[]> {
-		return this.underlyingSession.getItems(limit);
+		// Return sanitized items so provider-specific metadata doesn't leak to upstream APIs.
+		const items = await this.underlyingSession.getItems(limit);
+		return (items as any[]).map((it) => sanitizeItem(it)) as AgentInputItem[];
+	}
+
+	/**
+	 * Returns the provider-stamped timestamp of the latest-added item, or null when unavailable.
+	 * Uses the underlying session directly to access our providerData without sanitation.
+	 */
+	async getLatestAddedTimestamp(): Promise<number | null> {
+		const items = await this.underlyingSession.getItems();
+		if (!Array.isArray(items) || items.length === 0) { return null; }
+		const last: any = items[items.length - 1];
+		const ts = last?.providerData?.harper?.addedAtMs;
+		return (typeof ts === 'number' && Number.isFinite(ts)) ? ts : null;
 	}
 
 	async addItems(items: AgentInputItem[]): Promise<void> {
-		await this.underlyingSession.addItems(items);
+		// Stamp each item with a providerData timestamp under our provider key.
+		// We avoid mutating the original objects by shallow-cloning.
+		const now = Date.now();
+		const stamped: AgentInputItem[] = (items as any[]).map((it) => {
+			const pd = { ...it?.providerData } as Record<string, any>;
+			const ours = { ...pd['harper'] } as Record<string, any>;
+			// Record the wall-clock time when the item was added to the session.
+			ours.addedAtMs = now;
+			pd['harper'] = ours;
+			return { ...it, providerData: pd } as AgentInputItem as any;
+		});
+		await this.underlyingSession.addItems(stamped);
 		this.itemsAddedSinceLastCompaction += items.length;
 		// Proactively invoke compaction entry point; runCompaction will decide
 		// whether a compaction is actually needed based on token thresholds.
@@ -96,7 +121,8 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 	 *   summarized by the model), and retains the last 3 recent items.
 	 */
 	async runCompaction(args?: OpenAIResponsesCompactionArgs): Promise<OpenAIResponsesCompactionResult | null> {
-		const items = await this.underlyingSession.getItems();
+		// Use sanitized view of history for compaction operations and token estimates.
+		const items = await this.getItems();
 
 		if (items.length <= 1) {
 			return null;
@@ -127,6 +153,36 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 
 		return null;
 	}
+}
+
+function sanitizeItem<T extends Record<string, any>>(it: T): T {
+	if (!it || typeof it !== 'object') { return it; }
+	const out: any = { ...it };
+	// Remove any stray top-level 'harper' key just in case
+	if ('harper' in out) {
+		try {
+			delete out.harper;
+		} catch {}
+	}
+	const pd = out.providerData && typeof out.providerData === 'object' ? { ...out.providerData } : undefined;
+	if (pd) {
+		if ('harper' in pd) {
+			try {
+				delete (pd as any).harper;
+			} catch {}
+		}
+		// If providerData ends up empty, drop it to avoid sending empty objects upstream
+		if (Object.keys(pd).length === 0) {
+			try {
+				delete out.providerData;
+			} catch {
+				out.providerData = undefined;
+			}
+		} else {
+			out.providerData = pd;
+		}
+	}
+	return out as T;
 }
 
 // Rough token estimator: ~4 chars per token heuristic across text content

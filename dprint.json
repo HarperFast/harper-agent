@@ -17,7 +17,8 @@
 		"useTabs": true
 	},
 	"excludes": [
-		"**/node_modules"
+		"**/node_modules",
+		"test.e2e/samples/*"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/typescript-0.95.13.wasm",

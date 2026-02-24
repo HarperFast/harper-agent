@@ -87,7 +87,7 @@ You can also set the default model via the `HARPER_AGENT_MODEL` environment vari
 
 ### Compaction Model
 
-By default, `harper-agent` uses `gpt-4o-mini` for session memory compaction. You can switch this to another model using the `--compaction-model` (or `-c`) flag:
+By default, `harper-agent` uses `gpt-5-nano` for session memory compaction. You can switch this to another model using the `--compaction-model` (or `-c`) flag:
 
 ```bash
 # Use a different compaction model
@@ -142,7 +142,7 @@ harper-agent --model ollama-llama3
 
 If you are using a restricted API key, ensure the following permissions are enabled:
 
-- **Models**: `Write` access for `gpt-5.2` (the main model) and `gpt-4o-mini` (the memory summarizer)
+- **Models**: `Write` access for `gpt-5.2` (the main model) and `gpt-5-nano` (the memory summarizer)
 - **Model capabilities**: `Write` (to allow tool calling and completions).
 
 No other permissions (like Assistants, Threads, or Files) are required as `harper-agent` runs its tools locally.

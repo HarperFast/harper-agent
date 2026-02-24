@@ -20,7 +20,7 @@ import { UserInput } from './UserInput';
 import { VirtualList } from './VirtualList';
 
 export function ChatContent() {
-	const { messages, isThinking, focusedArea, setFocusedArea } = useChat();
+	const { messages, isThinking, isCompacting, focusedArea, setFocusedArea } = useChat();
 	const { payload } = useApproval();
 	const size = useTerminalSize();
 
@@ -219,7 +219,8 @@ export function ChatContent() {
 
 	const timelineTitle = 'TIMELINE:';
 	const timelineHeaderWidth = timelineWidth - 1; // excluding '╭'
-	const timelineDashes = timelineHeaderWidth - timelineTitle.length - (isThinking ? 5 : 0);
+	const showSpinner = isCompacting || isThinking;
+	const timelineDashes = timelineHeaderWidth - timelineTitle.length - (showSpinner ? 5 : 0);
 
 	const tabsTotalWidth = tabs.reduce((acc, t) => acc + t.label.length + 2, 0) + (tabs.length - 1);
 	const statusDashes = Math.max(0, statusWidth - tabsTotalWidth - 2); // -1 for '┬', -1 for '╮'
@@ -254,7 +255,7 @@ export function ChatContent() {
 			<Box flexDirection="row" height={1}>
 				<Text color={timelineColor}>╭</Text>
 				<Text bold color={timelineColor}>{timelineTitle}</Text>
-				{isThinking && (
+				{showSpinner && (
 					<Box paddingLeft={2} paddingRight={1}>
 						<Spinner type="clock" />
 					</Box>

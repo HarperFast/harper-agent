@@ -58,7 +58,7 @@ export class Chat {
 		this.child = spawn(process.execPath, [
 			cliPath,
 			'--model',
-			process.env.HARPER_AGENT_MODEL || 'gpt-4o-mini',
+			process.env.HARPER_AGENT_MODEL || 'gpt-5-nano',
 		], {
 			cwd: this.tempDir,
 			env: {

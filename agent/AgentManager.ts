@@ -7,6 +7,7 @@ import { readAgentsMD } from '../lifecycle/readAgentsMD';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
 import { createTools } from '../tools/factory';
+import { logError } from '../utils/logger';
 import { createSession } from '../utils/sessions/createSession';
 import { getModelSettings } from '../utils/sessions/modelSettings';
 import { runAgentForOnePass } from './runAgentForOnePass';
@@ -119,6 +120,8 @@ export class AgentManager {
 	public async runTask(task: string) {
 		this.controller = new AbortController();
 
+		await this.runCompactionIfWeWereIdle();
+
 		// We think while the pass executes.
 		emitToListeners('SetThinking', true);
 		let taskOrState: null | string | AgentInputItem[] | RunState<undefined, Agent> = task;
@@ -133,6 +136,25 @@ export class AgentManager {
 			const batched = this.queuedUserInputs.splice(0).join('\n\n');
 			// Fire-and-forget next run with batched messages
 			void this.runTask(batched);
+		}
+	}
+
+	private async runCompactionIfWeWereIdle() {
+		if (this.session) {
+			// Determine idle duration from provider-stamped timestamps in history using
+			// the session helper (does not require fetching history).
+			const lastTs = await this.session.getLatestAddedTimestamp();
+			if (typeof lastTs === 'number' && Number.isFinite(lastTs)) {
+				const ONE_HOUR_MS = 60 * 60 * 1000;
+				const idleMs = Date.now() - lastTs;
+				if (idleMs > ONE_HOUR_MS) {
+					try {
+						await this.session.runCompaction({ force: true });
+					} catch (err) {
+						logError(err);
+					}
+				}
+			}
 		}
 	}
 

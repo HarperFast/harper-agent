@@ -17,7 +17,7 @@ describe('MemoryCompactionSession', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		trackedState.compactionModel = 'gpt-4o';
+		trackedState.compactionModel = 'gpt-5-nano';
 		underlyingSession = new MemorySession();
 		session = new MemoryCompactionSession({
 			underlyingSession,
@@ -33,12 +33,28 @@ describe('MemoryCompactionSession', () => {
 		await session.addItems([user('hello')]);
 		const items = await session.getItems();
 		expect(items).toHaveLength(1);
-		expect(items[0]).toEqual(user('hello'));
+		const first: any = items[0];
+		expect(first.type).toBe('message');
+		expect(first.role).toBe('user');
+		// Content equivalence
+		const content = Array.isArray(first.content) ? first.content[0]?.text : first.content;
+		expect(content).toBe('hello');
+		// Our provider data should be stripped from getItems
+		expect(first?.providerData?.harper).toBeUndefined();
+	});
+
+	it('getLatestAddedTimestamp returns a recent timestamp', async () => {
+		const before = Date.now();
+		await session.addItems([user('ts-check-1'), user('ts-check-2')]);
+		const ts = await session.getLatestAddedTimestamp();
+		expect(typeof ts).toBe('number');
+		expect(ts!).toBeGreaterThanOrEqual(before);
+		expect(ts!).toBeLessThanOrEqual(Date.now());
 	});
 
 	it('should use default fraction of 0.5 when not specified', async () => {
 		const defaultSession = new MemoryCompactionSession({ underlyingSession: new MemorySession() });
-		// gpt-4o limit is 200,000. 200,000 * 0.5 = 100,000
+		// gpt-5-nano limit is 200,000. 200,000 * 0.5 = 100,000
 		expect((defaultSession as any).triggerTokens).toBe(100_000);
 	});
 

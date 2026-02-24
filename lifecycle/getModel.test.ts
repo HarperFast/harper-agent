@@ -34,9 +34,9 @@ describe('getModel', () => {
 	});
 
 	it('should return wrapped openai model for other models', () => {
-		const result: any = getModel('gpt-4o');
+		const result: any = getModel('gpt-5-nano');
 		expect(result.wrapped.provider).toBe('openai');
-		expect(result.wrapped.name).toBe('gpt-4o');
+		expect(result.wrapped.name).toBe('gpt-5-nano');
 	});
 
 	it('should return wrapped ollama model for ollama- models', () => {
@@ -100,8 +100,8 @@ describe('getModel', () => {
 			expect(isOpenAIModel('gpt-5.2')).toBe(true);
 		});
 
-		it('should return true for gpt-4o', () => {
-			expect(isOpenAIModel('gpt-4o')).toBe(true);
+		it('should return true for gpt-5-nano', () => {
+			expect(isOpenAIModel('gpt-5-nano')).toBe(true);
 		});
 
 		it('should return false for claude- models', () => {
@@ -120,7 +120,7 @@ describe('getModel', () => {
 	describe('getProvider', () => {
 		it('should return OpenAI for generic models', () => {
 			expect(getProvider('gpt-5.2')).toBe('OpenAI');
-			expect(getProvider('gpt-4o')).toBe('OpenAI');
+			expect(getProvider('gpt-5-nano')).toBe('OpenAI');
 			expect(getProvider('something-else')).toBe('OpenAI');
 		});
 

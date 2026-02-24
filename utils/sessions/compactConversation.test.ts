@@ -14,8 +14,8 @@ vi.mock('@openai/agents', async () => {
 describe('compactConversation utility', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Ensure the compaction path is taken by the implementation
-		trackedState.compactionModel = 'gpt-4o';
+		// Ensure the implementation takes the compaction path
+		trackedState.compactionModel = 'gpt-5-nano';
 		// Default mocked summary
 		(run as any).mockResolvedValue({ finalOutput: 'Key facts decided.' });
 	});

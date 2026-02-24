@@ -10,6 +10,7 @@ export interface WatchedValuesTypeMap {
 	SetPlanDescription: string;
 	SetInputMode: UserInputMode;
 	SetThinking: boolean;
+	SetCompacting: boolean;
 	SetPlanItems: PlanItem[];
 	AddShellCommand: Omit<ShellCommand, 'id'>;
 	UpdateShellCommand: Partial<ShellCommand> & { id: number };

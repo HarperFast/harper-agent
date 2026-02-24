@@ -66,7 +66,7 @@ describe('parseArgs defaults based on ENV provider keys', () => {
 		process.env.OPENAI_API_KEY = 'sk-openai-123';
 		parseArgs();
 		expect(trackedState.model).toBe('gpt-5.2');
-		expect(trackedState.compactionModel).toBe('gpt-4o-mini');
+		expect(trackedState.compactionModel).toBe('gpt-5-nano');
 	});
 
 	it('uses Ollama default when OLLAMA_BASE_URL is present', () => {
@@ -78,9 +78,9 @@ describe('parseArgs defaults based on ENV provider keys', () => {
 
 	it('HARPER_AGENT_MODEL explicit env should override provider defaults', () => {
 		process.env.ANTHROPIC_API_KEY = 'sk-ant-123';
-		process.env.HARPER_AGENT_MODEL = 'gpt-4o';
+		process.env.HARPER_AGENT_MODEL = 'gpt-5-nano';
 		parseArgs();
-		expect(trackedState.model).toBe('gpt-4o');
+		expect(trackedState.model).toBe('gpt-5-nano');
 	});
 
 	it('when multiple provider keys exist, Anthropic takes precedence over OpenAI and Google', () => {

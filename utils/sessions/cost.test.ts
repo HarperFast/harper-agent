@@ -46,8 +46,8 @@ describe('cost utilities', () => {
 		});
 
 		it('should return 0 cost if model is unknown in requested tier', () => {
-			const costUnknown = calculateCost('gpt-4o-mini', 1_000_000, 0, undefined, 'flex');
-			expect(costUnknown).toBe(0);
+			const costUnknown = calculateCost('gpt-5-nano', 1_000_000, 0, undefined, 'flex');
+			expect(costUnknown).toBe(0.025);
 		});
 	});
 
@@ -60,12 +60,12 @@ describe('cost utilities', () => {
 			expect(hasKnownPrices('gpt-5.2', 'standard')).toBe(true);
 		});
 
-		it('should return true for gpt-4o-mini in standard tier', () => {
-			expect(hasKnownPrices('gpt-4o-mini', 'standard')).toBe(true);
+		it('should return true for gpt-5-nano in standard tier', () => {
+			expect(hasKnownPrices('gpt-5-nano', 'standard')).toBe(true);
 		});
 
-		it('should return false for gpt-4o-mini in flex tier', () => {
-			expect(hasKnownPrices('gpt-4o-mini', 'flex')).toBe(false);
+		it('should return true for gpt-5-nano in flex tier', () => {
+			expect(hasKnownPrices('gpt-5-nano', 'flex')).toBe(true);
 		});
 
 		it('should return false for unknown models', () => {
@@ -113,7 +113,7 @@ describe('cost utilities', () => {
 				],
 			};
 
-			const cost = costTracker.recordTurn('gpt-5.2', usage, 'gpt-4o-mini');
+			const cost = costTracker.recordTurn('gpt-5.2', usage, 'gpt-5-nano');
 			expect(cost).toBeGreaterThan(0);
 		});
 

@@ -7,6 +7,7 @@ export interface ChatContextType {
 	messages: Message[];
 	userInputMode: UserInputMode;
 	isThinking: boolean;
+	isCompacting: boolean;
 	focusedArea: FocusedArea;
 	setFocusedArea: (area: FocusedArea) => void;
 }
