@@ -1,7 +1,11 @@
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { vi } from 'vitest';
+import { updateEnv } from '../utils/files/updateEnv';
 import { parseArgs } from './parseArgs';
 import { trackedState } from './trackedState';
+
+vi.mock('../utils/files/updateEnv.js');
 
 const ORIGINAL_ENV = { ...process.env } as Record<string, string | undefined>;
 const ORIGINAL_ARGV = [...process.argv];
@@ -335,5 +339,51 @@ describe('parseArgs edge cases and mixed scenarios', () => {
 		process.env.HARPER_AGENT_MAX_TURNS = '75';
 		parseArgs();
 		expect(trackedState.maxTurns).toBe(75);
+	});
+});
+
+describe('deprecated gpt-4o model redirection', () => {
+	const ORIGINAL_ENV = { ...process.env } as Record<string, string | undefined>;
+
+	beforeEach(() => {
+		vi.resetAllMocks();
+		process.argv = ['node', 'agent.js'];
+		process.env = { ...ORIGINAL_ENV };
+		// clear model envs used in parseArgs
+		delete process.env.HARPER_AGENT_MODEL;
+		delete process.env.HARPER_AGENT_COMPACTION_MODEL;
+		delete process.env.ANTHROPIC_API_KEY;
+		delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+		delete process.env.OPENAI_API_KEY;
+		delete process.env.OLLAMA_BASE_URL;
+		trackedState.model = '';
+		trackedState.compactionModel = '';
+	});
+
+	afterEach(() => {
+		process.env = { ...ORIGINAL_ENV };
+	});
+
+	it('redirects HARPER_AGENT_MODEL=gpt-4o to gpt-5-nano and updates env', () => {
+		process.env.HARPER_AGENT_MODEL = 'gpt-4o';
+		parseArgs();
+		expect(trackedState.model).toBe('gpt-5-nano');
+		expect(updateEnv).toHaveBeenCalledWith('HARPER_AGENT_MODEL', 'gpt-5-nano');
+	});
+
+	it('redirects HARPER_AGENT_MODEL=gpt-4o-2024-05-13 to gpt-5-nano and updates env', () => {
+		process.env.HARPER_AGENT_MODEL = 'gpt-4o-2024-05-13';
+		parseArgs();
+		expect(trackedState.model).toBe('gpt-5-nano');
+		expect(updateEnv).toHaveBeenCalledWith('HARPER_AGENT_MODEL', 'gpt-5-nano');
+	});
+
+	it('redirects HARPER_AGENT_COMPACTION_MODEL=gpt-4o-mini to gpt-5-nano and updates env', () => {
+		process.env.HARPER_AGENT_COMPACTION_MODEL = 'gpt-4o-mini';
+		// ensure a default model doesn't trigger non-OpenAI path
+		process.env.OPENAI_API_KEY = 'sk-openai';
+		parseArgs();
+		expect(trackedState.compactionModel).toBe('gpt-5-nano');
+		expect(updateEnv).toHaveBeenCalledWith('HARPER_AGENT_COMPACTION_MODEL', 'gpt-5-nano');
 	});
 });

@@ -1,3 +1,4 @@
+import { getDeprecatedReplacement, warnAndPersistRedirect } from '../utils/models/deprecations';
 import { handleHelp, handleVersion, isHelpRequest, isVersionRequest } from '../utils/shell/cli';
 import { isTrue } from '../utils/strings/isTrue';
 import { isOpenAIModel } from './getModel';
@@ -144,4 +145,18 @@ export function parseArgs() {
 	if (!isOpenAIModel(trackedState.model)) {
 		process.env.OPENAI_AGENTS_DISABLE_TRACING = process.env.OPENAI_AGENTS_DISABLE_TRACING || '1';
 	}
+
+	// Generic deprecation redirection (extensible via utils/models/deprecations.ts)
+	const maybeRedirect = (current: string, envKey: 'HARPER_AGENT_MODEL' | 'HARPER_AGENT_COMPACTION_MODEL') => {
+		const hit = getDeprecatedReplacement(current);
+		if (hit) {
+			const { replacement, rule } = hit;
+			warnAndPersistRedirect(current, envKey, replacement, rule.reason);
+			return replacement;
+		}
+		return current;
+	};
+
+	trackedState.model = maybeRedirect(trackedState.model, 'HARPER_AGENT_MODEL');
+	trackedState.compactionModel = maybeRedirect(trackedState.compactionModel, 'HARPER_AGENT_COMPACTION_MODEL');
 }

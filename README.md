@@ -80,7 +80,7 @@ harper-agent --model claude-3-5-sonnet-20241022
 harper-agent --model gemini-1.5-pro
 
 # Use a specific OpenAI model
-harper-agent --model gpt-4o-mini
+harper-agent --model gpt-5.2
 ```
 
 You can also set the default model via the `HARPER_AGENT_MODEL` environment variable.
