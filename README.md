@@ -13,22 +13,11 @@ AI to help you with Harper app creation and management.
 
 ## Getting Started
 
-When you first run `harper-agent`, it will prompt you for an API key if one is not found in your environment. It will then automatically save it to a `.env` file in your current working directory.
+When you first run `harper-agent`, it will guide you through setting up your environment.
 
-If you prefer to set it manually, you can create a `.env` file:
+![What model provider would you like to use today? OpenAI, Anthropic, Google or Ollama](guidance/pick-a-provider.png)
 
-```bash
-# For OpenAI (default)
-OPENAI_API_KEY=your_api_key_here
-
-# For Anthropic
-ANTHROPIC_API_KEY=your_api_key_here
-
-# For Google Gemini
-GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
-```
-
-(If you'd rather export these environment variables from within your .zshrc or equivalent file, you can do that instead.)
+It will then automatically save it to either `~/.harper/harper-agent-env` or your local `.env` file in your current working directory.
 
 Now install harper-agent:
 
@@ -44,33 +33,44 @@ npx -y @harperfast/agent
 
 You're ready to go!
 
-```bash
-> harper-agent
+![What would you like to create together?](guidance/what-would-you-like-to-create-together.png)
 
-Working directory: /Users/dawson/Code/softwork-beats
-Harper app detected: Yes
-Press Ctrl+C or hit enter twice to exit.
+## Usage
 
-Harper: What do you want to do together today?
+Once installed or running, you can ask harper-agent to help you with tasks in your current directory, such as applying patches or managing your Harper application.
 
->
-```
+Press `Ctrl+C` or type "exit" or hit enter twice to exit.
 
-### Non-interactive: pipe an initial prompt
+### Non-interactive: pass an initial prompt
 
-You can pass an initial chat dump via stdin. This runs a one-shot interaction and exits after responding:
+You can pass an initial `--prompt=`. Harper Agent will turn that into an actionable plan, and then it will iterate until it completes it.
 
 ```bash
-cat somePrompt.md | harper-agent
-# or
-harper-agent < somePrompt.md
+harper-agent --prompt="Write a poem generation app, please"
 ```
 
 In this mode, the initial greeting question is suppressed, and the agent processes the provided prompt immediately.
 
+## Manual Environment Configuration
+
+If you prefer to set up your environment manually, you can create a `.env` file:
+
+```bash
+# For OpenAI (default)
+OPENAI_API_KEY=your_api_key_here
+
+# For Anthropic
+ANTHROPIC_API_KEY=your_api_key_here
+
+# For Google Gemini
+GOOGLE_GENERATIVE_AI_API_KEY=your_api_key_here
+```
+
+(If you'd rather export these environment variables from within your .zshrc or equivalent file, you can do that instead.)
+
 ## Model Selection
 
-By default, `harper-agent` uses OpenAI. You can switch to other models using the `--model` (or `-m`) flag:
+When you first fire up Harper Agent, it will ask you what model you want to use. You can also control this with command line arguments:
 
 ```bash
 # Use Claude 3.5 Sonnet
@@ -83,11 +83,11 @@ harper-agent --model gemini-3-pro
 harper-agent --model gpt-5.2
 ```
 
-You can also set the default model via the `HARPER_AGENT_MODEL` environment variable.
+Or you can set the default model via the `HARPER_AGENT_MODEL` environment variable in your `.env` file or in `~/.harper/harper-agent-env`
 
 ### Compaction Model
 
-By default, `harper-agent` uses `gpt-5-nano` for session memory compaction. You can switch this to another model using the `--compaction-model` (or `-c`) flag:
+A smaller model will be used for compaction, depending on your chosen LLM provider. You can specify your model using the `--compaction-model` (or `-c`) flag:
 
 ```bash
 # Use a different compaction model
@@ -98,7 +98,7 @@ You can also set the default compaction model via the `HARPER_AGENT_COMPACTION_M
 
 ### Session Persistence
 
-By default, `harper-agent` uses an in-memory session that is lost when you exit. You can persist your chat session to a SQLite database on disk using the `--session` (or `-s`) flag:
+Harper Agent will ask if it can persist your chat session to a JSON database on disk using the `--session` (or `-s`) flag:
 
 ```bash
 # Persist session to a file
@@ -176,9 +176,3 @@ npm link
 ```
 
 Now you can run `harper-agent` from any directory.
-
-## Usage
-
-Once installed or running, you can ask harper-agent to help you with tasks in your current directory, such as applying patches or managing your Harper application.
-
-Press `Ctrl+C` or hit enter twice to exit.
