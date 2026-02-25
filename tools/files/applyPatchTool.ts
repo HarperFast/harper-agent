@@ -8,10 +8,12 @@ import { execute as getHarperSkillExecute, skills as harperSkills } from '../har
 import { WorkspaceEditor } from './workspaceEditor';
 
 const ApplyPatchParameters = z.object({
-	type: z.enum(['create_file', 'update_file', 'delete_file']).describe('The type of operation to perform.'),
+	type: z.enum(['create_file', 'update_file', 'delete_file', 'overwrite_file']).describe(
+		'The type of operation to perform.',
+	),
 	path: z.string().describe('The path to the file to operate on.'),
 	diff: z.string().optional().default('').describe(
-		'The diff to apply. For create_file, every line must start with "+". For update_file, use a headerless unified diff format (start sections with "@@", and use "+", "-", or " " for lines). Do not include markers like "*** Begin Patch" or "*** Add File:".',
+		'The diff to apply. For create_file, every line must start with "+". For update_file, use a headerless unified diff format (start sections with "@@", and use "+", "-", or " " for lines). For overwrite_file, the diff is the raw content of the file. Do not include markers like "*** Begin Patch" or "*** Add File:".',
 	),
 });
 
@@ -36,7 +38,7 @@ function pickExistingSkill(candidates: string[]): string | null {
 
 async function requiredSkillForOperation(
 	path: string,
-	type: 'create_file' | 'update_file' | 'delete_file',
+	type: 'create_file' | 'update_file' | 'delete_file' | 'overwrite_file',
 ): Promise<string | null> {
 	if (type === 'delete_file') { return null; }
 	const p = normalizedPath(path);
@@ -126,6 +128,11 @@ export async function execute(operation: z.infer<typeof ApplyPatchParameters>) {
 					return { status: 'failed', output: 'Error: diff is required for update_file' } as const;
 				}
 				return await editor.updateFile(operation as any);
+			case 'overwrite_file':
+				if (!operation.diff) {
+					return { status: 'failed', output: 'Error: diff is required for overwrite_file' } as const;
+				}
+				return await editor.overwriteFile(operation as any);
 			case 'delete_file':
 				return await editor.deleteFile(operation as any);
 			default:

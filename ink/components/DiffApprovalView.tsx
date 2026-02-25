@@ -24,6 +24,19 @@ export function DiffApprovalView() {
 			result.push({ text: 'Delete file: ' + payload.path, color: 'red' });
 			return result;
 		}
+		if (payload.type === 'overwrite_file') {
+			for (const line of diffLines) {
+				let color: string | undefined;
+				if (line.startsWith('+')) { color = 'green'; }
+				else if (line.startsWith('-')) { color = 'red'; }
+
+				const wrapped = wrapText(line, size.columns - 4);
+				for (const w of wrapped) {
+					result.push({ text: w, color });
+				}
+			}
+			return result;
+		}
 		if (payload.type === 'code_interpreter' && payload.code) {
 			const lines = payload.code.split('\n');
 			for (const line of lines) {

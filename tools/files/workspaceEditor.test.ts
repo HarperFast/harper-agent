@@ -47,4 +47,38 @@ describe('WorkspaceEditor', () => {
 			expect(applyDiff).toHaveBeenCalledWith('', 'normalized new diff', 'create');
 		});
 	});
+
+	describe('overwriteFile', () => {
+		it('should overwrite with raw content if no diff markers', async () => {
+			const editor = new WorkspaceEditor(() => '/root');
+			const { writeFile } = await import('node:fs/promises');
+			await editor.overwriteFile({ type: 'overwrite_file', path: 'test.txt', diff: 'raw content' });
+
+			// normalizeDiff returns `normalized ${diff}` in mocks
+			expect(writeFile).toHaveBeenCalledWith(expect.any(String), 'normalized raw content', 'utf8');
+		});
+
+		it('should extract positive changes if diff markers present', async () => {
+			const editor = new WorkspaceEditor(() => '/root');
+			const { writeFile } = await import('node:fs/promises');
+
+			// Just mock normalizeDiff to return the input for this test
+			vi.mocked(normalizeDiff).mockImplementationOnce((diff) => diff);
+
+			const diff = [
+				' some context',
+				'-removed line',
+				'+added line',
+				'another line',
+			].join('\n');
+			await editor.overwriteFile({ type: 'overwrite_file', path: 'test.txt', diff });
+
+			const expected = [
+				'some context',
+				'added line',
+				'another line',
+			].join('\n');
+			expect(writeFile).toHaveBeenCalledWith(expect.any(String), expected, 'utf8');
+		});
+	});
 });

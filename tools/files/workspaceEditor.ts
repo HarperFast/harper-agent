@@ -42,6 +42,32 @@ export class WorkspaceEditor implements Editor {
 		}
 	}
 
+	async overwriteFile(operation: OverwriteFileOperation): Promise<ApplyPatchResult> {
+		try {
+			const targetPath = resolvePath(this.root(), operation.path);
+			await mkdir(path.dirname(targetPath), { recursive: true });
+
+			const normalizedInput = normalizeDiff(operation.diff);
+			const lines = normalizedInput.split(/\r?\n/);
+			const hasDiffMarkers = lines.some((line) => line.startsWith('+') || line.startsWith('-'));
+
+			let finalContent: string;
+			if (hasDiffMarkers) {
+				finalContent = lines
+					.filter((line) => !line.startsWith('-'))
+					.map((line) => (line.startsWith('+') || line.startsWith(' ') ? line.slice(1) : line))
+					.join('\n');
+			} else {
+				finalContent = normalizedInput;
+			}
+
+			await writeFile(targetPath, finalContent, 'utf8');
+			return { status: 'completed', output: `Overwrote ${operation.path}` };
+		} catch (err) {
+			return { status: 'failed', output: `Error overwriting ${operation.path}: ${String(err)}` };
+		}
+	}
+
 	async deleteFile(operation: DeleteFileOperation): Promise<ApplyPatchResult> {
 		try {
 			const targetPath = resolvePath(this.root(), operation.path);
@@ -64,6 +90,12 @@ interface CreateFileOperation {
 
 interface UpdateFileOperation {
 	type: 'update_file';
+	path: string;
+	diff: string;
+}
+
+interface OverwriteFileOperation {
+	type: 'overwrite_file';
 	path: string;
 	diff: string;
 }
