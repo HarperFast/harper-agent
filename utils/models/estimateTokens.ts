@@ -24,10 +24,10 @@ export function estimateTokens<
 			chars += it.text.length;
 		}
 		// function calls and results
-		if (it.type === 'function_call') {
+		if (it.type === 'function_call' && it.call) {
 			chars += JSON.stringify(it.call).length;
 		}
-		if (it.type === 'function_call_result') {
+		if (it.type === 'function_call_result' && it.result) {
 			chars += JSON.stringify(it.result).length;
 		}
 	}
