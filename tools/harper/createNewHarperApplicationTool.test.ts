@@ -14,6 +14,7 @@ import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { agentsSkillDir, agentsSkillReference } from '../../lifecycle/agentsSkillReference';
 import { trackedState } from '../../lifecycle/trackedState';
 import { execute as createHarper } from './createNewHarperApplicationTool';
 
@@ -35,22 +36,24 @@ describe('createNewHarperApplicationTool', () => {
 		await rm(baseDir, { recursive: true, force: true });
 	});
 
-	it('automatically switches cwd to the created directory and suggests reading AGENTS.md if it exists', async () => {
+	it('automatically switches cwd to the created directory and suggests reading agent skills if it exists', async () => {
 		const appName = 'my-app';
-		const resolved = path.join(baseDir, appName);
-		await mkdir(resolved, { recursive: true }); // simulate a directory created by npm
-		await writeFile(path.join(resolved, 'AGENTS.md'), '# Agents');
+		const appDir = path.join(baseDir, appName);
+		const skillsDir = path.join(appDir, agentsSkillDir);
+		const skillsFile = path.join(appDir, agentsSkillReference);
+		await mkdir(skillsDir, { recursive: true }); // simulate a directory created by npm
+		await writeFile(skillsFile, '# Agents');
 
 		const result = await createHarper({ directoryName: appName, template: 'vanilla-ts' });
 		expect(result).toContain('Successfully created a new Harper application');
 		expect(result).toContain('I strongly suggest you use these newfound skills!');
-		expect(result).toContain('AGENTS.md');
-		const expected = await realpath(resolved);
+		expect(result).toContain(agentsSkillReference);
+		const expected = await realpath(appDir);
 		expect(process.cwd()).toBe(expected);
 		expect(trackedState.cwd).toBe(expected);
 	});
 
-	it('does not strongly suggest reading AGENTS.md if it does not exist', async () => {
+	it('does not strongly suggest reading agent skills if it does not exist', async () => {
 		const appName = 'no-agents-app';
 		const resolved = path.join(baseDir, appName);
 		await mkdir(resolved, { recursive: true });
@@ -58,7 +61,7 @@ describe('createNewHarperApplicationTool', () => {
 		const result = await createHarper({ directoryName: appName, template: 'vanilla-ts' });
 		expect(result).toContain('Successfully created a new Harper application');
 		expect(result).not.toContain('I strongly suggest you read it next');
-		expect(result).not.toContain('AGENTS.md');
+		expect(result).not.toContain(agentsSkillReference);
 		const expected = await realpath(resolved);
 		expect(process.cwd()).toBe(expected);
 		expect(trackedState.cwd).toBe(expected);

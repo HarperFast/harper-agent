@@ -5,19 +5,26 @@ import { dirname, join } from 'node:path';
 import { z } from 'zod';
 import { agentManager } from '../../agent/AgentManager';
 
-const createHarper = dirname(createRequire(import.meta.url).resolve('create-harper'));
+const require = createRequire(import.meta.url);
 
-const agentsMarkdown = join(
-	createHarper,
-	'AGENTS.md',
-);
-const skillsDir = join(
-	createHarper,
-	'template-vanilla',
-	'skills',
+const harperSkillsModuleDir = dirname(
+	require.resolve('@harperfast/skills/package.json'),
 );
 
-export const skillLinkRegex = /\[[^\]]+]\(skills\/([^)]+)\.md\)/g;
+const harperBestPracticesDir = join(
+	harperSkillsModuleDir,
+	'harper-best-practices',
+);
+const skillRootFile = join(
+	harperBestPracticesDir,
+	'SKILL.md',
+);
+const rulesDir = join(
+	harperBestPracticesDir,
+	'rules',
+);
+
+export const skillLinkRegex = /\[[^\]]+]\((?:rules|skills)\/([^)]+)\.md\)/g;
 export const skills = getSkills();
 
 const ToolParameters = z.object({
@@ -35,7 +42,7 @@ export const getHarperSkillTool = tool({
 
 function getSkillsDescription() {
 	try {
-		return readFileSync(agentsMarkdown, 'utf8')
+		return readFileSync(skillRootFile, 'utf8')
 			.replace('This repository contains', 'This tool describes')
 			.replace(skillLinkRegex, '$1');
 	} catch {
@@ -45,7 +52,7 @@ function getSkillsDescription() {
 
 function getSkills() {
 	try {
-		return readdirSync(skillsDir)
+		return readdirSync(rulesDir)
 			.filter((file) => file.endsWith('.md'))
 			.map((file) => file.replace('.md', ''));
 	} catch {
@@ -55,10 +62,10 @@ function getSkills() {
 
 export async function execute({ skill }: z.infer<typeof ToolParameters>) {
 	if (skill === 'none') {
-		return 'No skills found.';
+		return 'No skill requested.';
 	}
 	try {
-		const filePath = join(skillsDir, `${skill}.md`);
+		const filePath = join(rulesDir, `${skill}.md`);
 		const content = readFileSync(filePath, 'utf8');
 		agentManager.session?.addSkillRead?.(skill);
 		return content;

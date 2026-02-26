@@ -1,4 +1,0 @@
-- Add more tools:
-  - Tool for running Harper and observing the results
-    - Start it off with the Vite plugin pre-installed?
-- Decoupling to prepare for socketization

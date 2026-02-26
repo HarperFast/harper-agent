@@ -5,7 +5,7 @@ import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, isOpenAIModel } from '../lifecycle/getModel';
 import { handleExit } from '../lifecycle/handleExit';
-import { readAgentsMD } from '../lifecycle/readAgentsMD';
+import { readAgentSkillsRoot } from '../lifecycle/readAgentSkillsRoot';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
 import { createTools } from '../tools/factory';
@@ -34,7 +34,7 @@ export class AgentManager {
 			name: 'Harper Agent',
 			model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
 			modelSettings: getModelSettings(trackedState.model),
-			instructions: readAgentsMD() || defaultInstructions(),
+			instructions: readAgentSkillsRoot() || defaultInstructions(),
 			tools: createTools(),
 		});
 		this.session = createSession(trackedState.sessionPath);
