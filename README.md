@@ -39,7 +39,15 @@ You're ready to go!
 
 Once installed or running, you can ask harper-agent to help you with tasks in your current directory, such as applying patches or managing your Harper application.
 
-Press `Ctrl+C` or type "exit" or hit enter twice to exit.
+Press `Ctrl+C` or type "/exit" or hit enter twice to exit.
+
+### Slash Commands
+
+Harper Agent supports several slash commands for common tasks:
+
+- `/clear`: Resets the chat history.
+- `/skills`: Installs recommended agent skills via `npx skills add harperfast/skills`.
+- `/exit`: Exits the agent.
 
 ### Non-interactive: pass an initial prompt
 

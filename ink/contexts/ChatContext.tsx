@@ -28,7 +28,7 @@ function getInitialMessages() {
 			: [{
 				id: 0,
 				type: 'agent',
-				text: 'What shall we build today? (type "exit" or Ctrl+X to quit)',
+				text: 'What shall we build today? (Type "/clear" to reset, "/skills" to add skills, or "/exit" to quit)',
 				version: 1,
 			}];
 	}
@@ -90,6 +90,16 @@ export const ChatProvider = ({
 			};
 			return updated;
 		});
+	}, []);
+
+	useListener('ClearChatHistory', () => {
+		agentManager.session?.clearSession();
+		setMessages([{
+			id: 0,
+			type: 'agent',
+			text: 'Chat cleared. What shall we build today?',
+			version: 1,
+		}]);
 	}, []);
 
 	const value = useMemo(() => ({

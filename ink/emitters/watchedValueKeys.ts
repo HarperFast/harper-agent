@@ -29,6 +29,7 @@ export interface WatchedValuesTypeMap {
 	OpenApprovalViewer: ApprovalPayload;
 	CloseApprovalViewer: undefined;
 	ClearUserInput: undefined;
+	ClearChatHistory: undefined;
 	ApproveCurrentApproval: undefined;
 	DenyCurrentApproval: undefined;
 	RegisterToolInfo: ApprovalPayload & { callId: string };
