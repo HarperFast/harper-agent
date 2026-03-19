@@ -84,7 +84,7 @@ class HarperProcess {
 		}
 
 		this.logs = [];
-		this.childProcess = spawn('harperdb', ['dev', '.'], {
+		this.childProcess = spawn('harper', ['dev', '.'], {
 			cwd: directoryName,
 			stdio: ['ignore', 'pipe', 'pipe'],
 		});

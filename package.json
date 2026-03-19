@@ -80,7 +80,7 @@
 		"conventional-changelog-conventionalcommits": "^9.1.0",
 		"dprint": "^0.52.0",
 		"express": "^5.2.1",
-		"harperdb": "^4.7.19",
+		"harperdb": "^4.7.24",
 		"hono": "^4.11.9",
 		"husky": "^9.1.7",
 		"ink-testing-library": "^4.0.0",
