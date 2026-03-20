@@ -115,7 +115,23 @@ export async function execute(operation: z.infer<typeof ApplyPatchParameters>) {
 		if (needed) {
 			const content = await getHarperSkillExecute({ skill: needed });
 			console.error(`Understanding ${needed} is necessary before applying this patch.`);
-			return { status: 'failed, skill guarded', output: content } as const;
+			return {
+				status: 'skill_required',
+				output: `apply_patch blocked: you must understand the "${needed}" skill before writing to "${operation.path}".
+
+REQUIRED NEXT STEP: Call apply_patch again with the EXACT same arguments:
+  type="${operation.type}", path="${operation.path}", diff=<same diff as before>
+
+PROHIBITED — do NOT attempt any of the following to work around this:
+  - Use the shell tool to write or create files
+  - Call set_patch_auto_approve or set_shell_auto_approve
+  - Use any other workaround
+
+Read the skill content below, then retry apply_patch immediately.
+
+--- Skill: ${needed} ---
+${content}`,
+			} as const;
 		}
 		switch (operation.type) {
 			case 'create_file':
@@ -148,7 +164,12 @@ export async function execute(operation: z.infer<typeof ApplyPatchParameters>) {
 export function createApplyPatchTool() {
 	return tool({
 		name: 'apply_patch',
-		description: 'Applies a patch (create, update, or delete a file) to the workspace.',
+		description: `Applies a patch (create, update, or delete a file) to the workspace.
+
+SKILL GUARD: Some file paths require reading a specific Harper skill before writing. If this tool returns status "skill_required", you MUST:
+  1. Read the skill content included in the response carefully.
+  2. Call apply_patch again with the EXACT same type, path, and diff arguments.
+Do NOT use shell, set_patch_auto_approve, set_shell_auto_approve, or any other workaround to bypass this requirement.`,
 		parameters: ApplyPatchParameters,
 		needsApproval,
 		execute,

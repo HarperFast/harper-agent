@@ -1,4 +1,4 @@
-import { Agent, type AgentInputItem, type RunState } from '@openai/agents';
+import { Agent, type AgentInputItem, type RunState, type Tool } from '@openai/agents';
 import { globalPlanContext } from '../ink/contexts/globalPlanContext';
 import { addListener, curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
@@ -26,18 +26,22 @@ export class AgentManager {
 	public session: CombinedSession | null = null;
 	public initialMessages: Message[] = [];
 
+	public static instantiateAgent(tools: Tool[]) {
+		return new Agent({
+			name: 'Harper Agent',
+			model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
+			modelSettings: getModelSettings(trackedState.model),
+			instructions: readAgentSkillsRoot() || defaultInstructions(),
+			tools,
+		});
+	}
+
 	public async initialize() {
 		if (this.isInitialized) {
 			return;
 		}
 
-		this.agent = new Agent({
-			name: 'Harper Agent',
-			model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
-			modelSettings: getModelSettings(trackedState.model),
-			instructions: readAgentSkillsRoot() || defaultInstructions(),
-			tools: createTools(),
-		});
+		this.agent = AgentManager.instantiateAgent(createTools());
 		this.session = createSession(trackedState.sessionPath);
 
 		// Restore plan state from session storage, if present

@@ -40,9 +40,10 @@ describe('applyPatchTool guards', () => {
 		expect(needs).toBe(false);
 
 		const result = await applyExecute(operation);
-		expect(result && typeof result.output === 'string').toBe(true);
+		expect(result.status).toBe('skill_required');
+		expect(typeof result.output === 'string').toBe(true);
 
 		const expected = await getHarperSkillExecute({ skill: targetSkill });
-		expect(result.output).toBe(expected);
+		expect(result.output).toContain(expected);
 	});
 });
