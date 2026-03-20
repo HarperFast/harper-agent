@@ -5,7 +5,7 @@ import { getModel, getProvider, isOpenAIModel } from './getModel';
 vi.mock('@ai-sdk/anthropic', () => ({ anthropic: vi.fn((name) => ({ name, provider: 'anthropic' })) }));
 vi.mock('@ai-sdk/google', () => ({ google: vi.fn((name) => ({ name, provider: 'google' })) }));
 vi.mock('@ai-sdk/openai', () => ({ openai: vi.fn((name) => ({ name, provider: 'openai' })) }));
-vi.mock('@openai/agents-extensions', () => ({ aisdk: vi.fn((model) => ({ wrapped: model })) }));
+vi.mock('@openai/agents-extensions/ai-sdk', () => ({ aisdk: vi.fn((model) => ({ wrapped: model })) }));
 vi.mock('ollama-ai-provider-v2', () => ({
 	ollama: vi.fn((name) => ({ name, provider: 'ollama' })),
 	createOllama: vi.fn((config) => {
