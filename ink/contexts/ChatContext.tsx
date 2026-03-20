@@ -44,6 +44,7 @@ export const ChatProvider = ({
 	const [userInputMode, setUserInputMode] = useState<UserInputMode>('waiting');
 	const [isThinking, setIsThinking] = useState<boolean>(false);
 	const [isCompacting, setIsCompacting] = useState<boolean>(false);
+	const [pullingState, setPullingState] = useState<ChatContextType['pullingState']>(null);
 	const [focusedArea, setFocusedArea] = useState<FocusedArea>('input');
 
 	useListener('PushNewMessages', (messages) => {
@@ -64,6 +65,9 @@ export const ChatProvider = ({
 
 	useListener('SetCompacting', (value) => {
 		setIsCompacting(Boolean(value));
+	}, []);
+	useListener('SetPulling', (value) => {
+		setPullingState(value);
 	}, []);
 
 	useListener('InterruptThought', () => {
@@ -107,9 +111,10 @@ export const ChatProvider = ({
 		userInputMode,
 		isThinking,
 		isCompacting,
+		pullingState,
 		focusedArea,
 		setFocusedArea,
-	} satisfies ChatContextType), [messages, userInputMode, isThinking, isCompacting, focusedArea]);
+	} satisfies ChatContextType), [messages, userInputMode, isThinking, isCompacting, pullingState, focusedArea]);
 
 	return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

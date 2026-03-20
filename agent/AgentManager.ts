@@ -3,13 +3,14 @@ import { globalPlanContext } from '../ink/contexts/globalPlanContext';
 import { addListener, curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
-import { getModel, isOpenAIModel } from '../lifecycle/getModel';
+import { getModel, getModelName, getProvider, isOpenAIModel } from '../lifecycle/getModel';
 import { handleExit } from '../lifecycle/handleExit';
 import { readAgentSkillsRoot } from '../lifecycle/readAgentSkillsRoot';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
 import { createTools } from '../tools/factory';
 import { logError } from '../utils/logger';
+import { ensureOllamaModel } from '../utils/ollama/ensureOllamaModel';
 import { sleep } from '../utils/promises/sleep';
 import { createSession } from '../utils/sessions/createSession';
 import { getModelSettings } from '../utils/sessions/modelSettings';
@@ -188,6 +189,24 @@ export class AgentManager {
 		this.controller = new AbortController();
 
 		await this.runCompactionIfWeWereIdle();
+
+		if (getProvider(trackedState.model) === 'Ollama') {
+			try {
+				const modelName = getModelName(trackedState.model);
+				await ensureOllamaModel(modelName, (progress) => {
+					emitToListeners('SetPulling', {
+						modelName,
+						status: progress.status,
+						completed: progress.completed ?? 0,
+						total: progress.total ?? 0,
+					});
+				});
+				emitToListeners('SetPulling', null);
+			} catch (err) {
+				emitToListeners('SetPulling', null);
+				logError(err);
+			}
+		}
 
 		// We think while the pass executes.
 		emitToListeners('SetThinking', true);

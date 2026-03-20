@@ -1,8 +1,9 @@
 import { Box, useInput } from 'ink';
 import { Step, Stepper } from 'ink-stepper';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { updateEnv } from '../../utils/files/updateEnv';
 import { updateEnvKeyForProvider } from '../../utils/files/updateEnvKeyForProvider';
+import { fetchOllamaModels } from '../../utils/ollama/fetchOllamaModels';
 import { curryEmitToListeners, emitToListeners } from '../emitters/listener';
 import type { ModelProvider } from '../models/config';
 import { ApiKeyStep } from './ApiKeyStep';
@@ -19,6 +20,17 @@ interface Props {
 
 export function ConfigurationWizard({ onComplete }: Props) {
 	const [provider, setProvider] = useState<ModelProvider>('OpenAI');
+	const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+
+	useEffect(() => {
+		if (provider === 'Ollama') {
+			fetchOllamaModels().then(models => {
+				if (models.length > 0) {
+					setOllamaModels(models);
+				}
+			});
+		}
+	}, [provider]);
 
 	useInput((input, key) => {
 		if (key.ctrl && input === 'x') {
@@ -26,8 +38,12 @@ export function ConfigurationWizard({ onComplete }: Props) {
 		}
 	});
 
-	const models = modelsByProvider[provider];
-	const compactorModels = compactorModelsByProvider[provider];
+	const models = provider === 'Ollama' && ollamaModels.length > 0
+		? [...new Set([...ollamaModels, ...modelsByProvider[provider]])]
+		: modelsByProvider[provider];
+	const compactorModels = provider === 'Ollama' && ollamaModels.length > 0
+		? [...new Set([...ollamaModels, ...compactorModelsByProvider[provider]])]
+		: compactorModelsByProvider[provider];
 
 	return (
 		<Box flexDirection="column" padding={1} minHeight={10}>
@@ -78,7 +94,10 @@ export function ConfigurationWizard({ onComplete }: Props) {
 							title="What model would you like to use?"
 							models={models}
 							onConfirm={(m) => {
-								updateEnv('HARPER_AGENT_MODEL', m);
+								const finalModelName = (provider === 'Ollama' && !m.startsWith('ollama-') && !m.includes(':'))
+									? `ollama-${m}`
+									: m;
+								updateEnv('HARPER_AGENT_MODEL', finalModelName);
 								goNext();
 							}}
 							onBack={goBack}
@@ -92,7 +111,10 @@ export function ConfigurationWizard({ onComplete }: Props) {
 							title="What model should we use for memory compaction?"
 							models={compactorModels}
 							onConfirm={(m) => {
-								updateEnv('HARPER_AGENT_COMPACTION_MODEL', m);
+								const finalModelName = (provider === 'Ollama' && !m.startsWith('ollama-') && !m.includes(':'))
+									? `ollama-${m}`
+									: m;
+								updateEnv('HARPER_AGENT_COMPACTION_MODEL', finalModelName);
 								goNext();
 							}}
 							onBack={goBack}

@@ -9,8 +9,8 @@ export const defaultAnthropicCompactionModel = 'claude-4-5-haiku-latest';
 export const defaultGoogleModel = 'gemini-3-pro';
 export const defaultGoogleCompactionModel = 'gemini-2.5-flash-lite';
 
-export const defaultOllamaModel = 'ollama-qwen3-coder:30b';
-export const defaultOllamaCompactionModel = 'ollama-qwen2.5-coder';
+export const defaultOllamaModel = 'ollama-qwen3.5';
+export const defaultOllamaCompactionModel = 'ollama-qwen3.5:2b';
 
 export const defaultModels = [
 	defaultOpenAIModel,

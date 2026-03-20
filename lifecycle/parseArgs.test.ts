@@ -86,8 +86,8 @@ describe('parseArgs defaults based on ENV provider keys', () => {
 	it('uses Ollama default when OLLAMA_BASE_URL is present', () => {
 		process.env.OLLAMA_BASE_URL = 'http://localhost:11434/api';
 		parseArgs();
-		expect(trackedState.model).toBe('ollama-qwen3-coder:30b');
-		expect(trackedState.compactionModel).toBe('ollama-qwen2.5-coder');
+		expect(trackedState.model).toBe('ollama-qwen3.5');
+		expect(trackedState.compactionModel).toBe('ollama-qwen3.5:2b');
 	});
 
 	it('HARPER_AGENT_MODEL explicit env should override provider defaults', () => {

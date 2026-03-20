@@ -3,8 +3,11 @@ import { render } from 'ink-testing-library';
 import { existsSync, writeFileSync } from 'node:fs';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fetchOllamaModels } from '../utils/ollama/fetchOllamaModels';
 import { emitToListeners } from './emitters/listener';
 import { MainConfig } from './main';
+
+vi.mock('../utils/ollama/fetchOllamaModels');
 
 vi.mock('ink', async () => {
 	const actual = await vi.importActual('ink');
@@ -45,6 +48,9 @@ describe('MainConfig', () => {
 
 		// Mock fs to simulate no existing env files
 		vi.mocked(existsSync).mockReturnValue(false);
+
+		// Mock Ollama models
+		vi.mocked(fetchOllamaModels).mockResolvedValue(['llama3', 'mistral']);
 	});
 
 	it('renders ConfigurationWizard', () => {
@@ -230,7 +236,7 @@ describe('MainConfig', () => {
 
 		// Check process.env
 		expect(process.env.OLLAMA_BASE_URL).toBe('http://localhost:11434/api');
-		expect(process.env.HARPER_AGENT_MODEL).toBe('default');
-		expect(process.env.HARPER_AGENT_COMPACTION_MODEL).toBe('default');
+		expect(process.env.HARPER_AGENT_MODEL).toBe('ollama-llama3');
+		expect(process.env.HARPER_AGENT_COMPACTION_MODEL).toBe('ollama-llama3');
 	});
 });

@@ -21,7 +21,7 @@ import { UserInput } from './UserInput';
 import { VirtualList } from './VirtualList';
 
 export function ChatContent() {
-	const { messages, isThinking, isCompacting, focusedArea, setFocusedArea } = useChat();
+	const { messages, isThinking, isCompacting, pullingState, focusedArea, setFocusedArea } = useChat();
 	const { payload } = useApproval();
 	const size = useTerminalSize();
 
@@ -132,6 +132,7 @@ export function ChatContent() {
 	}, []);
 
 	const availableTextWidth = timelineWidth - 4; // -0 left border, -1 paddingRight, -3 selection indicator
+	const pullingHeight = pullingState ? 1 : 0;
 
 	const lineItems: LineItem[] = useMemo(() => {
 		const acc: LineItem[] = [];
@@ -236,7 +237,7 @@ export function ChatContent() {
 
 	const timelineTitle = 'TIMELINE:';
 	const timelineHeaderWidth = timelineWidth - 1; // excluding '╭'
-	const showSpinner = isCompacting || isThinking;
+	const showSpinner = isCompacting || isThinking || Boolean(pullingState);
 	const timelineDashes = timelineHeaderWidth - timelineTitle.length - (showSpinner ? 5 : 0);
 
 	const tabsTotalWidth = tabs.reduce((acc, t) => acc + t.label.length + 2, 0) + (tabs.length - 1);
@@ -295,7 +296,7 @@ export function ChatContent() {
 			</Box>
 
 			{/* Main content area */}
-			<Box flexDirection="row" height={contentHeight - 2}>
+			<Box flexDirection="row" height={contentHeight - 2 - pullingHeight}>
 				{/* Timeline pane (Left) */}
 				<Box
 					flexDirection="column"
@@ -307,7 +308,7 @@ export function ChatContent() {
 						<VirtualList
 							items={lineItems}
 							itemHeight={1}
-							height={contentHeight - 2}
+							height={contentHeight - 2 - pullingHeight}
 							selectedIndex={selectedIndex}
 							renderOverflowTop={useCallback((count: number) => (
 								<Box>
@@ -373,18 +374,46 @@ export function ChatContent() {
 							</Box>
 						)}
 						{activeTab === 'planDescription' && <PlanView />}
-						{activeTab === 'actions' && <ActionsView height={contentHeight - 2} isFocused={focusedArea === 'status'} />}
+						{activeTab === 'actions' && (
+							<ActionsView
+								height={contentHeight - 2 - pullingHeight}
+								isFocused={focusedArea === 'status'}
+							/>
+						)}
 					</Box>
 				</Box>
 			</Box>
 
 			{/* Bottom border line */}
-			<Box flexDirection="row" height={1}>
-				<Text color={junctionLeftColor}>┢</Text>
-				<Text color={timelineBottomColor}>{'━'.repeat(timelineWidth - 1)}</Text>
-				<Text color={junctionMiddleColor}>┷</Text>
-				<Text color={statusBottomColor}>{'━'.repeat(Math.max(0, statusWidth - 2))}</Text>
-				<Text color={junctionRightColor}>┪</Text>
+			<Box flexDirection="column">
+				{pullingState && (
+					<Box paddingLeft={2} paddingRight={2} marginBottom={0}>
+						<Text color="yellow">
+							{` Downloading `}
+							<Text bold>{pullingState.modelName}</Text>
+							{` from Ollama... `}
+							<Text dimColor>
+								{pullingState.status === 'pulling manifest' ? 'initializing' : pullingState.status}
+							</Text>
+							{pullingState.total > 0 && (
+								<Text>
+									{` [${'='.repeat(Math.floor((pullingState.completed / pullingState.total) * 20))}${
+										' '.repeat(20 - Math.floor((pullingState.completed / pullingState.total) * 20))
+									}] `}
+									{Math.round((pullingState.completed / pullingState.total) * 100)}
+									%
+								</Text>
+							)}
+						</Text>
+					</Box>
+				)}
+				<Box flexDirection="row" height={1}>
+					<Text color={junctionLeftColor}>┢</Text>
+					<Text color={timelineBottomColor}>{'━'.repeat(timelineWidth - 1)}</Text>
+					<Text color={junctionMiddleColor}>┷</Text>
+					<Text color={statusBottomColor}>{'━'.repeat(Math.max(0, statusWidth - 2))}</Text>
+					<Text color={junctionRightColor}>┪</Text>
+				</Box>
 			</Box>
 
 			<UserInput />

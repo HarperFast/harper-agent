@@ -14,7 +14,7 @@ export const modelsByProvider: Record<ModelProvider, string[]> = {
 	OpenAI: [defaultOpenAIModel, 'gpt-5.0', defaultOpenAICompactionModel],
 	Anthropic: [defaultAnthropicModel, 'claude-4-5-sonnet-latest', defaultAnthropicCompactionModel],
 	Google: [defaultGoogleModel, 'gemini-3-flash', 'gemini-2.5-flash', defaultGoogleCompactionModel],
-	Ollama: [defaultOllamaModel, 'mistral', defaultOllamaCompactionModel],
+	Ollama: [defaultOllamaModel, 'ollama-qwen3.5:27b', defaultOllamaCompactionModel],
 };
 
 export const compactorModelsByProvider: Record<ModelProvider, string[]> = {

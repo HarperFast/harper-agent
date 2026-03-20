@@ -8,6 +8,12 @@ export interface ChatContextType {
 	userInputMode: UserInputMode;
 	isThinking: boolean;
 	isCompacting: boolean;
+	pullingState: {
+		modelName: string;
+		status: string;
+		completed: number;
+		total: number;
+	} | null;
 	focusedArea: FocusedArea;
 	setFocusedArea: (area: FocusedArea) => void;
 }

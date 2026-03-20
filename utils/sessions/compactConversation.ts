@@ -1,10 +1,11 @@
 import { Agent, type AgentInputItem, run, system } from '@openai/agents';
 import { emitToListeners } from '../../ink/emitters/listener';
-import { getModel, isOpenAIModel } from '../../lifecycle/getModel';
+import { getModel, getModelName, getProvider, isOpenAIModel } from '../../lifecycle/getModel';
 import { trackedState } from '../../lifecycle/trackedState';
 import { excludeFalsy } from '../arrays/excludeFalsy';
 import { estimateTokens } from '../models/estimateTokens';
 import { splitItemsIntelligently } from '../models/splitItemsIntelligently';
+import { ensureOllamaModel } from '../ollama/ensureOllamaModel';
 import { getModelContextLimit } from './modelContextLimits';
 import { getModelSettings } from './modelSettings';
 
@@ -30,6 +31,19 @@ export async function compactConversation(
 
 	if (trackedState.compactionModel && itemsToCompact.length > 0) {
 		try {
+			if (getProvider(trackedState.compactionModel) === 'Ollama') {
+				const modelName = getModelName(trackedState.compactionModel);
+				await ensureOllamaModel(modelName, (progress) => {
+					emitToListeners('SetPulling', {
+						modelName,
+						status: progress.status,
+						completed: progress.completed ?? 0,
+						total: progress.total ?? 0,
+					});
+				});
+				emitToListeners('SetPulling', null);
+			}
+
 			const agent = new Agent({
 				name: 'History Compactor',
 				model: isOpenAIModel(trackedState.compactionModel)

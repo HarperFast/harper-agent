@@ -11,6 +11,12 @@ export interface WatchedValuesTypeMap {
 	SetInputMode: UserInputMode;
 	SetThinking: boolean;
 	SetCompacting: boolean;
+	SetPulling: {
+		modelName: string;
+		status: string;
+		completed: number;
+		total: number;
+	} | null;
 	SetPlanItems: PlanItem[];
 	AddShellCommand: Omit<ShellCommand, 'id'>;
 	UpdateShellCommand: Partial<ShellCommand> & { id: number };
