@@ -5,6 +5,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { normalizeDiff } from '../../utils/files/normalizeDiff';
 import { resolvePath } from '../../utils/files/paths';
+import { validateGraphQL } from '../../utils/files/validateGraphQL';
 
 export class WorkspaceEditor implements Editor {
 	private readonly root: () => string;
@@ -20,7 +21,14 @@ export class WorkspaceEditor implements Editor {
 			const normalizedDiff = normalizeDiff(operation.diff);
 			const content = applyDiff('', normalizedDiff, 'create');
 			await writeFile(targetPath, content, 'utf8');
-			return { status: 'completed', output: `Created ${operation.path}` };
+
+			let output = `Created ${operation.path}`;
+			const validationError = validateGraphQL(content, operation.path, this.root());
+			if (validationError) {
+				output += `\n\n${validationError}`;
+			}
+
+			return { status: 'completed', output };
 		} catch (err) {
 			return { status: 'failed', output: `Error creating ${operation.path}: ${String(err)}` };
 		}
@@ -36,7 +44,14 @@ export class WorkspaceEditor implements Editor {
 			const normalizedDiff = normalizeDiff(operation.diff);
 			const patched = applyDiff(original, normalizedDiff);
 			await writeFile(targetPath, patched, 'utf8');
-			return { status: 'completed', output: `Updated ${operation.path}` };
+
+			let output = `Updated ${operation.path}`;
+			const validationError = validateGraphQL(patched, operation.path, this.root());
+			if (validationError) {
+				output += `\n\n${validationError}`;
+			}
+
+			return { status: 'completed', output };
 		} catch (err) {
 			return { status: 'failed', output: `Error updating ${operation.path}: ${String(err)}` };
 		}
@@ -62,7 +77,14 @@ export class WorkspaceEditor implements Editor {
 			}
 
 			await writeFile(targetPath, finalContent, 'utf8');
-			return { status: 'completed', output: `Overwrote ${operation.path}` };
+
+			let output = `Overwrote ${operation.path}`;
+			const validationError = validateGraphQL(finalContent, operation.path, this.root());
+			if (validationError) {
+				output += `\n\n${validationError}`;
+			}
+
+			return { status: 'completed', output };
 		} catch (err) {
 			return { status: 'failed', output: `Error overwriting ${operation.path}: ${String(err)}` };
 		}
