@@ -1,8 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { openai } from '@ai-sdk/openai';
-import { aisdk } from '@openai/agents-extensions';
-import { AiSdkModel } from '@openai/agents-extensions/ai-sdk';
+import { aisdk, AiSdkModel } from '@openai/agents-extensions/ai-sdk';
 import { createOllama, ollama } from 'ollama-ai-provider-v2';
 import { defaultOpenAIModel } from '../agent/defaults';
 import type { ModelProvider } from '../ink/models/config';

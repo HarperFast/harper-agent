@@ -81,12 +81,7 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 		{
 			label: '<edit settings>',
 			isAction: true,
-			action: () => {
-				bootstrapConfig(() => {
-					// Config wizard handles its own exit/restart logic usually,
-					// but here we just call it.
-				});
-			},
+			action: bootstrapConfig,
 		},
 	], [autoApproveCodeInterpreter, autoApprovePatches, autoApproveShell, monitorRateLimits]);
 
