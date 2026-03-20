@@ -15,6 +15,7 @@ export function isOpenAIModel(modelName: string): boolean {
 		!modelName.startsWith('claude-')
 		&& !modelName.startsWith('gemini-')
 		&& !modelName.startsWith('ollama-')
+		&& !modelName.includes(':')
 	);
 }
 
@@ -27,7 +28,7 @@ export function getProvider(modelName: string): ModelProvider {
 		return 'Google';
 	}
 
-	if (modelName.startsWith('ollama-')) {
+	if (modelName.startsWith('ollama-') || modelName.includes(':')) {
 		return 'Ollama';
 	}
 
@@ -43,10 +44,10 @@ export function getModel(modelName: string): AiSdkModel {
 		return aisdk(google(modelName));
 	}
 
-	if (modelName.startsWith('ollama-')) {
+	if (modelName.startsWith('ollama-') || modelName.includes(':')) {
 		const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ? normalizeOllamaBaseUrl(process.env.OLLAMA_BASE_URL) : undefined;
 		const ollamaProvider = ollamaBaseUrl
-			? createOllama({ baseURL: ollamaBaseUrl })
+			? createOllama({ baseURL: ollamaBaseUrl, compatibility: 'strict' })
 			: ollama;
 		return aisdk(ollamaProvider(getModelName(modelName)));
 	}
@@ -64,7 +65,7 @@ export function getModelName(modelName: string): string {
 	}
 
 	if (modelName.startsWith('ollama-')) {
-		return modelName.replace('ollama-', '');
+		return modelName.slice(7);
 	}
 
 	return modelName;

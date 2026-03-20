@@ -13,7 +13,7 @@ export function ensureApiKey(): boolean {
 			requiredEnvVars.add('ANTHROPIC_API_KEY');
 		} else if (model.startsWith('gemini-')) {
 			requiredEnvVars.add('GOOGLE_GENERATIVE_AI_API_KEY');
-		} else if (model.startsWith('ollama-')) {
+		} else if (model.startsWith('ollama-') || model.includes(':')) {
 			// Ollama doesn't need an API key
 		} else {
 			requiredEnvVars.add('OPENAI_API_KEY');
