@@ -72,7 +72,6 @@ describe('validateGraphQL', () => {
 	});
 
 	it('should fallback to local schema if node_modules schema is missing', () => {
-		const root = '/root';
 		const localSchemaContent = 'directive @local on OBJECT';
 
 		vi.mocked(existsSync).mockImplementation((p: any) => {
