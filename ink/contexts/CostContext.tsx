@@ -1,13 +1,6 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 import { useListener } from '../emitters/listener';
-
-export interface CostData {
-	totalCost: number;
-	inputTokens: number;
-	outputTokens: number;
-	cachedInputTokens: number;
-	hasUnknownPrices: boolean;
-}
+import type { CostData } from './CostData';
 
 export interface CostContextType {
 	cost: CostData;

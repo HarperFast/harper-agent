@@ -82,14 +82,6 @@ export async function needsApproval(
 		const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_PATCHES', 'APPLY_PATCH_AUTO_APPROVE') === '1';
 
 		if (autoApproved) {
-			if (callId) {
-				emitToListeners('RegisterToolInfo', {
-					type: operation.type,
-					path: operation.path,
-					diff: operation.diff,
-					callId,
-				});
-			}
 			return false;
 		}
 

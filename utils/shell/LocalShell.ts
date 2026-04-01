@@ -1,12 +1,13 @@
 import type { Shell, ShellAction, ShellOutputResult, ShellResult } from '@openai/agents';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { commandId } from '../../ink/contexts/ShellContext';
 import { emitToListeners } from '../../ink/emitters/listener';
 import { trackedState } from '../../lifecycle/trackedState';
 import { getEnv } from '../getEnv';
 
 const execAsync = promisify(exec);
+
+let commandId = 0;
 
 export class LocalShell implements Shell {
 	private readonly defaultTimeoutMs: number;
@@ -35,13 +36,8 @@ export class LocalShell implements Shell {
 			const firstPart = parts[0]!;
 			const laterParts = parts.slice(1).join(' ') || '';
 
-			// Maintain original Shell pane ID tracking
-			let myCommandId = commandId;
-			emitToListeners('AddShellCommand', {
-				command: firstPart,
-				args: laterParts,
-				running: true,
-			});
+			const myCommandId = ++commandId;
+
 			// Also push to generic ACTIONS pane
 			emitToListeners('AddActionItem', {
 				id: myCommandId,
@@ -72,11 +68,6 @@ export class LocalShell implements Shell {
 					: { type: 'exit', exitCode };
 			}
 
-			emitToListeners('UpdateShellCommand', {
-				id: myCommandId,
-				running: false,
-				exitCode,
-			});
 			// Update ACTIONS pane item (same id sequence used at time of add)
 			emitToListeners('UpdateActionItem', {
 				id: myCommandId,

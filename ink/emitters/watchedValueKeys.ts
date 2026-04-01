@@ -1,45 +1,38 @@
 import type { ApprovalPayload } from '../contexts/ApprovalPayload';
+import type { CostData } from '../contexts/CostData';
 import type { ActionItem } from '../models/actionItem';
 import type { Message } from '../models/message';
 import type { PlanItem } from '../models/planItem';
-import type { ShellCommand } from '../models/shellCommand';
+import type { PullingState } from '../models/pullingState';
 import type { UserInputMode } from '../models/userInputMode';
 
 export interface WatchedValuesTypeMap {
-	PushNewMessages: Omit<Message, 'id'>[];
+	// Planning
 	SetPlanDescription: string;
-	SetInputMode: UserInputMode;
-	SetThinking: boolean;
-	SetCompacting: boolean;
-	SetPulling: {
-		modelName: string;
-		status: string;
-		completed: number;
-		total: number;
-	} | null;
 	SetPlanItems: PlanItem[];
-	AddShellCommand: Omit<ShellCommand, 'id'>;
-	UpdateShellCommand: Partial<ShellCommand> & { id: number };
+	// Actions
 	AddActionItem: Omit<ActionItem, 'id'> & { id?: number };
 	UpdateActionItem: Partial<ActionItem> & { id: number };
-	ExitUI: undefined;
-	InterruptThought: undefined;
-	UpdateLastMessageText: string;
-	UpdateCost: {
-		totalCost: number;
-		inputTokens: number;
-		outputTokens: number;
-		cachedInputTokens: number;
-		hasUnknownPrices: boolean;
-	};
-	OpenApprovalViewer: ApprovalPayload;
-	CloseApprovalViewer: undefined;
-	ClearUserInput: undefined;
-	ClearChatHistory: undefined;
+	// Approvals
 	ApproveCurrentApproval: undefined;
+	CloseApprovalViewer: undefined;
 	DenyCurrentApproval: undefined;
-	RegisterToolInfo: ApprovalPayload & { callId: string };
+	OpenApprovalViewer: ApprovalPayload;
+	// History
+	ClearChatHistory: undefined;
+	PushNewMessages: Omit<Message, 'id'>[];
+	UpdateLastMessageText: string;
+	// User input
+	ClearUserInput: undefined;
+	InterruptThought: undefined;
+	SetInputMode: UserInputMode;
+	// State
+	ExitUI: undefined;
+	SetCompacting: boolean;
+	SetPulling: PullingState | null;
+	SetThinking: boolean;
 	SettingsUpdated: undefined;
+	UpdateCost: CostData;
 }
 
 export type WatchedValueKeys = keyof WatchedValuesTypeMap;

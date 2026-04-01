@@ -38,13 +38,6 @@ export async function needsApproval(
 	const autoApproved = getEnv('HARPER_AGENT_AUTO_APPROVE_CODE_INTERPRETER', 'CODE_INTERPRETER_AUTO_APPROVE') === '1';
 
 	if (autoApproved) {
-		if (callId) {
-			emitToListeners('RegisterToolInfo', {
-				type: 'code_interpreter',
-				code: parameters.code,
-				callId,
-			});
-		}
 		return false;
 	}
 

@@ -19,11 +19,6 @@ export async function runAgentForOnePass(
 	isPrompt?: boolean,
 ): Promise<null | RunState<undefined, Agent>> {
 	let lastToolCallInfo: string | null = null;
-	const toolInfoMap = new Map<string, any>();
-	const removeToolListener = addListener('RegisterToolInfo', (info) => {
-		toolInfoMap.set(info.callId, info);
-	});
-
 	try {
 		let hasStartedResponse = false;
 
@@ -407,7 +402,6 @@ export async function runAgentForOnePass(
 			// After we finish gathering approvals or denials, we will start thinking again.
 			emitToListeners('SetThinking', true);
 			setTimeout(curryEmitToListeners('SetInputMode', 'waiting'), 1000);
-			removeToolListener();
 			return stream.state;
 		} else {
 			costTracker.recordTurn(
@@ -417,8 +411,6 @@ export async function runAgentForOnePass(
 			);
 			emitToListeners('UpdateCost', costTracker.getSessionStats());
 		}
-
-		removeToolListener();
 
 		return null;
 	} catch (error: any) {

@@ -40,13 +40,6 @@ export const shellTool = tool({
 			&& !foundIgnoredInteraction;
 
 		if (autoApproved) {
-			if (callId) {
-				emitToListeners('RegisterToolInfo', {
-					type: 'shell',
-					commands,
-					callId,
-				});
-			}
 			return false;
 		}
 

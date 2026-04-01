@@ -50,10 +50,6 @@ export const ApprovalProvider = ({ children }: { children: ReactNode }) => {
 		setPayload(finalPayload);
 	}, [registerToolInfo, toolInfos]);
 
-	useListener('RegisterToolInfo', (info) => {
-		registerToolInfo(info);
-	}, [registerToolInfo]);
-
 	useListener('CloseApprovalViewer', () => {
 		setPayload(null);
 	}, []);
