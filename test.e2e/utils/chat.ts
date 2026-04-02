@@ -51,7 +51,7 @@ export class Chat {
 	 *   // ... optionally, await next(out.next()) to sync on subsequent prompts
 	 */
 	bootstrap(): AsyncGenerator<string, void, void> {
-		const cliPath = join(this.originalCwd, 'dist', 'agent.js');
+		const cliPath = join(this.originalCwd, 'dist', 'cli.js');
 
 		this.stdoutBuf = '';
 

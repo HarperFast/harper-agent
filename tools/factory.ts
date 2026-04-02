@@ -1,3 +1,4 @@
+import type { CombinedSession } from '../lifecycle/session';
 import { browserClickTool } from './browser/browserClickTool';
 import { browserCloseTool } from './browser/browserCloseTool';
 import { browserEvaluateTool } from './browser/browserEvaluateTool';
@@ -36,12 +37,26 @@ import { hitHarperAPITool } from './harper/hitHarperAPITool';
 import { readHarperLogsTool } from './harper/readHarperLogsTool';
 import { startHarperTool } from './harper/startHarperTool';
 import { stopHarperTool } from './harper/stopHarperTool';
-import { addPlanItemTool } from './plan/addPlanItemTool';
-import { setPlanDescriptionTool } from './plan/setPlanDescriptionTool';
-import { setPlanItemsTool } from './plan/setPlanItemsTool';
-import { updatePlanItemTool } from './plan/updatePlanItemTool';
+import { createAddPlanItemTool } from './plan/createAddPlanItemTool';
+import { createSetPlanDescriptionTool } from './plan/setPlanDescriptionTool';
+import { createSetPlanItemsTool } from './plan/setPlanItemsTool';
+import { createUpdatePlanItemTool } from './plan/updatePlanItemTool';
 
-export function createTools() {
+export function createSharedTools(session: CombinedSession) {
+	return [
+		collectFeedbackTool,
+		createAddPlanItemTool(session),
+		createSetPlanDescriptionTool(session),
+		createSetPlanItemsTool(session),
+		createUpdatePlanItemTool(session),
+		getHarperConfigSchemaTool,
+		getHarperResourceInterfaceTool,
+		getHarperSchemaGraphQLTool,
+		getHarperSkillTool,
+	];
+}
+
+export function createCLITools(_session: CombinedSession) {
 	return [
 		browserClickTool,
 		browserCloseTool,
@@ -52,19 +67,13 @@ export function createTools() {
 		browserNavigateTool,
 		browserScreenshotTool,
 		browserTypeTool,
-		addPlanItemTool,
 		changeCwdTool,
 		checkHarperStatusTool,
-		collectFeedbackTool,
 		codeInterpreterTool,
 		createApplyPatchTool(),
 		createNewHarperApplicationTool,
 		egrepTool,
 		findTool,
-		getHarperConfigSchemaTool,
-		getHarperResourceInterfaceTool,
-		getHarperSchemaGraphQLTool,
-		getHarperSkillTool,
 		gitAddTool,
 		gitBranchTool,
 		gitCommitTool,
@@ -78,12 +87,9 @@ export function createTools() {
 		readHarperLogsTool,
 		setInterpreterAutoApproveTool,
 		setPatchAutoApproveTool,
-		setPlanDescriptionTool,
-		setPlanItemsTool,
 		setShellAutoApproveTool,
 		shellTool,
 		startHarperTool,
 		stopHarperTool,
-		updatePlanItemTool,
 	];
 }

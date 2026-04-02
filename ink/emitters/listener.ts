@@ -4,6 +4,7 @@ import type { WatchedValueKeys, WatchedValuesTypeMap } from './watchedValueKeys'
 type GenericListenerCallback<T = unknown> = (newValue: T, trigger?: unknown) => void | Promise<void>;
 
 const listenersMap: Record<string, Array<GenericListenerCallback>> = {};
+const emittedMap: Record<string, unknown> = {};
 
 export function useListener<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(
 	name: K,
@@ -16,8 +17,10 @@ export function useListener<K extends keyof WatchedValuesTypeMap, T extends Watc
 		listenerRef.current = listener;
 	}, [listener]);
 
-	// eslint-disable-next-line react-hooks/preserve-manual-memoization,react-hooks/exhaustive-deps
-	const callback = useCallback((newValue: T, trigger?: unknown) => listenerRef.current(newValue, trigger), [deps]);
+	const callback = useCallback((newValue: T, trigger?: unknown) => {
+		return listenerRef.current(newValue, trigger);
+	}, [deps]);
+
 	useEffect(() => {
 		if (!listenersMap[name]) {
 			listenersMap[name] = [];
@@ -56,6 +59,7 @@ export function emitToListeners<K extends keyof WatchedValuesTypeMap, T extends 
 	value: T,
 	trigger?: unknown,
 ): void {
+	emittedMap[name] = value;
 	const listeners = listenersMap[name];
 	if (listeners) {
 		const stableCopyOfListeners = listeners.slice();
@@ -63,6 +67,12 @@ export function emitToListeners<K extends keyof WatchedValuesTypeMap, T extends 
 			listener(value, trigger);
 		}
 	}
+}
+
+export function lastEmittedValue<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(
+	name: K,
+): T | null {
+	return emittedMap[name] as T | null;
 }
 
 export function addListener<K extends keyof WatchedValuesTypeMap, T extends WatchedValuesTypeMap[K]>(

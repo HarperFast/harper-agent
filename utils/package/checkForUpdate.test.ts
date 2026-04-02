@@ -110,7 +110,7 @@ describe('checkForUpdate', () => {
 		vi.mocked(isVersionNewer).mockReturnValue(true);
 
 		const globalRoot = '/usr/local/lib/node_modules';
-		process.argv[1] = `${globalRoot}/@harperfast/agent/dist/agent.js`;
+		process.argv[1] = `${globalRoot}/@harperfast/agent/dist/cli.js`;
 
 		vi.mocked(spawn.sync).mockImplementation((cmd, args) => {
 			if (cmd === 'npm' && args && args[0] === 'root' && args[1] === '-g') {

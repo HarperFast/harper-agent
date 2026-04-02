@@ -195,11 +195,15 @@ export class DiskSession extends MemorySession implements WithSkillsRead, WithPl
 		return storage.skillsRead?.[sessionId] ?? [];
 	}
 
-	async getPlanState(): Promise<PlanState | null> {
+	async getPlanState(): Promise<PlanState> {
 		await this.ready;
 		const sessionId = await this.getSessionId();
 		const storage = await this.loadStorage();
-		return storage.plan?.[sessionId] ?? null;
+		return storage.plan?.[sessionId] ?? {
+			planDescription: '',
+			planItems: [],
+			progress: 0,
+		};
 	}
 
 	async setPlanState(state: Partial<PlanState>): Promise<void> {

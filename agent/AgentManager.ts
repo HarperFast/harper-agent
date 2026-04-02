@@ -1,6 +1,5 @@
 import { Agent, type AgentInputItem, type RunState, type Tool } from '@openai/agents';
-import { globalPlanContext } from '../ink/contexts/globalPlanContext';
-import { addListener, curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
+import { curryEmitToListeners, emitToListeners } from '../ink/emitters/listener';
 import type { Message } from '../ink/models/message';
 import { defaultInstructions } from '../lifecycle/defaultInstructions';
 import { getModel, getModelName, getProvider, isOpenAIModel } from '../lifecycle/getModel';
@@ -8,13 +7,16 @@ import { handleExit } from '../lifecycle/handleExit';
 import { readAgentSkillsRoot } from '../lifecycle/readAgentSkillsRoot';
 import type { CombinedSession } from '../lifecycle/session';
 import { trackedState } from '../lifecycle/trackedState';
-import { createTools } from '../tools/factory';
+import { createCLITools, createSharedTools } from '../tools/factory';
 import { logError } from '../utils/logger';
 import { ensureOllamaModel } from '../utils/ollama/ensureOllamaModel';
 import { sleep } from '../utils/promises/sleep';
 import { createSession } from '../utils/sessions/createSession';
 import { getModelSettings } from '../utils/sessions/modelSettings';
 import { runAgentForOnePass } from './runAgentForOnePass';
+import { translateSessionItemsToMessages } from './translateSessionItemsToMessages';
+
+export type { Tool };
 
 export class AgentManager {
 	private isInitialized = false;
@@ -26,141 +28,43 @@ export class AgentManager {
 	public session: CombinedSession | null = null;
 	public initialMessages: Message[] = [];
 
-	public static instantiateAgent(tools: Tool[]) {
+	public static instantiateAgent(tools: Tool[], instructions?: string) {
 		return new Agent({
 			name: 'Harper Agent',
 			model: isOpenAIModel(trackedState.model) ? trackedState.model : getModel(trackedState.model),
 			modelSettings: getModelSettings(trackedState.model),
-			instructions: readAgentSkillsRoot() || defaultInstructions(),
+			instructions: instructions || readAgentSkillsRoot() || defaultInstructions(),
 			tools,
 		});
 	}
 
-	public async initialize() {
+	public async initialize(agent?: Agent, session?: CombinedSession) {
 		if (this.isInitialized) {
 			return;
 		}
 
-		this.agent = AgentManager.instantiateAgent(createTools());
-		this.session = createSession(trackedState.sessionPath);
+		this.session = session || createSession(trackedState.sessionPath);
+		this.agent = agent || AgentManager.instantiateAgent([
+			...createSharedTools(this.session),
+			...createCLITools(this.session),
+		]);
 
 		// Restore plan state from session storage, if present
 		try {
 			const plan = await this.session?.getPlanState?.();
 			if (plan && typeof plan === 'object') {
 				if (typeof plan.planDescription === 'string') {
-					globalPlanContext.planDescription = plan.planDescription;
 					emitToListeners('SetPlanDescription', plan.planDescription);
 				}
 				if (Array.isArray(plan.planItems)) {
-					globalPlanContext.planItems = plan.planItems;
-					// compute progress like PlanProvider does
-					const completedCount = plan.planItems.filter((it) =>
-						it?.status === 'done' || it?.status === 'not-needed'
-					).length;
-					const progress = plan.planItems.length === 0 ? 0 : Math.round((completedCount / plan.planItems.length) * 100);
-					globalPlanContext.progress = progress;
 					emitToListeners('SetPlanItems', plan.planItems);
 				}
 			}
 		} catch {}
 
-		// Persist plan state changes to session storage
-		try {
-			addListener('SetPlanDescription', async (desc: string) => {
-				try {
-					await this.session?.setPlanState?.({ planDescription: desc });
-				} catch {}
-			});
-			addListener('SetPlanItems', async (items) => {
-				if (Array.isArray(items)) {
-					globalPlanContext.planItems = items;
-					const completedCount = items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length;
-					globalPlanContext.progress = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0;
-				}
-				try {
-					const completedCount = Array.isArray(items)
-						? items.filter((it: any) => it?.status === 'done' || it?.status === 'not-needed').length
-						: 0;
-					const progress = Array.isArray(items) && items.length > 0
-						? Math.round((completedCount / items.length) * 100)
-						: 0;
-					await this.session?.setPlanState?.({ planItems: items, progress });
-				} catch {}
-			});
-		} catch {}
-
 		if (trackedState.sessionPath) {
 			const items = await this.session.getItems();
-			if (items.length > 0) {
-				const messages: Message[] = [];
-				let id = 0;
-				for (const item of items) {
-					if (item.type === 'message' && item.role === 'user') {
-						messages.push({
-							id: id++,
-							type: 'user',
-							text: item.content as string,
-							version: 1,
-						});
-					} else if (item.type === 'message' && item.role === 'assistant') {
-						if (typeof item.content === 'string') {
-							messages.push({
-								id: id++,
-								type: 'agent',
-								text: item.content,
-								version: 1,
-							});
-						} else if (Array.isArray(item.content)) {
-							for (const part of item.content as any[]) {
-								if (part.type === 'text' || part.type === 'output_text') {
-									messages.push({
-										id: id++,
-										type: 'agent',
-										text: part.text,
-										version: 1,
-									});
-								} else if (part.type === 'tool_call' || part.type === 'function_call') {
-									const args = typeof part.arguments === 'string'
-										? part.arguments
-										: part.arguments
-										? JSON.stringify(part.arguments)
-										: '';
-									const displayedArgs = args
-										? `(${args})`
-										: '()';
-									messages.push({
-										id: id++,
-										type: 'tool',
-										text: part.name,
-										args: displayedArgs,
-										version: 1,
-									});
-								}
-							}
-						}
-					} else if (item.type === 'function_call') {
-						const args = typeof item.arguments === 'string'
-							? item.arguments
-							: item.arguments
-							? JSON.stringify(item.arguments)
-							: '';
-						const displayedArgs = args
-							? `(${args})`
-							: '()';
-						messages.push({
-							id: id++,
-							type: 'tool',
-							text: item.name,
-							args: displayedArgs,
-							version: 1,
-						});
-					}
-				}
-				if (messages.length > 0) {
-					this.initialMessages = messages;
-				}
-			}
+			this.initialMessages = translateSessionItemsToMessages(items);
 		}
 
 		this.isInitialized = true;
@@ -249,8 +153,9 @@ export class AgentManager {
 			}
 
 			if (trackedState.autonomous && !this.resumeState) {
-				// If autonomous and the plan is 100% accomplished, we can exit.
-				const planItems = globalPlanContext.planItems;
+				// If autonomous and the plan is 100% completed, we can exit.
+				const planState = await this.session!.getPlanState();
+				const planItems = planState.planItems;
 				const hasPlan = planItems.length > 0;
 				const allDone = hasPlan && planItems.every(item => item.status === 'done' || item.status === 'not-needed');
 				if (allDone) {

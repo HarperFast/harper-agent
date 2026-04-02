@@ -1,10 +1,9 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
-import { useListener } from '../emitters/listener';
+import { lastEmittedValue, useListener } from '../emitters/listener';
 import type { PlanContextType } from '../models/planContextType';
 import type { PlanItem } from '../models/planItem';
-import { globalPlanContext } from './globalPlanContext';
 
-const PlanContext = createContext<PlanContextType>(globalPlanContext);
+const PlanContext = createContext<PlanContextType>({ planDescription: '', planItems: [], progress: 0 });
 
 export const usePlan = () => {
 	const context = useContext(PlanContext);
@@ -19,20 +18,20 @@ export const PlanProvider = ({
 }: {
 	children: ReactNode;
 }) => {
-	const [planDescription, setPlanDescription] = useState<string>(globalPlanContext.planDescription);
-	const [planItems, setPlanItems] = useState<PlanItem[]>(globalPlanContext.planItems);
-	const [progress, setProgress] = useState<number>(globalPlanContext.progress);
+	const initialPlanDescription = lastEmittedValue('SetPlanDescription') || '';
+	const initialPlanItems = lastEmittedValue('SetPlanItems') || [];
+	const initialProgress = calculatePlanProgress(initialPlanItems);
+
+	const [planDescription, setPlanDescription] = useState<string>(initialPlanDescription);
+	const [planItems, setPlanItems] = useState<PlanItem[]>(initialPlanItems);
+	const [progress, setProgress] = useState<number>(initialProgress);
 
 	useListener('SetPlanDescription', newGoal => {
-		globalPlanContext.planDescription = newGoal;
 		setPlanDescription(newGoal);
 	}, []);
 
 	useListener('SetPlanItems', (planItems) => {
-		globalPlanContext.planItems = planItems;
-		const completedCount = planItems.filter(item => item.status === 'done' || item.status === 'not-needed').length;
-		const progress = planItems.length === 0 ? 0 : Math.round((completedCount / planItems.length) * 100);
-		globalPlanContext.progress = progress;
+		const progress = calculatePlanProgress(planItems);
 		setPlanItems(planItems);
 		setProgress(progress);
 	}, []);
@@ -45,3 +44,11 @@ export const PlanProvider = ({
 
 	return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
 };
+
+export function calculatePlanProgress(planItems: null | PlanItem[]) {
+	if (!planItems?.length) {
+		return 0;
+	}
+	const completedCount = planItems.filter(item => item.status === 'done' || item.status === 'not-needed').length;
+	return Math.round((completedCount / planItems.length) * 100);
+}

@@ -64,7 +64,7 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 		return Array.from(merged);
 	}
 
-	async getPlanState(): Promise<PlanState | null> {
+	async getPlanState(): Promise<PlanState> {
 		const u = this.underlyingSession as unknown as WithPlanState;
 		let base: PlanState | null = null;
 		if (u && typeof u.getPlanState === 'function') {
@@ -75,16 +75,19 @@ export class MemoryCompactionSession implements OpenAIResponsesCompactionAwareSe
 		// Merge local over base if present
 		if (this.planStateLocal) {
 			const existing = base ?? { planDescription: '', planItems: [], progress: 0 } as PlanState;
-			const merged: PlanState = {
+			return {
 				...existing,
 				...this.planStateLocal,
 				planItems: Array.isArray(this.planStateLocal.planItems)
 					? this.planStateLocal.planItems
 					: existing.planItems,
 			};
-			return merged;
 		}
-		return base;
+		return base || {
+			planDescription: '',
+			planItems: [],
+			progress: 0,
+		};
 	}
 
 	async setPlanState(state: Partial<PlanState>): Promise<void> {

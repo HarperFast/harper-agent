@@ -49,7 +49,7 @@ function clearProviderEnv() {
 
 describe('parseArgs defaults based on ENV provider keys', () => {
 	beforeEach(() => {
-		process.argv = ['node', 'agent.js'];
+		process.argv = ['node', 'cli.js'];
 		// copy to avoid mutating ORIGINAL_ENV reference
 		process.env = { ...ORIGINAL_ENV };
 		clearAllEnv();
@@ -108,7 +108,7 @@ describe('parseArgs defaults based on ENV provider keys', () => {
 
 describe('parseArgs CLI arguments', () => {
 	beforeEach(() => {
-		process.argv = ['node', 'agent.js'];
+		process.argv = ['node', 'cli.js'];
 		process.env = { ...ORIGINAL_ENV };
 		clearAllEnv();
 		resetState();
@@ -189,7 +189,7 @@ describe('parseArgs CLI arguments', () => {
 
 describe('parseArgs Environment Variables', () => {
 	beforeEach(() => {
-		process.argv = ['node', 'agent.js'];
+		process.argv = ['node', 'cli.js'];
 		process.env = { ...ORIGINAL_ENV };
 		clearAllEnv();
 		resetState();
@@ -265,7 +265,7 @@ describe('parseArgs Environment Variables', () => {
 
 describe('parseArgs edge cases and mixed scenarios', () => {
 	beforeEach(() => {
-		process.argv = ['node', 'agent.js'];
+		process.argv = ['node', 'cli.js'];
 		process.env = { ...ORIGINAL_ENV };
 		clearAllEnv();
 		resetState();
@@ -351,13 +351,13 @@ describe('parseArgs edge cases and mixed scenarios', () => {
 		expect(trackedState.maxTurns).toBe(75);
 	});
 	it('sets autonomous from --autonomous flag', () => {
-		process.argv = ['node', 'agent.js', '--autonomous'];
+		process.argv = ['node', 'cli.js', '--autonomous'];
 		parseArgs();
 		expect(trackedState.autonomous).toBe(true);
 	});
 
 	it('sets autonomous from -a flag', () => {
-		process.argv = ['node', 'agent.js', '-a'];
+		process.argv = ['node', 'cli.js', '-a'];
 		parseArgs();
 		expect(trackedState.autonomous).toBe(true);
 	});
@@ -369,13 +369,13 @@ describe('parseArgs edge cases and mixed scenarios', () => {
 	});
 
 	it('sets prompt from --prompt flag', () => {
-		process.argv = ['node', 'agent.js', '--prompt', 'hello world'];
+		process.argv = ['node', 'cli.js', '--prompt', 'hello world'];
 		parseArgs();
 		expect(trackedState.prompt).toBe('hello world');
 	});
 
 	it('sets prompt from -p flag', () => {
-		process.argv = ['node', 'agent.js', '-p', 'hello world'];
+		process.argv = ['node', 'cli.js', '-p', 'hello world'];
 		parseArgs();
 		expect(trackedState.prompt).toBe('hello world');
 	});
@@ -386,7 +386,7 @@ describe('deprecated gpt-4o model redirection', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		process.argv = ['node', 'agent.js'];
+		process.argv = ['node', 'cli.js'];
 		process.env = { ...ORIGINAL_ENV };
 		// clear model envs used in parseArgs
 		delete process.env.HARPER_AGENT_MODEL;

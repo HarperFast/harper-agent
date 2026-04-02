@@ -1,6 +1,5 @@
 import { Agent, type AgentInputItem, run, type RunState, system } from '@openai/agents';
 import { actionId } from '../ink/contexts/ActionsContext';
-import { globalPlanContext } from '../ink/contexts/globalPlanContext';
 import { addListener, curryEmitToListeners, emitToListeners, onceListener } from '../ink/emitters/listener';
 import { handleExit } from '../lifecycle/handleExit';
 import type { CombinedSession } from '../lifecycle/session';
@@ -23,9 +22,10 @@ export async function runAgentForOnePass(
 		let hasStartedResponse = false;
 
 		// If there is no plan yet, prepend a system instruction guiding the model to establish one first
+		const planContext = await session.getPlanState();
 		let adjustedInput = input;
-		const noPlanYet = globalPlanContext.planItems.length === 0
-			&& (!globalPlanContext.planDescription || globalPlanContext.planDescription.trim().length === 0);
+		const noPlanYet = planContext.planItems.length === 0
+			&& (!planContext?.planDescription || planContext?.planDescription.trim().length === 0);
 
 		if (noPlanYet && typeof input === 'string') {
 			const planningInstruction = [

@@ -16,7 +16,7 @@ export interface WithPlanState {
 	/**
 	 * Returns the persisted plan state for the current session, or null if none exists.
 	 */
-	getPlanState(): Promise<PlanState | null>;
+	getPlanState(): Promise<PlanState>;
 	/**
 	 * Merges and persists a partial plan state for the current session.
 	 */
