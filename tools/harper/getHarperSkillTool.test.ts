@@ -9,8 +9,8 @@ describe('getHarperSkillTool', () => {
 	});
 
 	it('should return an error if skill not found', async () => {
-		const result = await execute({ skill: 'non-existent-skill' });
-		expect(result).toContain('Error reading Harper skill');
+		const result = await execute({ skill: 'non-existent-skill' } as any);
+		expect(result).toContain('No skill found with the name non-existent-skill');
 	});
 
 	describe('skillLinkRegex', () => {
