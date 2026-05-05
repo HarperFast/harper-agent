@@ -1,6 +1,5 @@
 import { ruleNames, rules, skillSummary } from '@harperfast/skills';
 import { tool } from '@openai/agents';
-import { readdirSync, readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { agentManager } from '../../agent/AgentManager';
 
