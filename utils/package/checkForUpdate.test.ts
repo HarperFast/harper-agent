@@ -7,9 +7,9 @@ import { getLatestVersion } from './getLatestVersion';
 import { getOwnPackageJson } from './getOwnPackageJson';
 import { isVersionNewer } from './isVersionNewer';
 
-vi.mock('./getLatestVersion.js');
-vi.mock('./getOwnPackageJson.js');
-vi.mock('./isVersionNewer.js');
+vi.mock('./getLatestVersion');
+vi.mock('./getOwnPackageJson');
+vi.mock('./isVersionNewer');
 vi.mock('cross-spawn');
 vi.mock('ink', async (importOriginal) => {
 	const original = await importOriginal<typeof import('ink')>();

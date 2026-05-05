@@ -1,41 +1,5 @@
-import { buildSchema, extendSchema, parse, validateSchema } from 'graphql';
-import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-let cachedSchema: any = null;
-
-export function _resetCache() {
-	cachedSchema = null;
-}
-
-function getHarperSchema(root: string) {
-	if (cachedSchema) { return cachedSchema; }
-
-	const paths = [
-		path.join(root, 'node_modules', 'harperdb', 'schema.graphql'),
-		path.join(__dirname, 'schema.graphql'),
-		path.join(__dirname, '..', 'schema.graphql'),
-		path.join(__dirname, '..', '..', 'schema.graphql'),
-	];
-
-	for (const schemaPath of paths) {
-		if (existsSync(schemaPath)) {
-			try {
-				const schemaSource = readFileSync(schemaPath, 'utf8');
-				// Use buildSchema but don't validate it as a full executable schema
-				// We want to use it for validating SDL.
-				cachedSchema = buildSchema(schemaSource, { assumeValidSDL: true });
-				return cachedSchema;
-			} catch (e) {
-				console.error(`Error parsing HarperDB schema at ${schemaPath}:`, e);
-			}
-		}
-	}
-	return null;
-}
+import { extendSchema, parse, validateSchema } from 'graphql';
+import { getHarperSchemaBuilt } from './getHarperSchema';
 
 export function validateGraphQL(content: string, filePath: string, root: string): string | null {
 	if (!filePath.endsWith('.graphql')) {
@@ -44,7 +8,7 @@ export function validateGraphQL(content: string, filePath: string, root: string)
 
 	try {
 		const document = parse(content);
-		const schema = getHarperSchema(root);
+		const schema = getHarperSchemaBuilt(root);
 
 		if (schema) {
 			// Validate that the SDL content extends the HarperDB schema correctly.

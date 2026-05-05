@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { _resetCache, validateGraphQL } from './validateGraphQL';
+import { _resetCache } from './getHarperSchema';
+import { validateGraphQL } from './validateGraphQL';
 
 vi.mock('node:fs', () => ({
 	existsSync: vi.fn(),
