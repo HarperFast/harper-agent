@@ -1,6 +1,9 @@
 import { Box, useInput } from 'ink';
 import { Step, Stepper } from 'ink-stepper';
 import React, { useEffect, useState } from 'react';
+import { getProvider } from '../../lifecycle/getModel.js';
+import { trackedState } from '../../lifecycle/trackedState.js';
+import { getEnvVarForProvider } from '../../utils/files/getEnvVarForProvider';
 import { updateEnv } from '../../utils/files/updateEnv';
 import { updateEnvKeyForProvider } from '../../utils/files/updateEnvKeyForProvider';
 import { fetchOllamaModels } from '../../utils/ollama/fetchOllamaModels';
@@ -19,7 +22,9 @@ interface Props {
 }
 
 export function ConfigurationWizard({ onComplete }: Props) {
-	const [provider, setProvider] = useState<ModelProvider>('OpenAI');
+	const [provider, setProvider] = useState<ModelProvider>(
+		trackedState?.model && getProvider(trackedState.model) || 'OpenAI',
+	);
 	const [ollamaModels, setOllamaModels] = useState<string[]>([]);
 
 	useEffect(() => {
@@ -35,6 +40,9 @@ export function ConfigurationWizard({ onComplete }: Props) {
 	useInput((input, key) => {
 		if (key.ctrl && input === 'x') {
 			emitToListeners('ExitUI', undefined);
+		}
+		if (key.escape) {
+			onComplete();
 		}
 	});
 
@@ -56,10 +64,12 @@ export function ConfigurationWizard({ onComplete }: Props) {
 				<Step name="AI Provider">
 					{({ goNext }) => (
 						<ProviderStep
+							defaultValue={provider}
 							onConfirm={(p) => {
 								setProvider(p);
 								goNext();
 							}}
+							onExit={onComplete}
 						/>
 					)}
 				</Step>
@@ -69,6 +79,7 @@ export function ConfigurationWizard({ onComplete }: Props) {
 						? (
 							<ApiKeyStep
 								provider={provider}
+								defaultValue={process.env[getEnvVarForProvider(provider)] || ''}
 								onConfirm={(key) => {
 									updateEnvKeyForProvider(provider, key);
 									goNext();
@@ -79,6 +90,7 @@ export function ConfigurationWizard({ onComplete }: Props) {
 						: (
 							<ApiUrlStep
 								provider={provider}
+								defaultValue={process.env[getEnvVarForProvider(provider)] || ''}
 								onConfirm={(key) => {
 									updateEnvKeyForProvider(provider, key);
 									goNext();
@@ -93,6 +105,7 @@ export function ConfigurationWizard({ onComplete }: Props) {
 						<ModelSelectionStep
 							title="What model would you like to use?"
 							models={models}
+							defaultValue={trackedState?.model || ''}
 							onConfirm={(m) => {
 								const finalModelName = (provider === 'Ollama' && !m.startsWith('ollama-') && !m.includes(':'))
 									? `ollama-${m}`
@@ -110,6 +123,7 @@ export function ConfigurationWizard({ onComplete }: Props) {
 						<ModelSelectionStep
 							title="What model should we use for memory compaction?"
 							models={compactorModels}
+							defaultValue={trackedState?.compactionModel || ''}
 							onConfirm={(m) => {
 								const finalModelName = (provider === 'Ollama' && !m.startsWith('ollama-') && !m.includes(':'))
 									? `ollama-${m}`

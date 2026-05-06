@@ -1,12 +1,17 @@
-import { PasswordInput } from '@inkjs/ui';
 import { Box, Text, useInput } from 'ink';
 import { useStepperInput } from 'ink-stepper';
 import React, { useEffect } from 'react';
+import { BlinkingTextInput } from '../components/BlinkingTextInput';
 import { emitToListeners } from '../emitters/listener';
 import type { ModelProvider } from '../models/config';
 
 export function ApiKeyStep(
-	{ provider, onConfirm, onBack }: { provider: ModelProvider; onConfirm: (key: string) => void; onBack: () => void },
+	{ provider, defaultValue, onConfirm, onBack }: {
+		provider: ModelProvider;
+		defaultValue: string;
+		onConfirm: (key: string) => void;
+		onBack: () => void;
+	},
 ) {
 	const { disableNavigation, enableNavigation } = useStepperInput();
 
@@ -33,18 +38,20 @@ export function ApiKeyStep(
 			<Text>Can you provide us with your {provider} API key?</Text>
 			<Text dimColor>{instructions[provider]}</Text>
 			<Box marginTop={1}>
-				<PasswordInput
+				<BlinkingTextInput
+					isPassword
+					defaultValue={defaultValue}
 					onSubmit={(v) => {
 						if (v === 'exit') {
 							emitToListeners('ExitUI', undefined);
 						} else {
-							onConfirm(v);
+							onConfirm(v || defaultValue || '');
 						}
 					}}
 				/>
 			</Box>
 			<Box marginTop={1}>
-				<Text dimColor>Press ESC to go back</Text>
+				<Text dimColor>Press &lt;esc&gt; to go back, &lt;enter&gt; to proceed</Text>
 			</Box>
 		</Box>
 	);

@@ -6,7 +6,12 @@ import { emitToListeners } from '../emitters/listener';
 import type { ModelProvider } from '../models/config';
 
 export function ApiUrlStep(
-	{ provider, onConfirm, onBack }: { provider: ModelProvider; onConfirm: (key: string) => void; onBack: () => void },
+	{ provider, defaultValue, onConfirm, onBack }: {
+		provider: ModelProvider;
+		defaultValue: string;
+		onConfirm: (key: string) => void;
+		onBack: () => void;
+	},
 ) {
 	const { disableNavigation, enableNavigation } = useStepperInput();
 
@@ -33,18 +38,19 @@ export function ApiUrlStep(
 			<Text>Where are you hosting {provider}?</Text>
 			<Box marginTop={1}>
 				<BlinkingTextInput
+					defaultValue={defaultValue || ''}
 					placeholder={defaultApi[provider] || ''}
 					onSubmit={(v) => {
 						if (v === 'exit') {
 							emitToListeners('ExitUI', undefined);
 						} else {
-							onConfirm(v || defaultApi[provider] || '');
+							onConfirm(v || defaultValue || defaultApi[provider] || '');
 						}
 					}}
 				/>
 			</Box>
 			<Box marginTop={1}>
-				<Text dimColor>Press ESC to go back</Text>
+				<Text dimColor>Press &lt;esc&gt; to go back, &lt;enter&gt; to proceed</Text>
 			</Box>
 		</Box>
 	);

@@ -5,7 +5,7 @@ import { updateEnv } from '../../utils/files/updateEnv';
 import { useChat } from '../contexts/ChatContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { emitToListeners } from '../emitters/listener';
-import { bootstrapConfig } from '../main';
+import { showConfigThenReparse } from '../main';
 
 export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 	const {
@@ -81,7 +81,7 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 		{
 			label: '<edit settings>',
 			isAction: true,
-			action: bootstrapConfig,
+			action: showConfigThenReparse,
 		},
 	], [autoApproveCodeInterpreter, autoApprovePatches, autoApproveShell, monitorRateLimits]);
 
@@ -210,7 +210,7 @@ export function SettingsView({ isDense = false }: { isDense?: boolean }) {
 			)}
 
 			<Box marginTop={1} flexDirection="column">
-				<Text bold>Auto-approvals (up/down & space to toggle):</Text>
+				<Text bold>Auto-approvals (up/down & &lt;space&gt; to toggle):</Text>
 				{selectableOptions.map((option, index) => {
 					const isSelected = index === selectedIndex && focusedArea === 'status';
 					return (

@@ -56,7 +56,15 @@ export function EnvironmentSettingsStep({ onConfirm, onBack }: Props) {
 		value: s.value,
 	}));
 
-	const defaultValues = SETTINGS.map((s) => s.value);
+	const defaultValues = SETTINGS
+		.filter((s) => {
+			const currentValue = process.env[s.value];
+			if (currentValue === undefined) {
+				return true;
+			}
+			return currentValue === s.defaultValue;
+		})
+		.map((s) => s.value);
 
 	const handleSubmit = (values: string[]) => {
 		for (const setting of SETTINGS) {

@@ -1,18 +1,20 @@
 import { Select } from '@inkjs/ui';
 import { Box, Text, useInput } from 'ink';
 import { useStepperInput } from 'ink-stepper';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BlinkingTextInput } from '../components/BlinkingTextInput';
 import { emitToListeners } from '../emitters/listener';
 
 export function ModelSelectionStep({
 	title,
 	models,
+	defaultValue,
 	onConfirm,
 	onBack,
 }: {
 	title: string;
 	models: string[];
+	defaultValue: string;
 	onConfirm: (model: string) => void;
 	onBack: () => void;
 }) {
@@ -34,21 +36,37 @@ export function ModelSelectionStep({
 		}
 	});
 
+	const modelOptions = useMemo(() => {
+		const defaultIndex = models.indexOf(defaultValue);
+		const sortedModels = defaultIndex >= 0 && models[defaultIndex]
+			? [
+				models[defaultIndex],
+				...models.slice(0, defaultIndex),
+				...models.slice(defaultIndex + 1),
+			]
+			: models;
+		return [
+			...sortedModels.map(m => ({ label: m, value: m })),
+			{ label: 'Other...', value: 'other' },
+		];
+	}, [models, defaultValue]);
+
 	if (isCustom) {
 		return (
 			<Box flexDirection="column">
 				<Text>Enter custom model name for: {title}</Text>
 				<BlinkingTextInput
+					defaultValue={defaultValue}
 					onSubmit={(v) => {
 						if (v === 'exit') {
 							emitToListeners('ExitUI', undefined);
 						} else {
-							onConfirm(v);
+							onConfirm(v || defaultValue || '');
 						}
 					}}
 				/>
 				<Box marginTop={1}>
-					<Text dimColor>Press ESC to go back to list</Text>
+					<Text dimColor>Press &lt;esc&gt; to go back, &lt;enter&gt; to select</Text>
 				</Box>
 			</Box>
 		);
@@ -58,10 +76,7 @@ export function ModelSelectionStep({
 		<Box flexDirection="column">
 			<Text>{title}</Text>
 			<Select
-				options={[
-					...models.map(m => ({ label: m, value: m })),
-					{ label: 'Other...', value: 'other' },
-				]}
+				options={modelOptions}
 				onChange={(v) => {
 					if (v === 'other') {
 						setIsCustom(true);
@@ -71,7 +86,7 @@ export function ModelSelectionStep({
 				}}
 			/>
 			<Box marginTop={1}>
-				<Text dimColor>Press ESC to go back</Text>
+				<Text dimColor>Press &lt;esc&gt; to go back, &lt;enter&gt; to select</Text>
 			</Box>
 		</Box>
 	);

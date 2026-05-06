@@ -75,14 +75,13 @@ describe('Settings — Ollama Provider', () => {
 
 			// Step 1: ProviderStep — navigate to Ollama (3 steps down from OpenAI)
 			await waitForContent('What model provider would you like to use today?');
-			await simulateKey(down); // OpenAI → Anthropic
 			await simulateKey(down); // Anthropic → Google
 			await simulateKey(down); // Google → Ollama
 			await simulateKey(enter);
 
 			// Step 2: ApiUrlStep — confirm the Ollama host URL
 			await waitForContent('Where are you hosting Ollama?');
-			await simulateKey(ollamaBaseUrl);
+			// Accept the default (from the environment)
 			await simulateKey(enter);
 
 			// Step 3: ModelSelectionStep — wait for Ollama models to load, pick the first

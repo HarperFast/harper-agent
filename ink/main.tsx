@@ -1,5 +1,6 @@
 import { render, useApp } from 'ink';
 import React from 'react';
+import { parseArgs } from '../lifecycle/parseArgs.js';
 import { ChatContent } from './components/ChatContent';
 import { DiffApprovalView } from './components/DiffApprovalView';
 import { ConfigurationWizard } from './configurationWizard/ConfigurationWizard';
@@ -15,6 +16,12 @@ export function bootstrapConfig() {
 	return new Promise(resolve => {
 		render(<MainConfig onComplete={resolve} />);
 	});
+}
+
+export async function showConfigThenReparse() {
+	await bootstrapConfig();
+	parseArgs();
+	bootstrapMain();
 }
 
 export function MainConfig({ onComplete }: { onComplete: (value?: unknown) => void }) {

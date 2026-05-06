@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useReducer, useState } from 'react';
 
 export type TextInputProps = {
 	readonly isDisabled?: boolean;
+	readonly isPassword?: boolean;
 	readonly placeholder?: string;
 	readonly defaultValue?: string;
 	readonly suggestions?: string[];
@@ -66,6 +67,7 @@ const reducer = (state: State, action: Action): State => {
 
 export function BlinkingTextInput({
 	isDisabled = false,
+	isPassword = false,
 	defaultValue = '',
 	placeholder = '',
 	suggestions = [],
@@ -154,8 +156,10 @@ export function BlinkingTextInput({
 	);
 
 	const renderedValue = useMemo(() => {
+		const displayValue = isPassword ? '*'.repeat(state.value.length) : state.value;
+
 		if (isDisabled) {
-			const lines = (state.value || (placeholder ? chalk.dim(placeholder) : '')).split('\n');
+			const lines = (displayValue || (placeholder ? chalk.dim(placeholder) : '')).split('\n');
 			return (
 				<Box flexDirection="column">
 					{lines.map((line, i) => (
@@ -183,7 +187,7 @@ export function BlinkingTextInput({
 			);
 		}
 
-		const lines = state.value.split('\n');
+		const lines = displayValue.split('\n');
 		const result: React.ReactNode[] = [];
 		let totalOffset = 0;
 

@@ -165,7 +165,7 @@ describe('MainConfig', () => {
 
 		// 1. ProviderStep - Choose Google
 		expect(lastFrame()).toContain('What model provider would you like to use today?');
-		await simulateKey(down); // to Anthropic
+		// a, g, openai, ollama
 		await simulateKey(down); // to Google
 		await simulateKey(enter);
 
